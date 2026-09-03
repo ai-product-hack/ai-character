@@ -230,7 +230,8 @@ function buildTrackSource() {
 /** Декодировать WAV один раз и запомнить. */
 async function bufferFor(sample) {
   if (decoded.has(sample.id)) return decoded.get(sample.id);
-  const bytes = await (await fetch('./' + sample.audio)).arrayBuffer();
+  // Путь абсолютный от корня репозитория; в именах файлов есть пробелы и скобки.
+  const bytes = await (await fetch(encodeURI(sample.audio))).arrayBuffer();
   const buf = await audioCtx.decodeAudioData(bytes);
   decoded.set(sample.id, buf);
   return buf;

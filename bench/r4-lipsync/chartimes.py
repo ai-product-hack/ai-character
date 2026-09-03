@@ -88,15 +88,17 @@ def main():
         step = min((chars[i + 1]["ms"] - chars[i]["ms"]
                     for i in range(len(chars) - 1)), default=40)
 
-        # Звук отдаём странице как есть — она сама декодирует WAV.
-        dst = OUT_DIR / f"phrase_{idx}.wav"
-        dst.write_bytes(wav.read_bytes())
+        # Ссылаемся на исходный WAV, а не копируем его: копии пришлось бы либо
+        # держать в репозитории вторым экземпляром, либо игнорировать — и тогда
+        # на чистом клоне index.json указывал бы на несуществующие файлы.
+        # Dev-сервер раздаёт корень репозитория, так что путь виден странице.
+        rel = wav.relative_to(ROOT).as_posix()
 
         rec_json = {
             "id": idx,
             "text": PHRASES[idx] if idx < len(PHRASES) else "",
             "asr_text": res.text,
-            "audio": f"samples/phrase_{idx}.wav",
+            "audio": "/" + rel,
             "audio_s": round(len(audio) / sr, 3),
             "sample_rate": sr,
             "chars": chars,

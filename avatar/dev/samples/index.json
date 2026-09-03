@@ -3,7 +3,7 @@
     "id": 0,
     "text": "Здравствуйте! Расскажите, пожалуйста, о вашем последнем проекте.",
     "asr_text": "здравствуйте расскажите пожалуйста о вашем последнем проекте",
-    "audio": "samples/phrase_0.wav",
+    "audio": "/bench/r3-tts/samples/silero_tts v4_ru (TTSModelMultiAcc_v3)_0.wav",
     "audio_s": 4.4,
     "sample_rate": 48000,
     "chars": [
@@ -250,13 +250,13 @@
     ],
     "n_chars": 60,
     "min_step_ms": 40,
-    "align_ms": 98
+    "align_ms": 81
   },
   {
     "id": 1,
     "text": "Понятно. А что именно делали лично вы?",
     "asr_text": "понятно а что именно делали лично вы",
-    "audio": "samples/phrase_1.wav",
+    "audio": "/bench/r3-tts/samples/silero_tts v4_ru (TTSModelMultiAcc_v3)_1.wav",
     "audio_s": 2.837,
     "sample_rate": 48000,
     "chars": [
@@ -407,13 +407,13 @@
     ],
     "n_chars": 36,
     "min_step_ms": 40,
-    "align_ms": 63
+    "align_ms": 50
   },
   {
     "id": 2,
     "text": "Вы сказали, что держали latency на уровне ста миллисекунд. За счёт чего?",
     "asr_text": "вы сказали что держали на уровне ста миллисекунд за счет чего",
-    "audio": "samples/phrase_2.wav",
+    "audio": "/bench/r3-tts/samples/silero_tts v4_ru (TTSModelMultiAcc_v3)_2.wav",
     "audio_s": 4.475,
     "sample_rate": 48000,
     "chars": [
@@ -664,13 +664,13 @@
     ],
     "n_chars": 61,
     "min_step_ms": 40,
-    "align_ms": 84
+    "align_ms": 74
   },
   {
     "id": 3,
     "text": "Хорошо, давайте перейдём к следующему вопросу.",
     "asr_text": "хорошо давайте перейдем к следующему вопросу",
-    "audio": "samples/phrase_3.wav",
+    "audio": "/bench/r3-tts/samples/silero_tts v4_ru (TTSModelMultiAcc_v3)_3.wav",
     "audio_s": 3.25,
     "sample_rate": 48000,
     "chars": [
@@ -853,13 +853,13 @@
     ],
     "n_chars": 44,
     "min_step_ms": 40,
-    "align_ms": 66
+    "align_ms": 57
   },
   {
     "id": 4,
     "text": "Спасибо за ответ. У меня есть уточнение по поводу вашей роли в команде.",
     "asr_text": "спасибо за ответ у меня есть уточнение по поводу вашей роли в команде",
-    "audio": "samples/phrase_4.wav",
+    "audio": "/bench/r3-tts/samples/silero_tts v4_ru (TTSModelMultiAcc_v3)_4.wav",
     "audio_s": 4.725,
     "sample_rate": 48000,
     "chars": [
@@ -1142,6 +1142,6 @@
     ],
     "n_chars": 69,
     "min_step_ms": 40,
-    "align_ms": 91
+    "align_ms": 83
   }
 ]
