@@ -436,9 +436,23 @@ describe('лестница отступления', () => {
     layer.setSource(SOURCE.ANALYSER);
     const dt = 1 / 60;
     for (let i = 0; i < 30; i++) { writer.begin(); layer.update(dt); writer.commit(); }
-    assert.ok(writer.get('jawOpen') > 0.5,
+    assert.ok(writer.get('jawOpen') > 0.2,
       'уровень 3 должен открывать рот по огибающей без всякого трека');
+    assert.ok(writer.get('jawOpen') <= cfg.analyser.maxOpen + 1e-6,
+      'но не выше потолка раскрытия');
     assert.equal(layer.debug().source, 'analyser');
+  });
+
+  test('порог тишины закрывает рот в паузах', () => {
+    const { layer, writer } = setup();
+    // Уровень шума ниже порога: рот должен быть закрыт, а не приоткрыт.
+    layer.attachAnalyser({
+      fftSize: 256,
+      getFloatTimeDomainData(buf) { buf.fill(cfg.analyser.gate * 0.5); },
+    });
+    layer.setSource(SOURCE.ANALYSER);
+    for (let i = 0; i < 60; i++) { writer.begin(); layer.update(1 / 60); writer.commit(); }
+    assert.equal(writer.get('jawOpen'), 0, 'шум ниже порога не должен двигать челюсть');
   });
 
   test('переключение источника не требует ни трека, ни часов', () => {

@@ -48,18 +48,34 @@
     <input type="range" id="emoInt" min="0" max="1" step="0.05" value="1">
     <span class="v" id="emoIntV">1.00</span></div>
 
-  <h3>фейковый трек висем</h3>
-  <div class="hint">Синтетический PTS с шагом 40 мс, как у GigaAM. Конвейер не нужен.</div>
-  <input type="text" id="phrase" value="Понятно. А что именно делали лично вы?">
-  <div>
-    <button id="play">проиграть</button>
-    <button id="barge">перебить</button>
+  <h3>реплика</h3>
+  <div id="trackSrc"></div>
+
+  <div id="recordBox">
+    <div class="hint">Настоящий синтез Silero и настоящие таймкоды GigaAM,
+      выровненные по этому же звуку. Липсинк слышно и видно одновременно.</div>
+    <select id="sample"></select>
+  </div>
+
+  <div id="synthBox" style="display:none">
+    <div class="hint">Синтетический PTS без звука. Таймкод квантуется по сетке
+      40 мс, символ длится ~75 мс — это разные величины.</div>
+    <input type="text" id="phrase" value="Понятно. А что именно делали лично вы?">
     <select id="rate">
       <option value="1">1× темп</option>
       <option value="0.7">0.7× медленно</option>
       <option value="1.6">1.6× быстро</option>
     </select>
   </div>
+
+  <div>
+    <button id="play">проиграть</button>
+    <button id="barge">перебить</button>
+    <label style="margin-left:4px"><input type="checkbox" id="compLat" checked>
+      вычитать outputLatency</label>
+  </div>
+  <div><button id="measure">измерить синхронность</button></div>
+  <div id="syncOut" class="hint"></div>
 
   <h3>источник рта</h3>
   <div id="sources"></div>

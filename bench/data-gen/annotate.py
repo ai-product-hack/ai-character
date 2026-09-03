@@ -9,8 +9,12 @@
 import json, pathlib, re, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-LIVE = "--live" in sys.argv
-MF = ROOT / "data" / "audio" / ("manifest_live.jsonl" if LIVE else "manifest_synth.jsonl")
+LIVE = "--live" in sys.argv or "--manifest" in sys.argv
+if "--manifest" in sys.argv:
+    NAME = sys.argv[sys.argv.index("--manifest") + 1]
+else:
+    NAME = "manifest_live.jsonl" if LIVE else "manifest_synth.jsonl"
+MF = ROOT / "data" / "audio" / NAME
 if not MF.exists():
     sys.exit(f"нет {MF} — сначала запишите набор (bench/data-gen/record_live.py)")
 PAT = re.compile(r"silence_(start|end): ([0-9.]+)")

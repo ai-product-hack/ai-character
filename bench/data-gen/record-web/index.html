@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Диктофон — живые записи</title>
+<style>
+ body{font:15px/1.6 -apple-system,system-ui,sans-serif;margin:32px;max-width:820px}
+ h1{font-size:19px}
+ button{font:inherit;padding:8px 14px;cursor:pointer;margin-right:8px}
+ button:disabled{opacity:.4;cursor:default}
+ #text{font-size:26px;line-height:1.45;margin:22px 0;padding:22px;
+       background:#f6f6f4;border-radius:10px;border:1px solid #e2e2de}
+ #state{min-height:26px;font-size:15px;color:#444}
+ .row{color:#666;font-size:13px}
+ #barwrap,#meterwrap{height:8px;background:#eee;border-radius:4px;overflow:hidden;margin:8px 0}
+ #bar{height:100%;background:#4a8;width:0}
+ #meter{height:100%;background:#c55;width:0}
+ .hint{color:#666;font-size:13px}
+ code{background:#f0f0ee;padding:1px 5px;border-radius:3px}
+</style>
+<h1>Живые записи для R1 и R2</h1>
+<p class="hint">Разрешение на микрофон запрашивает браузер — доступ терминала не нужен.
+<b>Читайте естественно: на многоточии мнитесь по-настоящему</b>, с дыханием и «эээ».
+Ровная пауза не годится, именно её отсутствие и надо проверить.</p>
+<p><button id="init">Включить микрофон</button><span id="mic" class="row"></span></p>
+<div id="meterwrap"><div id="meter"></div></div>
+<div class="row"><span id="progress"></span> · набор <b id="set"></b> · <b id="id"></b></div>
+<div id="barwrap"><div id="bar"></div></div>
+<div id="text"></div>
+<div id="state"></div>
+<p>
+  <button id="prev">← назад</button>
+  <button id="rec" disabled>● Записать (пробел)</button>
+  <button id="next">вперёд →</button>
+  <button id="manifest">Записать манифест</button>
+</p>
+<p class="hint">Пробел — старт/стоп, стрелки — переход между фразами.
+Тихие записи помечаются и не засчитываются. Когда всё готово — нажмите
+«Записать манифест», затем <code>python3 bench/data-gen/annotate.py --live</code>.</p>
+<script src="app.js"></script>

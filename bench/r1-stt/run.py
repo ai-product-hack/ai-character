@@ -25,7 +25,10 @@ def load(wav):
 
 
 def speech_onset(rec):
-    """Audio time where speech starts (leading silence, if any, skipped)."""
+    """Audio time where speech starts. Живая разметка кладёт это прямо
+    (из выравнивания); синтетическая выводится из ведущей тишины."""
+    if rec.get("speech_onset_s") is not None:
+        return rec["speech_onset_s"]
     for a, b in rec.get("silences_s", []):
         if a < 0.05:
             return b

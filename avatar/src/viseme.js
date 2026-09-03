@@ -256,7 +256,11 @@ export class VisemeLayer {
         sum += v * v;
       }
       const rms = Math.sqrt(sum / this._analyserBuf.length);
-      target.jawOpen = clamp01(rms * (this.cfg.analyser?.gain ?? 6));
+      const A = this.cfg.analyser || {};
+      // Порог тишины: без него шум и хвосты реверберации держат челюсть
+      // приоткрытой в паузах, и рот не закрывается ни в одном кадре.
+      const gated = Math.max(0, rms - (A.gate ?? 0));
+      target.jawOpen = clamp01(gated * (A.gain ?? 6)) * (A.maxOpen ?? 1);
       this.stats.lastViseme = 'RMS';
     }
     this._approach(target, dt);

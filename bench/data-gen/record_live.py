@@ -1,74 +1,163 @@
 #!/usr/bin/env python3
-"""Records the live half of the R2/R1 sets. Synthetic pauses have no breath and
-no filled-pause formants, so an endpointer tested only on them measures the
-wrong thing. Run this and read each prompt aloud NATURALLY — hesitate for real.
+"""Записывает живую половину наборов R1/R2.
 
-  python3 bench/data-gen/record_live.py            # all sets
-  python3 bench/data-gen/record_live.py r2_hesitations
-  python3 bench/data-gen/record_live.py --device 1 # pick input device
+Синтетические паузы — ровная цифровая тишина без дыхания и без формант
+заполненной паузы. Эндпоинтер, протестированный только на них, меряет не то,
+поэтому живые записи обязательны.
+
+    python3 bench/data-gen/record_live.py --device 1
+    python3 bench/data-gen/record_live.py --device 1 --sets r2_hesitations
+    python3 bench/data-gen/record_live.py --list-devices
+    python3 bench/data-gen/record_live.py --device 1 --redo h03 h07
+
+Enter — начать запись, Enter — остановить. 'п' + Enter — пропустить фразу,
+'з' + Enter — перезаписать предыдущую.
 """
-import json, pathlib, subprocess, sys, wave, contextlib
+import argparse, contextlib, json, pathlib, signal, subprocess, sys, wave
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "data" / "audio" / "live"
 SR = 16000
+SETS = ["r2_hesitations", "r2_terminals", "r1_terms"]
 
 
 def devices():
-    p = subprocess.run(["ffmpeg", "-f", "avfoundation", "-list_devices", "true",
-                        "-i", ""], capture_output=True, text=True)
-    return [l for l in p.stderr.splitlines() if "] [" in l and "AVFoundation" not in l]
+    p = subprocess.run(["ffmpeg", "-f", "avfoundation", "-list_devices", "true", "-i", ""],
+                       capture_output=True, text=True)
+    out, audio = [], False
+    for line in p.stderr.splitlines():
+        if "AVFoundation audio devices" in line:
+            audio = True
+            continue
+        if "AVFoundation video devices" in line:
+            audio = False
+        if audio and "] [" in line:
+            out.append(line.split("] ", 1)[-1])
+    return out
 
 
-def record(dst, dev, max_s=20):
-    print("   [запись — Enter чтобы остановить]", end="", flush=True)
-    p = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "avfoundation",
-                          "-i", f":{dev}", "-ac", "1", "-ar", str(SR),
-                          "-t", str(max_s), str(dst)], stdin=subprocess.PIPE)
+def dur_rms(path):
+    """Длительность и громкость. Нулевая громкость почти всегда означает, что
+    macOS не дал терминалу доступ к микрофону — ffmpeg при этом не падает,
+    а пишет тишину, и без проверки это обнаружится только на бенчмарке."""
+    with contextlib.closing(wave.open(str(path))) as w:
+        n, sr = w.getnframes(), w.getframerate()
+        raw = w.readframes(n)
+    if not n:
+        return 0.0, 0.0
+    import array
+    a = array.array("h")
+    a.frombytes(raw)
+    rms = (sum(x * x for x in a) / len(a)) ** 0.5 / 32768
+    return n / sr, rms
+
+
+def record(dst: pathlib.Path, dev: str) -> bool:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    tmp = dst.with_suffix(".rec.wav")
+    p = subprocess.Popen(
+        ["ffmpeg", "-y", "-loglevel", "error", "-f", "avfoundation",
+         "-i", f":{dev}", "-ac", "1", "-ar", str(SR), str(tmp)],
+        stdin=subprocess.DEVNULL)
     try:
-        input()
-    except EOFError:
+        input("   ● запись… Enter — стоп ")
+    except (EOFError, KeyboardInterrupt):
         pass
-    p.communicate(b"q", timeout=5)
-
-
-def dur(p):
-    with contextlib.closing(wave.open(str(p))) as w:
-        return w.getnframes() / w.getframerate()
+    # SIGINT, а не 'q' в stdin: ffmpeg по нему корректно закрывает WAV-заголовок.
+    p.send_signal(signal.SIGINT)
+    try:
+        p.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        p.kill(); p.wait()
+    if not tmp.exists() or tmp.stat().st_size < 1000:
+        print("   !! ffmpeg не записал файл. Проверьте номер устройства "
+              "(--list-devices) и доступ к микрофону в Системных настройках → "
+              "Конфиденциальность → Микрофон.")
+        tmp.unlink(missing_ok=True)
+        return False
+    d, rms = dur_rms(tmp)
+    if rms < 0.001:
+        print(f"   !! записана тишина ({d:.1f} с, RMS {rms:.5f}). Скорее всего "
+              "терминалу не разрешён доступ к микрофону.")
+        tmp.unlink(missing_ok=True)
+        return False
+    tmp.replace(dst)
+    print(f"   -> {d:.2f} с, RMS {rms:.3f}")
+    return True
 
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    dev = "0"
-    if "--device" in sys.argv:
-        dev = sys.argv[sys.argv.index("--device") + 1]
-    print("Аудиоустройства ввода:")
-    for d in devices():
-        print("  " + d.strip())
-    print(f"\nПишу с устройства :{dev}. Читайте вслух ЕСТЕСТВЕННО — "
-          f"на многоточии реально мнитесь, не делайте ровную паузу.\n")
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--device", default="1", help="индекс аудиоустройства avfoundation")
+    ap.add_argument("--sets", nargs="+", default=SETS, choices=SETS,
+                    help="какие наборы писать")
+    ap.add_argument("--redo", nargs="+", default=[], metavar="ID",
+                    help="перезаписать конкретные фразы, например: --redo h03 h07")
+    ap.add_argument("--list-devices", action="store_true")
+    a = ap.parse_args()
 
-    sets = args or ["r2_hesitations", "r2_terminals", "r1_terms"]
-    manifest = []
-    for name in sets:
+    devs = devices()
+    if a.list_devices:
+        print("Аудиоустройства ввода (avfoundation):")
+        for d in devs:
+            print("  " + d)
+        return
+
+    print("Аудиоустройства ввода:")
+    for d in devs:
+        print("  " + d)
+    print(f"\nПишу с устройства :{a.device}. Читайте вслух ЕСТЕСТВЕННО — "
+          "на многоточии реально мнитесь, не делайте ровную паузу.")
+    print("Enter — начать, Enter — стоп. 'п' — пропустить, 'з' — перезаписать.\n")
+
+    manifest, total, done = [], 0, 0
+    for name in a.sets:
+        src = ROOT / "data" / f"{name}.jsonl"
+        if not src.exists():
+            sys.exit(f"нет файла набора: {src}")
+        recs = [json.loads(l) for l in src.read_text().splitlines()]
+        if a.redo:
+            recs = [r for r in recs if r["id"] in a.redo]
+        total += len(recs)
         outdir = OUT / name
-        outdir.mkdir(parents=True, exist_ok=True)
-        for line in (ROOT / "data" / f"{name}.jsonl").read_text().splitlines():
-            rec = json.loads(line)
+        for rec in recs:
             dst = outdir / f"{rec['id']}.wav"
-            if dst.exists():
+            if dst.exists() and rec["id"] not in a.redo:
                 print(f"{rec['id']}: уже записано, пропуск")
             else:
-                print(f"\n{rec['id']}: «{rec['text']}»")
-                record(dst, dev)
-                print(f"   -> {dur(dst):.2f} с")
-            rec.update(set=name, wav=str(dst.relative_to(ROOT)),
-                       duration_s=round(dur(dst), 3), source="live")
-            manifest.append(rec)
+                while True:
+                    print(f"\n{rec['id']}: «{rec['text']}»")
+                    cmd = input("   Enter — начать (п — пропустить): ").strip().lower()
+                    if cmd in ("п", "p", "skip"):
+                        break
+                    if record(dst, a.device):
+                        again = input("   Enter — дальше, 'з' — перезаписать: ").strip().lower()
+                        if again not in ("з", "z"):
+                            break
+                    else:
+                        again = input("   Повторить? Enter — да, 'п' — пропустить: ").strip().lower()
+                        if again in ("п", "p"):
+                            break
+            if dst.exists():
+                d, _ = dur_rms(dst)
+                rec.update(set=name, wav=str(dst.relative_to(ROOT)),
+                           duration_s=round(d, 3), source="live")
+                manifest.append(rec)
+                done += 1
+
+    if not manifest:
+        print("\nничего не записано")
+        return
     mf = ROOT / "data" / "audio" / "manifest_live.jsonl"
-    mf.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in manifest))
-    print(f"\n{len(manifest)} записей -> {mf.relative_to(ROOT)}")
-    print("Теперь: python3 bench/data-gen/annotate.py --live")
+    old = {}
+    if mf.exists():
+        old = {json.loads(l)["id"]: json.loads(l) for l in mf.read_text().splitlines()}
+    for r in manifest:
+        old[r["id"]] = r
+    mf.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in old.values()))
+    print(f"\nзаписано {done} из {total} -> {mf.relative_to(ROOT)}")
+    print("Дальше: python3 bench/data-gen/annotate.py --live")
 
 
 if __name__ == "__main__":
