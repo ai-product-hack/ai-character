@@ -1,0 +1,50 @@
+[
+  {
+    "point": "до первого звука",
+    "repeat": 0,
+    "clauses_before_cancel": 0,
+    "leaked_after_cancel": 0,
+    "stop_ms": 0,
+    "cleanup_ms": 2114
+  },
+  {
+    "point": "до первого звука",
+    "repeat": 1,
+    "clauses_before_cancel": 0,
+    "leaked_after_cancel": 0,
+    "stop_ms": 0,
+    "cleanup_ms": 2147
+  },
+  {
+    "point": "в середине первой клаузы",
+    "repeat": 0,
+    "clauses_before_cancel": 2,
+    "leaked_after_cancel": 0,
+    "stop_ms": 0,
+    "cleanup_ms": 0
+  },
+  {
+    "point": "в середине первой клаузы",
+    "repeat": 1,
+    "clauses_before_cancel": 2,
+    "leaked_after_cancel": 0,
+    "stop_ms": 0,
+    "cleanup_ms": 0
+  },
+  {
+    "point": "на стыке клауз",
+    "repeat": 0,
+    "clauses_before_cancel": 2,
+    "leaked_after_cancel": 0,
+    "stop_ms": 0,
+    "cleanup_ms": 10
+  },
+  {
+    "point": "на стыке клауз",
+    "repeat": 1,
+    "clauses_before_cancel": 2,
+    "leaked_after_cancel": 0,
+    "stop_ms": 0,
+    "cleanup_ms": 0
+  }
+]
