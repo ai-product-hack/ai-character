@@ -16,15 +16,17 @@ import { Look } from './look.js';
 import { loadAvatarModel } from './model.js';
 import { Microbehavior } from './behavior.js';
 import { VisemeLayer, SOURCE } from './viseme.js';
+import { EmotionLayer } from './emotion.js';
+import { StateMachine } from './states.js';
 import { AudioClock } from './clock.js';
 
-export const STATES = Object.freeze(['listening', 'thinking', 'speaking', 'interrupted']);
+export { STATES } from './states.js';
 export const EMOTIONS = Object.freeze(['neutral', 'skeptical', 'pressing', 'warming', 'impressed']);
 
 export class Avatar {
   /**
    * @param {HTMLCanvasElement} canvas
-   * @param {{look: object, behavior: object, visemes: object}} configs
+   * @param {{look: object, behavior: object, visemes: object, expression: object}} configs
    */
   constructor(canvas, configs) {
     this.canvas = canvas;
@@ -33,10 +35,9 @@ export class Avatar {
     this.model = null;
     this.behavior = null;
     this.visemes = null;
+    this.emotionLayer = null;
+    this.states = null;
     this.clock = null;
-
-    this.state = 'listening';
-    this.emotion = { name: 'neutral', intensity: 0 };
 
     this._lastFrameMs = 0;
     this._running = false;
@@ -60,6 +61,13 @@ export class Avatar {
     if (missing.length) {
       console.warn('avatar: морфов матрицы нет в модели:', missing);
     }
+
+    this.emotionLayer = new EmotionLayer(this.model.morphs, this.configs.expression);
+    const missingEmo = this.emotionLayer.validate();
+    if (missingEmo.length) {
+      console.warn('avatar: морфов поз нет в модели:', missingEmo);
+    }
+    this.states = new StateMachine(this.behavior, this.emotionLayer, this.configs.expression);
     if (this.clock) this.visemes.attachClock(this.clock);
     return this;
   }
@@ -83,18 +91,22 @@ export class Avatar {
   }
 
   setState(state) {
-    if (!STATES.includes(state)) throw new Error(`avatar: неизвестное состояние «${state}»`);
-    this.state = state;
-    // Автомат состояний — шаг 6. Пока состояние только запоминается и видно
-    // в оверлее; поведение по нему появится там же.
+    if (!this.states) throw new Error('avatar: модель ещё не загружена');
+    this.states.set(state);
     return this;
   }
 
   setEmotion(emotion, intensity = 1) {
-    if (!EMOTIONS.includes(emotion)) throw new Error(`avatar: неизвестная эмоция «${emotion}»`);
-    this.emotion = { name: emotion, intensity: Math.max(0, Math.min(1, intensity)) };
-    // Слой эмоции — шаг 7.
+    if (!this.emotionLayer) throw new Error('avatar: модель ещё не загружена');
+    this.emotionLayer.setEmotion(emotion, intensity);
+    // Эмоция меняет частоту моргания и наклон головы — пересобрать модуляцию.
+    this.states.apply();
     return this;
+  }
+
+  get state() { return this.states ? this.states.state : 'listening'; }
+  get emotion() {
+    return this.emotionLayer ? this.emotionLayer.emotion : { name: 'neutral', intensity: 0 };
   }
 
   playGeneration(genId, visemeTrack) {
@@ -113,6 +125,8 @@ export class Avatar {
     const releaseMs = this.configs.visemes.timing.interruptReleaseMs ?? 45;
     const ok = this.visemes.cancel(genId, releaseMs);
     if (ok && this.behavior) this.behavior.notifyEvent();
+    // Отмена и реакция — одно событие: жюри должно увидеть не тишину, а лицо.
+    if (ok && this.states) this.states.set('interrupted');
     return ok;
   }
 
@@ -132,8 +146,12 @@ export class Avatar {
     const t0 = performance.now();
     if (this.model) {
       const morphs = this.model.morphs;
+      // Порядок фиксирован: автомат состояний задаёт позу и модуляцию, слои
+      // пишут в своих зонах, writer раскладывает по мешам.
+      const fastMs = this.states ? this.states.update(dt) : null;
       morphs.begin();
-      if (this.visemes) this.visemes.update(dt);
+      if (this.visemes) this.visemes.update(dt * this.emotionLayer.articulationRate);
+      if (this.emotionLayer) this.emotionLayer.update(dt, fastMs);
       if (this.behavior) this.behavior.update(dt, nowMs / 1000);
       morphs.commit();
     }
@@ -162,6 +180,8 @@ export class Avatar {
       audioMs: this.clock ? this.clock.nowMs() : null,
       viseme: this.visemes ? this.visemes.debug() : null,
       behavior: this.behavior ? this.behavior.debug() : null,
+      states: this.states ? this.states.debug() : null,
+      emotionLayer: this.emotionLayer ? this.emotionLayer.debug() : null,
       postEnabled: this.look.postEnabled,
     };
   }
@@ -169,12 +189,13 @@ export class Avatar {
 
 /** Собрать аватар, прочитав все три конфига. */
 export async function createAvatar(canvas, urls) {
-  const [look, behavior, visemes] = await Promise.all([
+  const [look, behavior, visemes, expression] = await Promise.all([
     fetch(urls.look).then((r) => r.json()),
     fetch(urls.behavior).then((r) => r.json()),
     fetch(urls.visemes).then((r) => r.json()),
+    fetch(urls.expression).then((r) => r.json()),
   ]);
-  return new Avatar(canvas, { look, behavior, visemes });
+  return new Avatar(canvas, { look, behavior, visemes, expression });
 }
 
 export { AudioClock, THREE };

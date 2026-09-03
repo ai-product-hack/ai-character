@@ -103,6 +103,15 @@ export class Microbehavior {
 
     this.time = 0;
 
+    // Точки, через которые автомат состояний и эмоция модулируют этот слой.
+    // Писать в чужие морфы им нельзя — таблица зон не даст, — поэтому они
+    // СМЕЩАЮТ поведение, а не подменяют его.
+    this.gazeBias = { yaw: 0, pitch: 0 };       // куда смещены точки фиксации
+    this.blinkScale = 1;                        // множитель интервала моргания
+    this.headTiltDeg = 0;                       // наклон головы от состояния
+    this.headPitchDeg = 0;                      // наклон от эмоции
+    this._nod = null;                           // текущий микрокивок
+
     // --- переиспользуемые объекты ---
     this._v = new THREE.Vector3();
     this._v2 = new THREE.Vector3();
@@ -124,6 +133,40 @@ export class Microbehavior {
 
   setEnabled(channel, on) { this.enabled[channel] = !!on; }
 
+  /** Смещение точек фиксации взгляда, в градусах. Задаёт автомат состояний. */
+  setGazeBias(yawDeg, pitchDeg) {
+    this.gazeBias.yaw = yawDeg || 0;
+    this.gazeBias.pitch = pitchDeg || 0;
+  }
+
+  /** Множитель интервала моргания: больше единицы — моргания реже. */
+  setBlinkScale(k) { this.blinkScale = k > 0 ? k : 1; }
+
+  /** Постоянные наклоны головы: от состояния (крен) и от эмоции (тангаж). */
+  setHeadPose(tiltDeg, pitchDeg) {
+    this.headTiltDeg = tiltDeg || 0;
+    this.headPitchDeg = pitchDeg || 0;
+  }
+
+  /**
+   * Резко вернуть взгляд на собеседника. Нужно состоянию `interrupted`:
+   * доводить текущую саккаду там нельзя, реакция должна быть мгновенной.
+   */
+  snapGaze() {
+    const g = this.gaze;
+    g.phase = 'fixate';
+    g.t = 0;
+    g.duration = this._fixationDuration();
+    g.yaw = 0; g.pitch = 0;
+    g.fromYaw = 0; g.fromPitch = 0;
+    g.toYaw = 0; g.toPitch = 0;
+  }
+
+  /** Одиночный микрокивок. Складывается с шумом головы. */
+  nod(amplitudeDeg, durationMs) {
+    this._nod = { t: 0, amp: amplitudeDeg, dur: durationMs / 1000 };
+  }
+
   /**
    * Внешнее событие, к которому стоит привязать моргание: конец фразы,
    * смена состояния. Люди моргают на границах фраз, и это сильный сигнал.
@@ -134,7 +177,7 @@ export class Microbehavior {
     if (this.blink.phase === 'idle' && this.blink.sinceLast >= this.cfg.blink.refractorySec &&
         this.gazeRnd.uniform() < this.cfg.blink.onEventChance) {
       this._startBlink();
-      this.blink.next = this.blinkRnd.sample();
+      this.blink.next = this.blinkRnd.sample() * this.blinkScale;
     }
   }
 
@@ -158,15 +201,20 @@ export class Microbehavior {
     // от текущего — это случайное блуждание: за десяток саккад взгляд уходит
     // на предел поворота и там остаётся, что выглядит как «уставился в стену».
     // Человек же разглядывает лицо собеседника, всё время возвращаясь к нему.
+    // Все цели отсчитываются от смещения, заданного состоянием: в thinking
+    // взгляд уходит вверх-влево и разглядывает уже ТУ область, а не мечется
+    // между ней и собеседником.
+    const bx = this.gazeBias.yaw, by = this.gazeBias.pitch;
     if (this.gazeRnd.uniform() < S.returnChance) {
-      // Возврат прямо на собеседника — самая частая цель.
-      g.toYaw = (this.gazeRnd.uniform() * 2 - 1) * S.returnJitterDeg;
-      g.toPitch = (this.gazeRnd.uniform() * 2 - 1) * S.returnJitterDeg;
+      g.toYaw = bx + (this.gazeRnd.uniform() * 2 - 1) * S.returnJitterDeg;
+      g.toPitch = by + (this.gazeRnd.uniform() * 2 - 1) * S.returnJitterDeg;
     } else {
       const amp = lo + this.gazeRnd.uniform() * (hi - lo);
-      g.toYaw = clamp(Math.cos(dir) * amp, -L.yaw, L.yaw);
-      g.toPitch = clamp(Math.sin(dir) * amp * 0.65, -L.pitch, L.pitch);
+      g.toYaw = bx + Math.cos(dir) * amp;
+      g.toPitch = by + Math.sin(dir) * amp * 0.65;
     }
+    g.toYaw = clamp(g.toYaw, -L.yaw, L.yaw);
+    g.toPitch = clamp(g.toPitch, -L.pitch, L.pitch);
 
     // Длительность слабо зависит от амплитуды на малых углах — поэтому база
     // плюс небольшая добавка, а не пропорция.
@@ -185,7 +233,7 @@ export class Microbehavior {
         this.blink.next < this.cfg.blink.alignWindowSec &&
         this.gazeRnd.uniform() < this.cfg.blink.onSaccadeChance) {
       this._startBlink();
-      this.blink.next = this.blinkRnd.sample();
+      this.blink.next = this.blinkRnd.sample() * this.blinkScale;
     }
   }
 
@@ -262,7 +310,7 @@ export class Microbehavior {
       // Рефрактерный промежуток: два моргания подряд физически невозможны.
       if (b.next <= 0 && b.sinceLast >= B.refractorySec) {
         this._startBlink();
-        b.next = this.blinkRnd.sample();
+        b.next = this.blinkRnd.sample() * this.blinkScale;
       }
       b.value = 0;
       return;
@@ -309,11 +357,21 @@ export class Microbehavior {
     const A = H.amplitudeDeg;
     const nYaw = this.headNoise.yaw.fbm(t, H.octaves) * A.yaw;
     const nPitch = this.headNoise.pitch.fbm(t + 11.3, H.octaves) * A.pitch;
-    const nRoll = this.headNoise.roll.fbm(t + 27.7, H.octaves) * A.roll;
+    let nRoll = this.headNoise.roll.fbm(t + 27.7, H.octaves) * A.roll;
+
+    // Микрокивок: короткий импульс поверх шума, а не отдельный канал.
+    let nodPitch = 0;
+    if (this._nod) {
+      this._nod.t += dt;
+      const k = this._nod.t / this._nod.dur;
+      if (k >= 1) this._nod = null;
+      else nodPitch = Math.sin(k * Math.PI) * this._nod.amp;
+    }
 
     const follow = G.enabled ? this.headFollow : { yaw: 0, pitch: 0 };
     const totalYaw = nYaw + follow.yaw;
-    const totalPitch = nPitch + follow.pitch;
+    const totalPitch = nPitch + follow.pitch + nodPitch + this.headPitchDeg;
+    nRoll += this.headTiltDeg;
 
     // Движение делится между шеей и головой: одна кость на всё выглядит как
     // поворот манекена.

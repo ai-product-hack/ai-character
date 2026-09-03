@@ -23,6 +23,7 @@ const URLS = {
   look: '/avatar/look.config.json',
   behavior: '/avatar/behavior.config.json',
   visemes: '/avatar/visemes.json',
+  expression: '/avatar/expression.config.json',
 };
 
 let avatar, clock, audioCtx;
@@ -53,6 +54,7 @@ async function boot() {
   buildVisemePanel();
   buildTrackSource();
   wireRender();
+  watchState();
 
   window.__dev = { avatar, get clock() { return clock; }, URLS };
   requestAnimationFrame(loop);
@@ -89,10 +91,19 @@ function voicePeak() {
   return peak;
 }
 
+let hudNext = 0;
+
 function loop(now) {
   requestAnimationFrame(loop);
   avatar.frame(now);
-  drawHud();
+  // Оверлей обновляется 15 раз в секунду, а не 60. Он каждый раз собирает
+  // строку и переписывает innerHTML — на 60 Гц это заметная аллокационная
+  // нагрузка ради чисел, которые глаз всё равно не читает чаще. Замер кадра
+  // не должен упираться в собственную отладочную панель.
+  if (now >= hudNext) {
+    drawHud();
+    hudNext = now + 66;
+  }
 }
 
 // ------------------------------------------------------------------ оверлей
@@ -106,8 +117,12 @@ function drawHud() {
   $('hud').innerHTML =
     `FPS            <b>${d.fps.toFixed(0)}</b>  (кадр ${d.frameMs.toFixed(1)} мс, ` +
       `CPU ${d.cpuMs.toFixed(2)} мс)\n` +
-    `состояние      <b>${d.state}</b>\n` +
-    `эмоция         ${d.emotion.name} ${d.emotion.intensity.toFixed(2)}\n` +
+    `состояние      <b>${d.state}</b>  ${(d.states?.sinceEnter ?? 0).toFixed(1)} с` +
+      ((d.states?.impatience ?? 0) > 0 ? `   нетерпение ${(d.states.impatience * 100).toFixed(0)}%` : '') + `\n` +
+    `эмоция         ${d.emotion.name} ${d.emotion.intensity.toFixed(2)}` +
+      `   морфов ${d.emotionLayer?.activeMorphs ?? 0}` +
+      `   моргание ×${d.emotionLayer?.blinkScale ?? 1}` +
+      `   темп ×${d.emotionLayer?.articulationRate ?? 1}\n` +
     `generation_id  ${v.genId === null || v.genId === undefined ? '—' : v.genId}\n` +
     `outputLatency  ${d.outputLatencyMs === null ? '— (нет часов)' : d.outputLatencyMs.toFixed(1) + ' мс'}\n` +
     `время аудио    ${d.audioMs === null ? '—' : d.audioMs.toFixed(0) + ' мс'}\n` +
@@ -310,30 +325,26 @@ async function barge() {
   // Перебивание: новая генерация обесценивает старую, старый id не должен
   // проявиться ни в одном кадре.
   const dying = avatar.visemes.genId;
-  avatar.cancel(dying);
+  avatar.cancel(dying);              // сам переводит автомат в interrupted
   stopVoice();                       // flush + fade 25 мс, как в S3
-  avatar.setState('interrupted');
   syncStateButtons();
-  setTimeoutOnClock(0.6, () => { avatar.setState('listening'); syncStateButtons(); });
-}
-
-/**
- * Задержка по часам аудиографа, а не setTimeout: своих таймеров в модуле нет,
- * и на dev-странице тоже не заводим.
- */
-function setTimeoutOnClock(sec, fn) {
-  const target = audioCtx.currentTime + sec;
-  const tick = () => {
-    if (audioCtx.currentTime >= target) fn();
-    else requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
 }
 
 function syncStateButtons() {
   for (const btn of $('states').children) {
     btn.classList.toggle('on', btn.textContent === avatar.state);
   }
+}
+
+// Автомат сам выходит из interrupted через 600 мс — кнопки должны это
+// показывать, иначе на панели останется подсвеченным состояние, которого нет.
+function watchState() {
+  let last = avatar.state;
+  const tick = () => {
+    if (avatar.state !== last) { last = avatar.state; syncStateButtons(); }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
 }
 
 /**
