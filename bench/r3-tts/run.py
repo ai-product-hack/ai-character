@@ -35,7 +35,7 @@ class SileroTTS:
     name = "silero_tts v4_ru (TTSModelMultiAcc_v3)"
     license = "MIT (snakers4/silero-models)"
 
-    def __init__(self, speaker="baya", sr=48000):
+    def __init__(self, speaker="eugene", sr=48000):
         import torch
         self.torch = torch
         torch.set_num_threads(4)

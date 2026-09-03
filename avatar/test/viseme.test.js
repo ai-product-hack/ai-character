@@ -196,24 +196,32 @@ describe('три вещи, отличающие живую артикуляци�
       `подъём ${riseFrames} кадров, спад ${fallFrames} — спад должен быть длиннее`);
   });
 
-  test('на быстрой речи амплитуда режется вдвое', () => {
+  test('обычная речь на сетке таймкодов НЕ режется', () => {
+    // Смена висемы раз в 40 мс — это нормальный темп синтеза, а не быстрая
+    // речь: на реальных таймкодах Silero eugene 54.6% смен приходятся ровно
+    // на 40 мс. Прежний порог в 80 мс срезал бы амплитуду на 73% речи, и рот
+    // почти не открывался бы — тот же провал, что уже ловили на длительности
+    // символа, только пришедший через выбор голоса.
     const { layer, writer, clock } = setup();
     clock.anchor(0);
-    // Интервал 40 мс — меньше порога fastSpeechMs = 80.
-    const fast = [];
-    for (let i = 0; i < 20; i++) fast.push({ pts_ms: i * 40, viseme: i % 2 ? 'AA' : 'MBP' });
-    fast.push({ pts_ms: 2000, viseme: 'SIL' });
-    layer.playGeneration('g1', fast);
+    const track = [];
+    for (let i = 0; i < 20; i++) track.push({ pts_ms: i * 40, viseme: i % 2 ? 'AA' : 'MBP' });
+    track.push({ pts_ms: 3000, viseme: 'SIL' });
+    layer.playGeneration('g1', track);
     let maxJaw = 0;
-    // Мерить только внутри быстрой части. Последняя висема перед длинной
-    // паузой стоит долго, интервал до следующей большой — она законно
-    // раскрывается полностью, и хвост испортил бы замер.
     run(layer, writer, clock, 0.8, (nowMs) => {
       if (nowMs < 700) maxJaw = Math.max(maxJaw, writer.get('jawOpen'));
     });
     const full = cfg.matrix.AA.jawOpen;
-    assert.ok(maxJaw < full * 0.75,
-      `на быстрой речи челюсть дошла до ${maxJaw.toFixed(2)} при полном ${full} — не режется`);
+    assert.ok(maxJaw > full * 0.6,
+      `на обычной речи челюсть дошла только до ${maxJaw.toFixed(3)} из ${full}`);
+  });
+
+  test('порог ограничителя не выше шага таймкодов', () => {
+    // Инвариант, а не вкус: порог выше сетки превращает ограничитель в
+    // постоянно включённый, потому что большинство смен стоит ровно на сетке.
+    assert.ok(cfg.timing.fastSpeechMs <= cfg.g2p.timecodeStepMs,
+      `порог ${cfg.timing.fastSpeechMs} мс больше шага таймкодов ${cfg.g2p.timecodeStepMs} мс`);
   });
 
   test('подряд идущие одинаковые висемы не считаются быстрой речью', () => {
@@ -237,13 +245,16 @@ describe('три вещи, отличающие живую артикуляци�
   test('быстрая СМЕНА висем всё ещё режется', () => {
     const { layer, writer, clock } = setup();
     clock.anchor(0);
+    // Интервал ПОДСЕТОЧНЫЙ: порог равен шагу таймкодов (40 мс), потому что на
+    // реальных таймкодах Silero больше половины смен стоят ровно на 40, и порог
+    // выше срезал бы амплитуду на 73% речи.
     const track = [];
-    for (let i = 0; i < 20; i++) track.push({ pts_ms: i * 40, viseme: i % 2 ? 'AA' : 'MBP' });
+    for (let i = 0; i < 30; i++) track.push({ pts_ms: i * 25, viseme: i % 2 ? 'AA' : 'MBP' });
     track.push({ pts_ms: 3000, viseme: 'SIL' });
     layer.playGeneration('g', track);
     let maxJaw = 0;
     run(layer, writer, clock, 0.7, (nowMs) => {
-      if (nowMs < 700) maxJaw = Math.max(maxJaw, writer.get('jawOpen'));
+      if (nowMs < 600) maxJaw = Math.max(maxJaw, writer.get('jawOpen'));
     });
     assert.ok(maxJaw < cfg.matrix.AA.jawOpen * 0.75,
       `на быстрой смене челюсть дошла до ${maxJaw.toFixed(3)} — не режется`);

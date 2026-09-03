@@ -18,7 +18,7 @@
   },
   "tts": {
     "provider": "silero",
-    "voice": "baya"
+    "voice": "eugene"
   },
   "speculative": {
     "enabled": true,
