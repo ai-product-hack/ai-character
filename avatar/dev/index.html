@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Аватар — dev</title>
+<style>
+ :root { color-scheme: dark; }
+ html,body { margin:0; height:100%; background:#05060a; overflow:hidden; }
+ #stage { position:fixed; inset:0; }
+ canvas { display:block; width:100%; height:100%; }
+ #hud { position:fixed; top:10px; left:10px; z-index:5;
+        font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+        color:#cfd6e4; background:#0b0e14cc; border:1px solid #232a38;
+        border-radius:6px; padding:8px 10px; min-width:250px;
+        backdrop-filter:blur(6px); white-space:pre; }
+ #hud b { color:#7fd1ff; font-weight:600; }
+ #panel { position:fixed; top:10px; right:10px; z-index:5;
+          font:12px/1.5 -apple-system,system-ui,sans-serif; color:#cfd6e4;
+          background:#0b0e14cc; border:1px solid #232a38; border-radius:6px;
+          padding:10px; backdrop-filter:blur(6px); }
+ button { font:inherit; padding:4px 9px; margin:2px 2px 2px 0; cursor:pointer;
+          background:#171d29; color:#cfd6e4; border:1px solid #2c3547; border-radius:5px; }
+ button:hover { background:#1f2735; }
+ #err { position:fixed; left:10px; bottom:10px; right:10px; z-index:9;
+        font:12px/1.5 ui-monospace,monospace; color:#ff9a9a; background:#1a0d0dcc;
+        border:1px solid #4a2222; border-radius:6px; padding:8px 10px;
+        white-space:pre-wrap; display:none; max-height:35vh; overflow:auto; }
+</style>
+<div id="stage"><canvas id="c"></canvas></div>
+<div id="hud">загрузка…</div>
+<div id="panel">
+  <div><b>шаг 2: базовый рендер</b></div>
+  <button id="wire">каркас</button>
+  <button id="eyesOff">блики вкл/выкл</button>
+  <button id="post">пост вкл/выкл</button>
+  <button id="reload">перечитать конфиг</button>
+</div>
+<div id="err"></div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "/avatar/node_modules/three/build/three.module.js",
+    "three/addons/": "/avatar/node_modules/three/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./dev.js"></script>

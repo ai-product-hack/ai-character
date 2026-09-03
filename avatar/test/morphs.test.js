@@ -240,18 +240,34 @@ describe('горячий путь', () => {
     near(influence(m.Tongue_Mesh, 'viseme_O'), 0.42);
   });
 
-  test('commit() не аллоцирует: тысяча кадров не растит кучу', () => {
+  test('commit() не аллоцирует: кадры не растят кучу', (t) => {
+    // Без принудительной сборки мусора этот замер ловит работу тест-раннера,
+    // а не writer'а, и падает примерно в четверти прогонов. Запускается через
+    // `node --expose-gc` (см. package.json); без флага теста просто нет —
+    // лучше пропуск, чем красный тест, который ничего не доказывает.
+    if (typeof global.gc !== 'function') {
+      t.skip('нужен --expose-gc');
+      return;
+    }
     const w = new MorphWriter(fixtureMeshes(), { strict: true });
     const slot = w.slotOf('jawOpen');
-    w.begin(); w.setSlot(LAYERS.VISEME, slot, 0.5); w.commit();   // прогрев
-    global.gc?.();
+    const batch = (n) => {
+      for (let i = 0; i < n; i++) {
+        w.begin();
+        w.setSlot(LAYERS.VISEME, slot, (i % 100) / 100);
+        w.commit();
+      }
+    };
+    batch(2000);                                   // прогрев и JIT
+
+    global.gc();
     const before = process.memoryUsage().heapUsed;
-    for (let i = 0; i < 1000; i++) {
-      w.begin();
-      w.setSlot(LAYERS.VISEME, slot, i / 1000);
-      w.commit();
-    }
+    batch(20000);
+    global.gc();
     const grew = process.memoryUsage().heapUsed - before;
-    assert.ok(grew < 256 * 1024, `куча выросла на ${grew} байт за 1000 кадров`);
+
+    // Запись в предвыделенные типизированные массивы не аллоцирует ничего;
+    // порог в 64 КБ оставлен на служебный шум, а не на вклад writer'а.
+    assert.ok(grew < 64 * 1024, `куча выросла на ${grew} байт за 20000 кадров`);
   });
 });

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Модуль аватара: рендер, артикуляция, поведение. Vanilla three.js, без сборки.",
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "test": "node --expose-gc --test test/*.test.js",
     "dev": "python3 dev/serve.py"
   },
   "dependencies": {
