@@ -26,5 +26,14 @@
     "min_stable_ms": 300,
     "relaunch_growth": 0.4,
     "reuse_cover": 0.6
+  },
+  "backchannel": {
+    "enabled": true,
+    "phrases": [
+      "Угу.",
+      "Понятно.",
+      "Так.",
+      "Ага."
+    ]
   }
 }

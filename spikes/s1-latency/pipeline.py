@@ -145,6 +145,9 @@ def build_llm(cfg):
     raise SystemExit(f"провайдер LLM '{cfg['provider']}' не реализован")
 
 
+BACKCHANNELS = ["Угу.", "Понятно.", "Так.", "Ага."]
+
+
 class Pipeline:
     def __init__(self, cfg):
         self.cfg = cfg
@@ -160,6 +163,14 @@ class Pipeline:
         self.tts.to(torch.device("cpu"))
         for w in ("Прогрев.", "Ещё прогрев подлиннее."):
             self.tts.apply_tts(text=w, speaker=cfg["tts"]["voice"], sample_rate=24000)
+        # Бэкчэннелы синтезируются один раз при старте и лежат готовым PCM:
+        # в момент срабатывания эндпоинтера нельзя тратить даже 9 мс Silero,
+        # потому что весь смысл приёма — мгновенный звук.
+        self.bc = []
+        if cfg.get("backchannel", {}).get("enabled"):
+            for t in BACKCHANNELS:
+                au = self.tts.apply_tts(text=t, speaker=cfg["tts"]["voice"], sample_rate=24000)
+                self.bc.append(np.asarray(au, dtype=np.float32))
         self.llm = build_llm(cfg["llm"])
         # mock отдаёт слова, реальный провайдер — куски текста
         self.streaming_chars = cfg["llm"]["provider"] != "mock"
@@ -240,6 +251,13 @@ class Pipeline:
 
         if fired_at is None:
             tr.mark("endpoint")            # речь кончилась, детектор не сработал
+        # Бэкчэннел уходит в динамик сразу после решения эндпоинтера, до STT и
+        # до LLM. Для оцениваемой метрики «первый звук» это и есть первый звук.
+        if self.bc:
+            import random
+            b = random.choice(self.bc)
+            tr.mark("backchannel", audio_s=round(len(b) / 24000, 2))
+
         final = self.stt.finish(time.perf_counter() - loop_t0)
         tr.mark("stt_final", text=final[:60])
 
@@ -308,6 +326,8 @@ class Pipeline:
             "tts_ms": tr.rel("tts_first_chunk", "llm_first_clause"),
             "viseme_ms": tr.rel("visemes", "tts_first_chunk"),
             "total_after_speech_end_ms": round(tr.at("first_sound") - speech_end),
+            "backchannel_after_speech_end_ms": (
+                round(tr.at("backchannel") - speech_end) if tr.at("backchannel") else None),
             "primed": primed, "spec_cancelled": spec_cancels,
             "spec_relaunches": spec_relaunches,
             "spec_launch_ms_before_endpoint": (
@@ -358,7 +378,9 @@ async def main():
                 r = await p.run(rec, spec)
                 rows.append(r)
                 f.write(json.dumps(r, ensure_ascii=False) + "\n")
+                bc = r.get("backchannel_after_speech_end_ms")
                 print(f"  {r['clip']:5} эндпоинт={r['endpoint_after_speech_end_ms']:5} "
+                      + (f"БЧ={bc:5} " if bc is not None else "") + 
                       f"STT={r['stt_final_ms']:4} LLM={r['llm_ttft_ms']:4} "
                       f"клауза={r['llm_first_clause_ms']:4} TTS={r['tts_ms']:3} "
                       f"висемы={r['viseme_ms']:3} | ИТОГО {r['total_after_speech_end_ms']:5} мс"
