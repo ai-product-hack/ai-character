@@ -80,6 +80,7 @@ function loop(now) {
     `вызовов        ${info.render.calls}\n` +
     `fov            ${look.camera.fov.toFixed(1)}° (${cfg.camera.focalLengthMm} мм)\n` +
     `pixelRatio     ${look.renderer.getPixelRatio()}\n` +
+    `пост           ${look.postEnabled ? 'вкл' : 'ВЫКЛ'}\n` +
     (b ? `\nвзгляд         ${b.gazePhase}  ${b.gazeYaw.toFixed(1)}° / ${b.gazePitch.toFixed(1)}°\n` +
          `моргание       ${b.blinkPhase}  ${b.blinkValue.toFixed(2)}  (через ${b.nextBlinkSec.toFixed(1)} с)\n` +
          `дыхание        ${(b.breathPhase * 100).toFixed(0)}%  период ${b.breathPeriod.toFixed(2)} с\n` +
@@ -122,13 +123,7 @@ $('eyesOff').onclick = () => {
   const v = !model.eyes.catchlights[0]?.visible;
   model.eyes.setVisible(v);
 };
-$('post').onclick = () => {
-  for (const p of look.composer.passes) {
-    if (p === look.composer.passes[0]) continue;      // RenderPass не трогаем
-    if (p.constructor.name === 'OutputPass') continue; // без него всё уйдёт в линейное
-    p.enabled = !p.enabled;
-  }
-};
+$('post').onclick = () => look.setPostEnabled(!look.postEnabled);
 $('reload').onclick = async () => {
   const fresh = await (await fetch(CONFIG_URL + '?t=' + Date.now())).json();
   look.cfg = cfg = fresh;

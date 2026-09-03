@@ -225,6 +225,10 @@ export class Look {
       });
       this.composer.addPass(this.bokeh);
     }
+    // BokehPass рендерит сцену второй раз ради карты глубины, в полном
+    // разрешении. Размытие здесь мягкое, и половинная глубина на глаз
+    // неотличима — но это половина полноэкранного прохода.
+    this.dofScale = P.dof.resolutionScale ?? 1;
     if (P.bloom.enabled) {
       this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1),
         P.bloom.strength, P.bloom.radius, P.bloom.threshold);
@@ -242,6 +246,25 @@ export class Look {
     this.grade.uniforms.vignette.value = g.vignette;
     this.grade.uniforms.vignetteSoftness.value = g.vignetteSoftness;
     this.composer.addPass(this.grade);
+
+    this.setPostEnabled(P.enabledOnStart !== false);
+  }
+
+  /**
+   * Включить или выключить пост целиком. RenderPass и OutputPass остаются:
+   * без второго картинка ушла бы на экран в линейном пространстве, без ACES.
+   */
+  setPostEnabled(on) {
+    this.postEnabled = on;
+    for (const pass of this.composer.passes) {
+      const name = pass.constructor.name;
+      if (name === 'RenderPass' || name === 'OutputPass') continue;
+      pass.enabled = on;
+    }
+    // Последний включённый пасс должен рисовать на экран.
+    const active = this.composer.passes.filter((p) => p.enabled);
+    for (const p of this.composer.passes) p.renderToScreen = false;
+    if (active.length) active[active.length - 1].renderToScreen = true;
   }
 
   /**
@@ -279,7 +302,12 @@ export class Look {
     this.renderer.setSize(w, h, false);
     this.composer.setPixelRatio(dpr);
     this.composer.setSize(w, h);
-    if (this.bloom) this.bloom.setSize(w * dpr * this.bloomScale, h * dpr * this.bloomScale);
+    // Размеры буферов округляются: setSize с дробной высотой создаёт текстуру
+    // нецелого размера, и драйвер молча округляет её сам.
+    const px = (v, k) => Math.max(1, Math.round(v * dpr * k));
+    if (this.bloom) this.bloom.setSize(px(w, this.bloomScale), px(h, this.bloomScale));
+    // setSize композитора уже выставил проходу полный размер — переопределяем.
+    if (this.bokeh) this.bokeh.setSize(px(w, this.dofScale), px(h, this.dofScale));
     this.camera.aspect = w / Math.max(1, h);
     this.camera.updateProjectionMatrix();
   }
