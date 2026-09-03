@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>S2 — общий таймлайн аудио и мимики</title>
+<style>
+ body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:24px;max-width:900px}
+ h1{font-size:18px} button,select{font:inherit;padding:5px 9px}
+ #face{width:220px;height:220px;border-radius:50%;background:#e8ded4;
+       position:relative;margin:16px 0;border:1px solid #cbb}
+ .eye{position:absolute;width:22px;height:22px;border-radius:50%;background:#333;top:70px}
+ .eye.l{left:52px}.eye.r{right:52px}
+ #mouth{position:absolute;left:50%;transform:translateX(-50%);bottom:38px;
+        width:110px;height:8px;background:#7a2b2b;border-radius:40%/50%;
+        transition:none}
+ #hud{font:12px ui-monospace,monospace;color:#333;background:#f4f4f4;padding:6px}
+ table{border-collapse:collapse;margin-top:14px;width:100%}
+ th,td{border:1px solid #ccc;padding:4px 8px;font-size:13px;text-align:left}
+ th{background:#f4f4f4}
+ #log{background:#111;color:#0f0;padding:10px;height:150px;overflow:auto;
+      white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;margin-top:14px}
+ .hint{color:#666;font-size:13px}
+</style>
+<h1>S2 — аудио и мимика на одних часах</h1>
+<p class="hint">Часы — <code>AudioContext.currentTime</code>. Рендер-луп на каждом
+кадре спрашивает у них время и интерполирует между соседними кадрами блендшейпов.
+Никаких <code>setInterval</code>. Порог кейса — 200 мс.</p>
+<p>
+  Скорость сервера: <select id="speed">
+    <option value="3">3×</option><option value="1">1×</option><option value="10">10×</option></select>
+  Источник мимики: <select id="src">
+    <option value="track">поток блендшейпов (уровень 2)</option>
+    <option value="analyser">AnalyserNode (уровень 3)</option></select>
+  FFT: <select id="fft"><option>1024</option><option>2048</option><option>512</option></select>
+  <label><input type="checkbox" id="comp" checked> вычитать <code>outputLatency</code></label>
+  <button id="go">Играть</button>
+</p>
+<div id="face"><div class="eye l"></div><div class="eye r"></div><div id="mouth"></div></div>
+<div id="hud"></div>
+<table><thead><tr><th>источник</th><th>отставание рта, мс</th><th>компенсация</th><th>скорость</th><th>кадров</th>
+<th>дрейф p50, мс</th><th>p95, мс</th><th>rAF p50, мс</th>
+<th>outputLatency, мс</th><th>подвисаний</th></tr></thead><tbody id="rows"></tbody></table>
+<div id="log"></div>
+<script src="app.js"></script>

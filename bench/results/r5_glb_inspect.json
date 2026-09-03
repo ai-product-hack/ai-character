@@ -1,0 +1,485 @@
+[
+  {
+    "file": "data/model.glb",
+    "size_mb": 14.06,
+    "tris": 28358,
+    "morphs_total": 72,
+    "arkit_have": 52,
+    "arkit_missing": [],
+    "viseme_missing": [],
+    "oculus_have": [
+      "viseme_sil",
+      "viseme_PP",
+      "viseme_FF",
+      "viseme_TH",
+      "viseme_DD",
+      "viseme_kk",
+      "viseme_CH",
+      "viseme_SS",
+      "viseme_nn",
+      "viseme_RR",
+      "viseme_aa",
+      "viseme_E",
+      "viseme_I",
+      "viseme_O",
+      "viseme_U"
+    ],
+    "oculus_missing": [],
+    "extra_morphs": [
+      "eyesClosed",
+      "eyesLookDown",
+      "eyesLookUp",
+      "mouthOpen",
+      "mouthSmile"
+    ],
+    "meshes": {
+      "Body_Mesh": {
+        "count": 0,
+        "names": []
+      },
+      "Eye_Mesh": {
+        "count": 11,
+        "names": [
+          "eyeLookDownLeft",
+          "eyeLookDownRight",
+          "eyeLookUpLeft",
+          "eyeLookUpRight",
+          "eyeLookInLeft",
+          "eyeLookInRight",
+          "eyeLookOutLeft",
+          "eyeLookOutRight",
+          "eyesClosed",
+          "eyesLookUp",
+          "eyesLookDown"
+        ]
+      },
+      "EyeAO_Mesh": {
+        "count": 32,
+        "names": [
+          "browDownLeft",
+          "browDownRight",
+          "browInnerUp",
+          "browOuterUpLeft",
+          "browOuterUpRight",
+          "eyeSquintLeft",
+          "eyeSquintRight",
+          "noseSneerLeft",
+          "noseSneerRight",
+          "cheekPuff",
+          "cheekSquintLeft",
+          "cheekSquintRight",
+          "mouthSmile",
+          "mouthLeft",
+          "mouthRight",
+          "mouthSmileLeft",
+          "mouthSmileRight",
+          "eyeWideLeft",
+          "eyeWideRight",
+          "eyeLookDownLeft",
+          "eyeLookDownRight",
+          "eyeLookUpLeft",
+          "eyeLookUpRight",
+          "eyeLookInLeft",
+          "eyeLookInRight",
+          "eyeLookOutLeft",
+          "eyeLookOutRight",
+          "eyeBlinkLeft",
+          "eyeBlinkRight",
+          "eyesClosed",
+          "eyesLookUp",
+          "eyesLookDown"
+        ]
+      },
+      "Eyelash_Mesh": {
+        "count": 31,
+        "names": [
+          "browDownLeft",
+          "browDownRight",
+          "browInnerUp",
+          "browOuterUpLeft",
+          "browOuterUpRight",
+          "eyeSquintLeft",
+          "eyeSquintRight",
+          "eyeWideLeft",
+          "eyeWideRight",
+          "noseSneerLeft",
+          "noseSneerRight",
+          "eyeLookDownLeft",
+          "eyeLookDownRight",
+          "eyeLookUpLeft",
+          "eyeLookUpRight",
+          "eyeLookInLeft",
+          "eyeLookInRight",
+          "eyeLookOutLeft",
+          "eyeLookOutRight",
+          "cheekSquintLeft",
+          "cheekSquintRight",
+          "eyeBlinkLeft",
+          "eyeBlinkRight",
+          "eyesClosed",
+          "eyesLookUp",
+          "eyesLookDown",
+          "mouthSmile",
+          "mouthSmileLeft",
+          "mouthSmileRight",
+          "mouthUpperUpLeft",
+          "mouthUpperUpRight"
+        ]
+      },
+      "Head_Mesh": {
+        "count": 72,
+        "names": [
+          "mouthOpen",
+          "viseme_sil",
+          "viseme_PP",
+          "viseme_FF",
+          "viseme_TH",
+          "eyeWideLeft",
+          "eyeWideRight",
+          "eyeLookDownLeft",
+          "eyeLookDownRight",
+          "eyeLookUpLeft",
+          "eyeLookUpRight",
+          "eyeLookInLeft",
+          "eyeLookInRight",
+          "eyeLookOutLeft",
+          "eyeLookOutRight",
+          "cheekSquintLeft",
+          "cheekSquintRight",
+          "mouthRollUpper",
+          "eyeBlinkLeft",
+          "eyeBlinkRight",
+          "eyesClosed",
+          "eyesLookUp",
+          "eyesLookDown",
+          "mouthClose",
+          "mouthFrownLeft",
+          "mouthFrownRight",
+          "mouthFunnel",
+          "mouthPressLeft",
+          "mouthPressRight",
+          "mouthStretchLeft",
+          "mouthStretchRight",
+          "tongueOut",
+          "mouthDimpleLeft",
+          "mouthDimpleRight",
+          "jawLeft",
+          "jawRight",
+          "eyeSquintLeft",
+          "eyeSquintRight",
+          "mouthLowerDownLeft",
+          "mouthLowerDownRight",
+          "mouthUpperUpLeft",
+          "mouthUpperUpRight",
+          "mouthSmileLeft",
+          "mouthSmileRight",
+          "mouthLeft",
+          "mouthRight",
+          "mouthPucker",
+          "mouthSmile",
+          "jawForward",
+          "jawOpen",
+          "mouthRollLower",
+          "cheekPuff",
+          "noseSneerRight",
+          "noseSneerLeft",
+          "mouthShrugLower",
+          "mouthShrugUpper",
+          "viseme_DD",
+          "viseme_kk",
+          "viseme_CH",
+          "viseme_SS",
+          "viseme_nn",
+          "viseme_RR",
+          "viseme_aa",
+          "viseme_E",
+          "viseme_I",
+          "viseme_O",
+          "viseme_U",
+          "browDownLeft",
+          "browDownRight",
+          "browInnerUp",
+          "browOuterUpLeft",
+          "browOuterUpRight"
+        ]
+      },
+      "Teeth_Mesh": {
+        "count": 20,
+        "names": [
+          "mouthOpen",
+          "viseme_sil",
+          "viseme_PP",
+          "viseme_FF",
+          "viseme_TH",
+          "viseme_DD",
+          "viseme_kk",
+          "viseme_CH",
+          "viseme_SS",
+          "viseme_nn",
+          "viseme_RR",
+          "viseme_aa",
+          "viseme_E",
+          "viseme_I",
+          "viseme_O",
+          "viseme_U",
+          "jawOpen",
+          "jawForward",
+          "jawLeft",
+          "jawRight"
+        ]
+      },
+      "Tongue_Mesh": {
+        "count": 21,
+        "names": [
+          "mouthOpen",
+          "viseme_sil",
+          "viseme_PP",
+          "viseme_FF",
+          "viseme_TH",
+          "viseme_DD",
+          "viseme_kk",
+          "viseme_CH",
+          "viseme_SS",
+          "viseme_nn",
+          "viseme_RR",
+          "viseme_aa",
+          "viseme_E",
+          "viseme_I",
+          "viseme_O",
+          "viseme_U",
+          "jawOpen",
+          "jawForward",
+          "jawLeft",
+          "jawRight",
+          "tongueOut"
+        ]
+      },
+      "avaturn_hair_0": {
+        "count": 0,
+        "names": []
+      },
+      "avaturn_hair_1": {
+        "count": 0,
+        "names": []
+      },
+      "avaturn_shoes_0": {
+        "count": 0,
+        "names": []
+      },
+      "avaturn_look_0": {
+        "count": 0,
+        "names": []
+      }
+    },
+    "skeleton": {
+      "nodes": 66,
+      "skins": 1,
+      "joints": 54,
+      "bones_found": {
+        "Neck": 11,
+        "Head": 10,
+        "LeftEye": 8,
+        "RightEye": 9,
+        "Spine2": 50,
+        "LeftShoulder": 30,
+        "RightShoulder": 49
+      },
+      "bones_missing": []
+    },
+    "textures": [
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 26508
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 130548
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 75992
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 5060
+      },
+      {
+        "name": "?",
+        "mime": "image/png",
+        "w": 256,
+        "h": 256,
+        "bytes": 123276
+      },
+      {
+        "name": "?",
+        "mime": "image/png",
+        "w": 512,
+        "h": 512,
+        "bytes": 442288
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 5060
+      },
+      {
+        "name": "?",
+        "mime": "image/png",
+        "w": 512,
+        "h": 512,
+        "bytes": 85540
+      },
+      {
+        "name": "?",
+        "mime": "image/png",
+        "w": 512,
+        "h": 512,
+        "bytes": 114256
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 5060
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 18212
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 231680
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 96828
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 10632
+      },
+      {
+        "name": "?",
+        "mime": "image/png",
+        "w": 256,
+        "h": 256,
+        "bytes": 83880
+      },
+      {
+        "name": "?",
+        "mime": "image/png",
+        "w": 256,
+        "h": 256,
+        "bytes": 99776
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 10632
+      },
+      {
+        "name": "?",
+        "mime": "image/png",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 1133032
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 154208
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 184776
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 199708
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 165316
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 49756
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 152104
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 196004
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 1024,
+        "h": 1024,
+        "bytes": 344040
+      },
+      {
+        "name": "?",
+        "mime": "image/jpeg",
+        "w": 512,
+        "h": 512,
+        "bytes": 46464
+      }
+    ],
+    "textures_mb": 4.19,
+    "extensions": [],
+    "is_vrm": false,
+    "verdict_ok": true
+  }
+]

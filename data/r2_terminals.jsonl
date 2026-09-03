@@ -1,0 +1,5 @@
+{"id":"t01","text":"Меня зовут Алексей, я бэкенд-разработчик","expect_endpoint":true}
+{"id":"t02","text":"Да, я готов обсудить оффер","expect_endpoint":true}
+{"id":"t03","text":"У меня пять лет опыта в разработке","expect_endpoint":true}
+{"id":"t04","text":"Нет, с Kubernetes я не работал","expect_endpoint":true}
+{"id":"t05","text":"А какие задачи будут в первые три месяца?","expect_endpoint":true}

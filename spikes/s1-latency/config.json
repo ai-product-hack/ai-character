@@ -1,0 +1,30 @@
+{
+  "stt": {
+    "provider": "gigaam",
+    "chunk_ms": 480,
+    "hop_s": 0.5
+  },
+  "turn": {
+    "provider": "hybrid",
+    "st_thr": 0.97,
+    "timeout_ms": 1500
+  },
+  "llm": {
+    "provider": "mock",
+    "ttft_ms": 600,
+    "tok_per_s": 40,
+    "prefill_ms": 250,
+    "deepseek_model": "deepseek-chat"
+  },
+  "tts": {
+    "provider": "silero",
+    "voice": "baya"
+  },
+  "speculative": {
+    "enabled": true,
+    "min_chars": 12,
+    "min_stable_ms": 300,
+    "relaunch_growth": 0.4,
+    "reuse_cover": 0.6
+  }
+}

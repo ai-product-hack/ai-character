@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>R6 — эхо и перебивание в браузере</title>
+<style>
+  body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:24px;max-width:1000px}
+  h1{font-size:18px} label{margin-right:14px}
+  select,button{font:inherit;padding:4px 8px}
+  button{cursor:pointer} button:disabled{opacity:.4;cursor:default}
+  table{border-collapse:collapse;margin-top:16px;width:100%}
+  th,td{border:1px solid #ccc;padding:4px 8px;text-align:left;font-size:13px}
+  th{background:#f4f4f4}
+  #log{background:#111;color:#0f0;padding:10px;height:220px;overflow:auto;
+       white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;margin-top:16px}
+  #phase{font-size:20px;font-weight:600;margin:12px 0;min-height:28px;color:#c00}
+  .hint{color:#666;font-size:13px}
+</style>
+<h1>R6 — видит ли браузерный AEC наш собственный WebAudio-выход?</h1>
+<p class="hint">Прогоните все 4 ячейки на наушниках, потом переключите вывод на колонки
+и повторите. Во время фазы B молчите. Громкость системы держите одинаковой между прогонами.</p>
+<div>
+  <label>Вывод: <select id="device">
+    <option value="headphones">наушники</option>
+    <option value="speakers">колонки</option></select></label>
+  <label>echoCancellation: <select id="ec">
+    <option value="true">true</option><option value="false">false</option></select></label>
+  <label>Путь TTS: <select id="path">
+    <option value="webaudio">WebAudio AudioContext</option>
+    <option value="element">&lt;audio&gt; элемент</option></select></label>
+  <label>Gain: <select id="gain">
+    <option value="0.8">0.8</option><option value="0.5">0.5</option>
+    <option value="1.0">1.0</option></select></label>
+</div>
+<p>
+  <button id="start">1. Включить микрофон</button>
+  <button id="run" disabled>2. Прогнать ячейку (~16 с)</button>
+  <button id="barge" disabled>3. Тест перебивания (говорить на 3-й секунде)</button>
+</p>
+<div id="phase"></div>
+<table>
+  <thead><tr><th>вывод</th><th>AEC</th><th>путь</th><th>шум dBFS</th>
+  <th>эхо dBFS</th><th>утечка dB</th><th>ложных VAD</th><th>% времени</th><th>вердикт</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table>
+<div id="log"></div>
+<script src="app.js"></script>

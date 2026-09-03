@@ -1,0 +1,10 @@
+{"id":"e01","text":"На последнем месте я вёл system design интервью для мидлов","terms":["system design"]}
+{"id":"e02","text":"Мы раскатывали всё в k8s, там было около сорока подов","terms":["k8s"]}
+{"id":"e03","text":"Основная метрика это latency на девяносто девятом перцентиле","terms":["latency","p99"]}
+{"id":"e04","text":"Мне сделали оффер, но я взял неделю на подумать","terms":["оффер"]}
+{"id":"e05","text":"У нас был CI/CD на GitLab, деплой через Helm чарты","terms":["CI/CD","GitLab","Helm"]}
+{"id":"e06","text":"Я закрывал backlog по техдолгу и вёл code review в команде","terms":["backlog","code review"]}
+{"id":"e07","text":"Это классический trade-off между consistency и availability","terms":["trade-off","consistency","availability"]}
+{"id":"e08","text":"Мы сняли профайл и увидели, что бутылочное горлышко это N plus one запрос","terms":["N+1"]}
+{"id":"e09","text":"Мой стек это Python, FastAPI, PostgreSQL и немного Rust","terms":["Python","FastAPI","PostgreSQL","Rust"]}
+{"id":"e10","text":"Перформанс-ревью проходит раз в полгода, есть grade и есть feedback от команды","terms":["grade","feedback"]}

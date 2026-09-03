@@ -1,0 +1,63 @@
+# Разведка стека: голосовой тренажёр с говорящим аватаром
+
+Фаза 0. Дата: 2026-09-03. Железо замеров: MacBook Air M4 (10 CPU / 8 GPU),
+16 ГБ unified, macOS 26.6.2. Всё, что названо измеренным, померено здесь;
+сырьё лежит в `bench/results/`.
+
+## Читать в этом порядке
+
+| файл | что там |
+|---|---|
+| **[DECISION.md](DECISION.md)** | главный артефакт: выбор по каждому компоненту, альтернатива, обоснование числом |
+| **[LATENCY_BUDGET.md](LATENCY_BUDGET.md)** | раскладка 3000 мс по этапам, с запасом и без |
+| **[RISKS.md](RISKS.md)** | что может убить демо, с планом Б |
+
+## Блоки исследования
+
+| файл | статус |
+|---|---|
+| [research/R1-stt.md](research/R1-stt.md) | измерено; точность по терминам **закрыта** до живых записей |
+| [research/R2-endpointing.md](research/R2-endpointing.md) | измерено; вывод **не окончателен** до живых записей |
+| [research/R3-tts.md](research/R3-tts.md) | измерено (Silero); Qwen3-TTS и ElevenLabs не запускались |
+| [research/R4-lipsync.md](research/R4-lipsync.md) | уровни 2 и 3 измерены; A2F-3D не запускался (нет NVIDIA) |
+| [research/R5-avatar.md](research/R5-avatar.md) | инструмент проверки готов; **скриншотов нет**, источники за регистрацией |
+| [research/R6-echo-barge-in.md](research/R6-echo-barge-in.md) | стенд готов; **числа требуют человека у микрофона** |
+| [research/R7-references.md](research/R7-references.md) | разбор по документам и исходникам |
+| [research/gpu-budget.md](research/gpu-budget.md) | смета Runpod: $5.3 на исследование, $20 с запасом |
+
+## Спайки
+
+| папка | запуск | что меряет |
+|---|---|---|
+| [spikes/s1-latency](spikes/s1-latency) | `../../bench/r1-stt/.venv/bin/python pipeline.py --both` | сквозной бюджет + выигрыш спекулятивной генерации |
+| [spikes/s2-timeline](spikes/s2-timeline) | `python3 server.py` | общий таймлайн аудио и мимики, дрейф |
+| [spikes/s3-cancel](spikes/s3-cancel) | `python3 server.py` | отмена по `generation_id`, задержка остановки |
+
+## Стенды и данные
+
+    bench/r1-stt/       потоковый STT, 4 движка, реальное время
+    bench/r2-endpoint/  16 конфигураций детекторов конца хода
+    bench/r3-tts/       TTFB и RTF синтеза
+    bench/r4-lipsync/   офлайновое выравнивание в висемы
+    bench/r5-avatar/    inspect_glb.py — проверка GLB на 52 ARKit-морфа
+    bench/r6-echo/      ./run.sh — матрица эха в браузере (нужен человек)
+    bench/data-gen/     генерация датасета: synth.py, record_live.py, annotate.py
+    bench/summarize.py  сборка таблиц из сырья
+
+    data/scenarios/     5 сценариев, 33 шага, с критериями оценки
+    data/r1_terms.jsonl 10 фраз с английскими терминами
+    data/r2_*.jsonl     20 фраз с заминками + 5 терминальных контрольных
+    data/audio/synth/   35 клипов, паузы размечены по факту
+
+## Что нужно от команды
+
+1. **Живые записи** — `python3 bench/data-gen/record_live.py --device 1`,
+   ~15 минут. Разблокирует выводы R1 (термины) и R2 (конец хода). Самое важное.
+2. **Решение по LLM.** Ключ появился, замер сделан: DeepSeek даёт TTFT
+   1899 мс, и метрика 3000 мс выполняется в **13 случаях из 20** даже со
+   спекуляцией. Нужно решить — принимаем и маскируем бэкчэннелом, или ищем
+   более быстрого провайдера. См. `RISKS.md`, риск №4.
+3. **Прогон R6** — `cd bench/r6-echo && ./run.sh`, ~10 минут, нужен человек.
+4. **Аватар из Avaturn** в `data/avatars/` — проверка занимает минуту.
+5. **Послушать** `bench/r3-tts/samples/` и выбрать голос: оценку на слух
+   я сделать не могу.

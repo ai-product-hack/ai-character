@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>S3 — отмена по generation_id</title>
+<style>
+ body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:24px;max-width:900px}
+ h1{font-size:18px} button{font:inherit;padding:6px 10px;cursor:pointer}
+ button:disabled{opacity:.4;cursor:default}
+ table{border-collapse:collapse;margin-top:16px;width:100%}
+ th,td{border:1px solid #ccc;padding:4px 8px;font-size:13px;text-align:left}
+ th{background:#f4f4f4}
+ #log{background:#111;color:#0f0;padding:10px;height:200px;overflow:auto;
+      white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;margin-top:16px}
+ #depth{font:13px ui-monospace,monospace;color:#555;margin:8px 0}
+ .hint{color:#666;font-size:13px}
+</style>
+<h1>S3 — где на самом деле набирается задержка остановки</h1>
+<p class="hint">Сервер отдаёт «TTS» быстрее реального времени, как настоящий.
+Нажмите «Играть», дайте набраться буферу и перебейте тремя способами.
+Порог кейса — 300 мс.</p>
+<p>
+  Скорость сервера: <select id="speed">
+    <option value="3">3× реального времени</option>
+    <option value="1">1× (без забега)</option>
+    <option value="10">10× (весь ответ сразу)</option></select>
+  Fade: <select id="fade"><option>25</option><option>20</option><option>30</option></select> мс
+</p>
+<p>
+  <button id="init">1. Инициализировать аудио</button>
+  <button id="play" disabled>2. Играть</button>
+  <button id="b1" disabled>Перебить: только перестать кормить</button>
+  <button id="b2" disabled>Перебить: flush без fade</button>
+  <button id="b3" disabled>Перебить: flush с fade</button>
+</p>
+<div id="depth"></div>
+<table><thead><tr><th>режим</th><th>скорость</th><th>в буфере на отмене, мс</th>
+<th>остановка, мс</th><th>с учётом выхода устройства, мс</th></tr></thead>
+<tbody id="rows"></tbody></table>
+<div id="log"></div>
+<script src="app.js"></script>
