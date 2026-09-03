@@ -54,13 +54,25 @@
 Два следствия, которые прямо влияют на архитектуру:
 
 - **Веса пишутся по имени, а не по индексу.** Порядок морфов в мешах разный:
-  `jawOpen` — индекс 49 в `Head_Mesh`, но 0-й в `Teeth_Mesh`. Обновление идёт
+  `jawOpen` — индекс 49 в `Head_Mesh` и 16 в `Teeth_Mesh`. Обновление идёт
   через `morphTargetDictionary` каждого меша; писать в `morphTargetInfluences[i]`
   по индексу головы — гарантированный баг.
-- **Слой эмоции должен писать в три меша.** `browInnerUp` живёт в `EyeAO_Mesh`
-  и `Eyelash_Mesh`, но **не** в `Head_Mesh` — брови на голове двигаются
-  собственными `brow*`, и все три надо ставить одновременно, иначе ресницы
-  отстанут от бровей. То же для `eyeBlink*` (EyeAO + Eyelash + Head).
+- **Один морф — почти всегда несколько мешей.** Замерено по факту:
+
+  | морф | мешей | где (индекс) |
+  |---|---|---|
+  | `jawOpen` | 3 | Head 49, Teeth 16, Tongue 16 |
+  | `viseme_aa` | 3 | Head 62, Teeth 11, Tongue 11 |
+  | `browInnerUp` | 3 | Head 69, EyeAO 2, Eyelash 2 |
+  | `eyeBlinkLeft` | 3 | Head 18, EyeAO 27, Eyelash 21 |
+  | `mouthSmileLeft` | 3 | Head 42, EyeAO 15, Eyelash 27 |
+  | `eyeLookUpLeft` | 4 | Head 9, Eye 2, EyeAO 21, Eyelash 13 |
+  | `mouthUpperUpLeft` | 2 | Head 40, Eyelash 29 |
+  | `mouthFunnel` | 1 | Head 26 |
+
+  Записать бровь только в голову — ресницы отстанут от бровей; записать
+  челюсть только в голову — зубы останутся стоять. Обе ошибки закрыты тестами
+  в `avatar/test/morphs.test.js`.
 
 ## 3. Висемы Oculus есть — но «один в один» для русского не выйдет
 
