@@ -44,7 +44,7 @@
     "_frameHeightM": "Высота кадра в метрах: от груди до макушки. Глаза модели на 1.694 м, плечи на 1.466 м.",
     "eyeLineFromTop": 0.333,
     "_eyeLineFromTop": "Глаза на верхней трети кадра.",
-    "azimuthDeg": 32,
+    "azimuthDeg": 6,
     "_azimuthDeg": "Поворот в три четверти. 0 = анфас, лицо смотрит в +Z.",
     "elevationDeg": 4,
     "targetBone": "LeftEye",

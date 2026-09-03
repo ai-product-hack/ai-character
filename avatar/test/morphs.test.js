@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 import { MorphWriter } from '../src/morphs.js';
-import { LAYERS, OWNER, ZONE_MORPHS, UNUSED_MORPHS } from '../src/zones.js';
+import { COMBINE, LAYERS, RULES, SHARED_MORPHS, ZONE_MORPHS, UNUSED_MORPHS } from '../src/zones.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPORT = resolve(here, '../../bench/results/r5_glb_inspect.json');
@@ -52,7 +52,7 @@ describe('раскладка веса по всем мешам, где морф 
     const m = byName(meshes);
 
     w.begin();
-    w.set(LAYERS.VISEME, 'jawOpen', 0.7);
+    w.write(LAYERS.VISEME, 'jawOpen', 0.7);
     w.commit();
 
     near(influence(m.Head_Mesh, 'jawOpen'), 0.7, 'челюсть на голове');
@@ -75,7 +75,7 @@ describe('раскладка веса по всем мешам, где морф 
 
     const w = new MorphWriter(meshes, { strict: true });
     w.begin();
-    w.set(LAYERS.VISEME, 'jawOpen', 1);
+    w.write(LAYERS.VISEME, 'jawOpen', 1);
     w.commit();
     // В зубах должен быть тронут ровно индекс 16 и ничего больше.
     assert.equal(m.Teeth_Mesh.morphTargetInfluences[16], 1);
@@ -88,7 +88,7 @@ describe('раскладка веса по всем мешам, где морф 
     const w = new MorphWriter(meshes, { strict: true });
     const m = byName(meshes);
     w.begin();
-    w.set(LAYERS.VISEME, 'viseme_aa', 0.9);
+    w.write(LAYERS.VISEME, 'viseme_aa', 0.9);
     w.commit();
     for (const name of ['Head_Mesh', 'Teeth_Mesh', 'Tongue_Mesh']) {
       near(influence(m[name], 'viseme_aa'), 0.9, name);
@@ -100,7 +100,7 @@ describe('раскладка веса по всем мешам, где морф 
     const w = new MorphWriter(meshes, { strict: true });
     const m = byName(meshes);
     w.begin();
-    w.set(LAYERS.EMOTION, 'browInnerUp', 0.5);
+    w.write(LAYERS.EMOTION, 'browInnerUp', 0.5);
     w.commit();
     for (const name of ['Head_Mesh', 'EyeAO_Mesh', 'Eyelash_Mesh']) {
       near(influence(m[name], 'browInnerUp'), 0.5, name);
@@ -112,7 +112,7 @@ describe('раскладка веса по всем мешам, где морф 
     const w = new MorphWriter(meshes, { strict: true });
     const m = byName(meshes);
     w.begin();
-    w.set(LAYERS.IDLE, 'eyeBlinkLeft', 1);
+    w.write(LAYERS.IDLE, 'eyeBlinkLeft', 1);
     w.commit();
     for (const name of ['Head_Mesh', 'EyeAO_Mesh', 'Eyelash_Mesh']) {
       assert.equal(influence(m[name], 'eyeBlinkLeft'), 1, name);
@@ -125,8 +125,8 @@ describe('владение зонами', () => {
     const meshes = fixtureMeshes();
     const w = new MorphWriter(meshes);           // не strict: считаем, а не бросаем
     w.begin();
-    w.set(LAYERS.VISEME, 'jawOpen', 0.8);
-    const accepted = w.set(LAYERS.EMOTION, 'jawOpen', 0.1);   // эмоция лезет в рот
+    w.write(LAYERS.VISEME, 'jawOpen', 0.8);
+    const accepted = w.write(LAYERS.EMOTION, 'jawOpen', 0.1);   // эмоция лезет в рот
     w.commit();
 
     assert.equal(accepted, false);
@@ -135,12 +135,12 @@ describe('владение зонами', () => {
     assert.match(w.stats.lastTrespass, /emotion -> jawOpen/);
   });
 
-  test('порядок записей не влияет: владелец побеждает и когда пишет первым, и когда вторым', () => {
+  test('порядок записей не влияет: чужой отбрасывается и первым, и вторым', () => {
     const meshes = fixtureMeshes();
     const w = new MorphWriter(meshes);
     w.begin();
-    w.set(LAYERS.EMOTION, 'jawOpen', 0.1);       // чужой первым
-    w.set(LAYERS.VISEME, 'jawOpen', 0.8);
+    w.write(LAYERS.EMOTION, 'jawOpen', 0.1);       // чужой первым
+    w.write(LAYERS.VISEME, 'jawOpen', 0.8);
     w.commit();
     near(w.get('jawOpen'), 0.8);
   });
@@ -148,14 +148,14 @@ describe('владение зонами', () => {
   test('в strict нарушение владения — исключение', () => {
     const w = new MorphWriter(fixtureMeshes(), { strict: true });
     w.begin();
-    assert.throws(() => w.set(LAYERS.IDLE, 'mouthFunnel', 1), /владеет «viseme»/);
+    assert.throws(() => w.write(LAYERS.IDLE, 'mouthFunnel', 1), /разрешён слоям: viseme/);
   });
 
   test('агрегаты Avaturn не принадлежат никому и не пишутся', () => {
     const w = new MorphWriter(fixtureMeshes());
     w.begin();
     for (const layer of Object.values(LAYERS)) {
-      assert.equal(w.set(layer, 'mouthOpen', 1), false, `${layer} не должен писать в mouthOpen`);
+      assert.equal(w.write(layer, 'mouthOpen', 1), false, `${layer} не должен писать в mouthOpen`);
     }
     w.commit();
     assert.equal(w.get('mouthOpen'), 0);
@@ -168,8 +168,8 @@ describe('клампинг и обнуление кадра', () => {
     const w = new MorphWriter(meshes, { strict: true });
     const m = byName(meshes);
     w.begin();
-    w.add(LAYERS.VISEME, 'jawOpen', 0.7);   // висема
-    w.add(LAYERS.VISEME, 'jawOpen', 0.6);   // дожим
+    w.write(LAYERS.VISEME, 'jawOpen', 0.7);   // висема
+    w.write(LAYERS.VISEME, 'jawOpen', 0.6);   // дожим
     w.commit();
     assert.equal(w.get('jawOpen'), 1);
     assert.equal(influence(m.Teeth_Mesh, 'jawOpen'), 1, 'кламп доезжает до всех мешей');
@@ -178,7 +178,7 @@ describe('клампинг и обнуление кадра', () => {
   test('отрицательный вес клампится в 0', () => {
     const w = new MorphWriter(fixtureMeshes(), { strict: true });
     w.begin();
-    w.set(LAYERS.VISEME, 'jawOpen', -0.5);
+    w.write(LAYERS.VISEME, 'jawOpen', -0.5);
     w.commit();
     assert.equal(w.get('jawOpen'), 0);
   });
@@ -188,7 +188,7 @@ describe('клампинг и обнуление кадра', () => {
     const w = new MorphWriter(meshes, { strict: true });
     const m = byName(meshes);
     w.begin();
-    w.set(LAYERS.VISEME, 'jawOpen', 1);
+    w.write(LAYERS.VISEME, 'jawOpen', 1);
     w.commit();
     w.begin();
     w.commit();                              // кадр без единой записи
@@ -208,21 +208,78 @@ describe('модель и таблица зон не разошлись', () => 
     assert.deepEqual(w.missing, []);
   });
 
-  test('счёт сходится: 67 владельцев + 5 агрегатов = 72 морфа модели', () => {
+  test('счёт сходится: 67 правил + 5 агрегатов = 72 морфа модели', () => {
     const d = w.describe();
     assert.equal(d.morphs, 72);
     assert.equal(d.meshes, 6);
-    assert.equal(OWNER.size + UNUSED_MORPHS.length, 72);
+    assert.equal(RULES.size + UNUSED_MORPHS.length, 72);
     assert.equal(d.byLayer.viseme, ZONE_MORPHS[LAYERS.VISEME].length);
+    assert.equal(d.shared, Object.keys(SHARED_MORPHS).length);
     assert.equal(d.unowned, UNUSED_MORPHS.length);
   });
 
   test('запись в несуществующий морф считается, а не молча теряется', () => {
     const w2 = new MorphWriter(fixtureMeshes());
     w2.begin();
-    assert.equal(w2.set(LAYERS.VISEME, 'viseme_ы', 1), false);
+    assert.equal(w2.write(LAYERS.VISEME, 'viseme_ы', 1), false);
     assert.equal(w2.stats.unknownWrites, 1);
     assert.equal(w2.stats.lastUnknown, 'viseme_ы');
+  });
+});
+
+describe('правила смешивания общих морфов', () => {
+  // Ради этого правила и переписан writer: сложить моргание с прищуром эмоции
+  // аддитивно нельзя, иначе глаз либо переполняется, либо не закрывается.
+  test('eyeBlink берёт максимум: моргание перебивает прищур эмоции', () => {
+    const meshes = fixtureMeshes();
+    const w = new MorphWriter(meshes, { strict: true });
+    const m = byName(meshes);
+    assert.equal(w.combineOf('eyeBlinkLeft'), COMBINE.MAX);
+
+    w.begin();
+    w.write(LAYERS.EMOTION, 'eyeBlinkLeft', 0.3);   // прищур скептика
+    w.write(LAYERS.IDLE, 'eyeBlinkLeft', 1.0);      // моргание поверх
+    w.commit();
+    near(w.get('eyeBlinkLeft'), 1.0, 'глаз должен закрыться полностью');
+    near(influence(m.Eyelash_Mesh, 'eyeBlinkLeft'), 1.0, 'и ресницы тоже');
+  });
+
+  test('eyeBlink отпускает обратно на уровень эмоции, а не в ноль', () => {
+    const w = new MorphWriter(fixtureMeshes(), { strict: true });
+    w.begin();
+    w.write(LAYERS.EMOTION, 'eyeBlinkLeft', 0.3);
+    w.write(LAYERS.IDLE, 'eyeBlinkLeft', 0.0);      // моргание закончилось
+    w.commit();
+    near(w.get('eyeBlinkLeft'), 0.3);
+  });
+
+  test('максимум не зависит от порядка вкладов', () => {
+    const w = new MorphWriter(fixtureMeshes(), { strict: true });
+    for (const order of [[0.3, 1.0], [1.0, 0.3]]) {
+      w.begin();
+      w.write(LAYERS.EMOTION, 'eyeBlinkLeft', order[0]);
+      w.write(LAYERS.IDLE, 'eyeBlinkLeft', order[1]);
+      w.commit();
+      near(w.get('eyeBlinkLeft'), 1.0, `порядок ${order}`);
+    }
+  });
+
+  test('брови складываются: микроопускание от моргания плюс эмоция', () => {
+    const w = new MorphWriter(fixtureMeshes(), { strict: true });
+    assert.equal(w.combineOf('browDownLeft'), COMBINE.SUM);
+    w.begin();
+    w.write(LAYERS.EMOTION, 'browDownLeft', 0.4);
+    w.write(LAYERS.IDLE, 'browDownLeft', 0.1);
+    w.commit();
+    near(w.get('browDownLeft'), 0.5);
+  });
+
+  test('слой висем в общие морфы век не допускается', () => {
+    const w = new MorphWriter(fixtureMeshes());
+    w.begin();
+    assert.equal(w.write(LAYERS.VISEME, 'eyeBlinkLeft', 1), false);
+    w.commit();
+    assert.equal(w.get('eyeBlinkLeft'), 0);
   });
 });
 
@@ -235,7 +292,7 @@ describe('горячий путь', () => {
     assert.ok(slot >= 0);
     assert.equal(w.slotOf('нет такого'), -1);
     w.begin();
-    w.setSlot(LAYERS.VISEME, slot, 0.42);
+    w.writeSlot(LAYERS.VISEME, slot, 0.42);
     w.commit();
     near(influence(m.Tongue_Mesh, 'viseme_O'), 0.42);
   });
@@ -254,7 +311,7 @@ describe('горячий путь', () => {
     const batch = (n) => {
       for (let i = 0; i < n; i++) {
         w.begin();
-        w.setSlot(LAYERS.VISEME, slot, (i % 100) / 100);
+        w.writeSlot(LAYERS.VISEME, slot, (i % 100) / 100);
         w.commit();
       }
     };

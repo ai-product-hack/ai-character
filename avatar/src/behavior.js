@@ -1,0 +1,423 @@
+// Слой микроповедения: взгляд, моргание, движения головы, дыхание.
+//
+// Работает всегда, поверх всего остального. Без него любое лицо читается как
+// труп, и это самый дешёвый эффект в проекте.
+//
+// Два архитектурных решения, которые дороже всего менять потом:
+//
+// 1. Взгляд — это точка в МИРОВЫХ координатах, а не локальный поворот костей
+//    глаз. При качании головы от шума Перлина глаза тогда контрвращаются сами:
+//    получается вестибулоокулярный рефлекс, точка взгляда стоит на месте.
+//    Иначе взгляд поплывёт вместе с головой, и лицо будет смотреть «сквозь»
+//    собеседника — зритель не опознает причину, но неправильность почувствует.
+// 2. У каждого канала свой сид. Общий поток чисел синхронизировал бы
+//    периодичности каналов, и на второй минуте это стало бы видно.
+//
+// Аллокаций в update() нет: все векторы и кватернионы созданы в конструкторе.
+
+import * as THREE from 'three';
+import { LAYERS } from './zones.js';
+import { Lognormal, Noise1D } from './noise.js';
+
+const DEG = Math.PI / 180;
+const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+const smooth = (t) => t * t * (3 - 2 * t);
+
+/** Каналы, которые можно замораживать по одному в отладочной панели. */
+export const CHANNELS = Object.freeze(['gaze', 'blink', 'head', 'breath']);
+
+export class Microbehavior {
+  /**
+   * @param {import('./model.js').AvatarModel} model
+   * @param {object} cfg содержимое behavior.config.json
+   */
+  constructor(model, cfg) {
+    this.model = model;
+    this.cfg = cfg;
+    this.morphs = model.morphs;
+    this.enabled = { gaze: true, blink: true, head: true, breath: true };
+
+    const B = model.bones;
+    this.bones = {
+      neck: B[model.cfg.model.neckBone],
+      head: B[model.cfg.model.headBone],
+      chest: B[model.cfg.model.chestBone],
+      eyeL: B[model.cfg.model.eyeBones[0]],
+      eyeR: B[model.cfg.model.eyeBones[1]],
+      shoulderL: B[model.cfg.model.shoulderBones[0]],
+      shoulderR: B[model.cfg.model.shoulderBones[1]],
+    };
+
+    // Позы привязки: всё, что делает этот слой, домножается на них, а не
+    // заменяет их. Поза покоя (опущенные руки) уже применена к модели.
+    this.rest = new Map();
+    for (const [k, bone] of Object.entries(this.bones)) {
+      if (bone) this.rest.set(k, bone.quaternion.clone());
+    }
+
+    // --- слоты морфов резолвятся один раз ---
+    const slot = (n) => this.morphs.slotOf(n);
+    this.slots = {
+      blinkL: slot('eyeBlinkLeft'), blinkR: slot('eyeBlinkRight'),
+      browDL: slot('browDownLeft'), browDR: slot('browDownRight'),
+      lookDownL: slot('eyeLookDownLeft'), lookDownR: slot('eyeLookDownRight'),
+      lookUpL: slot('eyeLookUpLeft'), lookUpR: slot('eyeLookUpRight'),
+    };
+
+    // --- источники случайности, по одному на канал ---
+    this.headNoise = {
+      yaw: new Noise1D(cfg.head.seed),
+      pitch: new Noise1D(cfg.head.seed ^ 0x9e3779b9),
+      roll: new Noise1D(cfg.head.seed ^ 0x85ebca6b),
+    };
+    this.tremorNoise = {
+      yaw: new Noise1D(cfg.gaze.seed ^ 0xc2b2ae35),
+      pitch: new Noise1D(cfg.gaze.seed ^ 0x27d4eb2f),
+    };
+    this.blinkRnd = new Lognormal(cfg.blink.seed, cfg.blink.medianSec, cfg.blink.sigma);
+    this.gazeRnd = new Lognormal(cfg.gaze.seed, 1, 1);      // используется только uniform()
+    this.breathRnd = new Lognormal(cfg.breath.seed, 1, 1);
+
+    // --- состояние взгляда ---
+    this.gaze = {
+      yaw: 0, pitch: 0,               // текущее смещение от точки на собеседнике, град
+      fromYaw: 0, fromPitch: 0,
+      toYaw: 0, toPitch: 0,
+      phase: 'fixate',                // fixate | saccade
+      t: 0, duration: this._fixationDuration(),
+    };
+
+    // Линия задержки: голова догоняет взгляд. Кольцевой буфер фиксированного
+    // размера — чтобы не аллоцировать в кадре.
+    const delayFrames = Math.max(2, Math.ceil(cfg.head.gazeFollow.delayMs / 1000 * 90));
+    this.delay = { yaw: new Float32Array(delayFrames), pitch: new Float32Array(delayFrames), i: 0, n: delayFrames };
+    this.headFollow = { yaw: 0, pitch: 0 };
+
+    // --- состояние моргания ---
+    this.blink = { value: 0, t: 0, phase: 'idle', next: this.blinkRnd.sample(),
+                   pendingDouble: false, sinceLast: 99 };
+
+    // --- дыхание ---
+    this.breath = { phase: this.breathRnd.uniform(), period: 1 / cfg.breath.hz };
+    this._newBreathPeriod();
+
+    this.time = 0;
+
+    // --- переиспользуемые объекты ---
+    this._v = new THREE.Vector3();
+    this._v2 = new THREE.Vector3();
+    this._eyePos = new THREE.Vector3();
+    this._anchor = new THREE.Vector3();
+    this._right = new THREE.Vector3();
+    this._up = new THREE.Vector3();
+    this._fwd = new THREE.Vector3();
+    this._q = new THREE.Quaternion();
+    this._e = new THREE.Euler();
+    this._target = new THREE.Vector3();
+
+    // Куда смотрит персонаж по умолчанию — мировая точка на собеседнике.
+    this.anchor = new THREE.Vector3(0, 1.69, 1);
+  }
+
+  /** Точка, на которую направлен взгляд по умолчанию (позиция камеры). */
+  setAnchor(v) { this.anchor.copy(v); }
+
+  setEnabled(channel, on) { this.enabled[channel] = !!on; }
+
+  /**
+   * Внешнее событие, к которому стоит привязать моргание: конец фразы,
+   * смена состояния. Люди моргают на границах фраз, и это сильный сигнал.
+   */
+  notifyEvent() {
+    // Граница фразы — сильный человеческий сигнал, здесь моргание уместно
+    // даже вне очереди, но не чаще рефрактерного промежутка.
+    if (this.blink.phase === 'idle' && this.blink.sinceLast >= this.cfg.blink.refractorySec &&
+        this.gazeRnd.uniform() < this.cfg.blink.onEventChance) {
+      this._startBlink();
+      this.blink.next = this.blinkRnd.sample();
+    }
+  }
+
+  // ---------------------------------------------------------------- взгляд
+
+  _fixationDuration() {
+    const f = this.cfg.gaze.fixation;
+    return (f.minMs + this.gazeRnd.uniform() * (f.maxMs - f.minMs)) / 1000;
+  }
+
+  _startSaccade() {
+    const S = this.cfg.gaze.saccade, L = this.cfg.gaze.limitDeg;
+    const g = this.gaze;
+    const big = this.gazeRnd.uniform() < S.largeChance;
+    const [lo, hi] = big ? S.largeAmplitudeDeg : S.amplitudeDeg;
+    const dir = this.gazeRnd.uniform() * Math.PI * 2;
+
+    g.fromYaw = g.yaw; g.fromPitch = g.pitch;
+
+    // Точка фиксации выбирается ОТ ЯКОРЯ, а не от текущего положения. Смещение
+    // от текущего — это случайное блуждание: за десяток саккад взгляд уходит
+    // на предел поворота и там остаётся, что выглядит как «уставился в стену».
+    // Человек же разглядывает лицо собеседника, всё время возвращаясь к нему.
+    if (this.gazeRnd.uniform() < S.returnChance) {
+      // Возврат прямо на собеседника — самая частая цель.
+      g.toYaw = (this.gazeRnd.uniform() * 2 - 1) * S.returnJitterDeg;
+      g.toPitch = (this.gazeRnd.uniform() * 2 - 1) * S.returnJitterDeg;
+    } else {
+      const amp = lo + this.gazeRnd.uniform() * (hi - lo);
+      g.toYaw = clamp(Math.cos(dir) * amp, -L.yaw, L.yaw);
+      g.toPitch = clamp(Math.sin(dir) * amp * 0.65, -L.pitch, L.pitch);
+    }
+
+    // Длительность слабо зависит от амплитуды на малых углах — поэтому база
+    // плюс небольшая добавка, а не пропорция.
+    const realAmp = Math.hypot(g.toYaw - g.fromYaw, g.toPitch - g.fromPitch);
+    g.duration = clamp(S.minMs + realAmp * S.msPerDeg, S.minMs, S.maxMs) / 1000;
+    g.phase = 'saccade';
+    g.t = 0;
+
+    // Моргание группируется с саккадами — но НЕ добавляется к фоновому потоку,
+    // а притягивается к саккаде. Замерено на 90 с: добавление давало 43
+    // моргания в минуту при медианном промежутке 1.1 с, то есть человека с
+    // нервным тиком. Правильная модель — сдвиг уже назначенного моргания:
+    // если оно и так скоро, отыграть его сейчас, на саккаде. Частота остаётся
+    // фоновой, а привязка к событию появляется.
+    if (this.enabled.blink && this.blink.phase === 'idle' &&
+        this.blink.next < this.cfg.blink.alignWindowSec &&
+        this.gazeRnd.uniform() < this.cfg.blink.onSaccadeChance) {
+      this._startBlink();
+      this.blink.next = this.blinkRnd.sample();
+    }
+  }
+
+  _updateGaze(dt) {
+    const g = this.gaze;
+    g.t += dt;
+    if (g.phase === 'fixate') {
+      if (g.t >= g.duration) this._startSaccade();
+    } else {
+      if (g.t >= g.duration) {
+        g.yaw = g.toYaw; g.pitch = g.toPitch;
+        g.phase = 'fixate'; g.t = 0; g.duration = this._fixationDuration();
+      } else {
+        // Бросок резкий. Здесь намеренно НЕ плавная интерполяция за сотни
+        // миллисекунд: настоящий глаз фиксируется и прыгает.
+        const k = smooth(g.t / g.duration);
+        g.yaw = g.fromYaw + (g.toYaw - g.fromYaw) * k;
+        g.pitch = g.fromPitch + (g.toPitch - g.fromPitch) * k;
+      }
+    }
+  }
+
+  /** Куда смотреть: мировая точка, вычисленная от якоря. */
+  _gazePoint(out) {
+    const F = this.cfg.gaze.fixation;
+    const eyeL = this.bones.eyeL;
+    eyeL.getWorldPosition(this._eyePos);
+
+    // Базис вокруг направления «глаз -> собеседник».
+    this._fwd.copy(this.anchor).sub(this._eyePos);
+    const dist = this._fwd.length() || 1;
+    this._fwd.divideScalar(dist);
+    this._right.set(0, 1, 0).cross(this._fwd).normalize();
+    this._up.copy(this._fwd).cross(this._right).normalize();
+
+    // Микродрожь во время фиксации: ровно неподвижный глаз читается как
+    // стоп-кадр, но амплитуда здесь — десятые доли градуса, не больше.
+    const trem = this.gaze.phase === 'fixate' ? F.tremorDeg : 0;
+    const yaw = this.gaze.yaw + trem * this.tremorNoise.yaw.at(this.time * F.tremorHz);
+    const pitch = this.gaze.pitch + trem * this.tremorNoise.pitch.at(this.time * F.tremorHz);
+
+    return out.copy(this.anchor)
+      .addScaledVector(this._right, Math.tan(yaw * DEG) * dist)
+      .addScaledVector(this._up, Math.tan(pitch * DEG) * dist);
+  }
+
+  /**
+   * Навести кость глаза на мировую точку. Локальная +Z у костей глаз этой
+   * модели смотрит вперёд (проверено), поэтому годится штатный lookAt, который
+   * разворачивает +Z на цель и сам учитывает мировую матрицу родителя —
+   * отсюда и берётся компенсация движения головы.
+   */
+  _aimEye(bone, point) {
+    if (!bone) return;
+    bone.lookAt(point);
+    bone.updateMatrix();
+  }
+
+  // -------------------------------------------------------------- моргание
+
+  _startBlink(isSecond = false) {
+    const B = this.cfg.blink;
+    this.blink.phase = 'close';
+    this.blink.t = 0;
+    if (!isSecond) this.blink.sinceLast = 0;
+    this.blink.pendingDouble = !isSecond && this.blinkRnd.uniform() < B.doubleChance;
+  }
+
+  _updateBlink(dt) {
+    const B = this.cfg.blink, b = this.blink;
+    b.sinceLast += dt;
+    if (b.phase === 'idle') {
+      b.next -= dt;
+      // Рефрактерный промежуток: два моргания подряд физически невозможны.
+      if (b.next <= 0 && b.sinceLast >= B.refractorySec) {
+        this._startBlink();
+        b.next = this.blinkRnd.sample();
+      }
+      b.value = 0;
+      return;
+    }
+    b.t += dt * 1000;
+    // Асимметрия по времени: закрытие быстрее открытия. Симметричное моргание
+    // читается как затвор фотоаппарата.
+    if (b.phase === 'close') {
+      b.value = smooth(clamp(b.t / B.closeMs, 0, 1));
+      if (b.t >= B.closeMs) { b.phase = 'hold'; b.t = 0; }
+    } else if (b.phase === 'hold') {
+      b.value = 1;
+      if (b.t >= B.holdMs) { b.phase = 'open'; b.t = 0; }
+    } else if (b.phase === 'open') {
+      b.value = 1 - smooth(clamp(b.t / B.openMs, 0, 1));
+      if (b.t >= B.openMs) {
+        if (b.pendingDouble) { b.phase = 'gap'; b.t = 0; }
+        else { b.phase = 'idle'; b.value = 0; }
+      }
+    } else if (b.phase === 'gap') {
+      b.value = 0;
+      if (b.t >= B.doubleGapMs) this._startBlink(true);
+    }
+  }
+
+  // ------------------------------------------------------- голова и дыхание
+
+  _updateHead(dt) {
+    const H = this.cfg.head;
+    const G = H.gazeFollow;
+
+    // Линия задержки: голова доворачивает туда же, куда ушёл взгляд, но позже
+    // и на меньший угол.
+    const d = this.delay;
+    d.yaw[d.i] = this.gaze.yaw; d.pitch[d.i] = this.gaze.pitch;
+    d.i = (d.i + 1) % d.n;
+    const delayedYaw = d.yaw[d.i], delayedPitch = d.pitch[d.i];
+
+    const k = G.enabled ? clamp(dt / (G.smoothMs / 1000), 0, 1) : 1;
+    this.headFollow.yaw += (delayedYaw * G.gain - this.headFollow.yaw) * k;
+    this.headFollow.pitch += (delayedPitch * G.gain - this.headFollow.pitch) * k;
+
+    const t = this.time * H.hz;
+    const A = H.amplitudeDeg;
+    const nYaw = this.headNoise.yaw.fbm(t, H.octaves) * A.yaw;
+    const nPitch = this.headNoise.pitch.fbm(t + 11.3, H.octaves) * A.pitch;
+    const nRoll = this.headNoise.roll.fbm(t + 27.7, H.octaves) * A.roll;
+
+    const follow = G.enabled ? this.headFollow : { yaw: 0, pitch: 0 };
+    const totalYaw = nYaw + follow.yaw;
+    const totalPitch = nPitch + follow.pitch;
+
+    // Движение делится между шеей и головой: одна кость на всё выглядит как
+    // поворот манекена.
+    const share = H.neckShare;
+    this._applyEuler('neck', totalPitch * share * DEG, totalYaw * share * DEG, nRoll * share * DEG);
+    this._applyEuler('head', totalPitch * (1 - share) * DEG, totalYaw * (1 - share) * DEG,
+      nRoll * (1 - share) * DEG);
+  }
+
+  _newBreathPeriod() {
+    const B = this.cfg.breath;
+    this.breath.period = (1 / B.hz) * (1 + (this.breathRnd.uniform() * 2 - 1) * B.periodJitter);
+  }
+
+  /** Вдох быстрее выдоха: 40 на 60. Симметричная синусоида читается как насос. */
+  _breathCurve(phase) {
+    const f = this.cfg.breath.inhaleFraction;
+    return phase < f
+      ? smooth(phase / f)
+      : 1 - smooth((phase - f) / (1 - f));
+  }
+
+  _updateBreath(dt) {
+    const B = this.cfg.breath, br = this.breath;
+    br.phase += dt / br.period;
+    while (br.phase >= 1) { br.phase -= 1; this._newBreathPeriod(); }
+
+    const v = this._breathCurve(br.phase);
+    const lagged = this._breathCurve((br.phase - B.shoulderLagFraction + 1) % 1);
+
+    this._applyEuler('chest', -v * B.chestDeg * DEG, 0, 0);
+    // Плечи идут чуть позже груди и расходятся в стороны, а не вверх.
+    this._applyEuler('shoulderL', 0, 0, -lagged * B.shoulderDeg * DEG);
+    this._applyEuler('shoulderR', 0, 0, lagged * B.shoulderDeg * DEG);
+  }
+
+  /** Повернуть кость относительно её позы привязки. */
+  _applyEuler(key, x, y, z) {
+    const bone = this.bones[key];
+    if (!bone) return;
+    const rest = this.rest.get(key);
+    this._e.set(x, y, z);
+    bone.quaternion.copy(rest).multiply(this._q.setFromEuler(this._e));
+  }
+
+  // ------------------------------------------------------------------ кадр
+
+  /**
+   * Один кадр. Вызывается до commit() writer'а морфов — этот слой только
+   * вносит вклады, раскладывает их по мешам writer.
+   */
+  update(dt, timeSec) {
+    this.time = timeSec;
+    const S = this.slots;
+    const m = this.morphs;
+
+    if (this.enabled.head) this._updateHead(dt);
+    if (this.enabled.breath) this._updateBreath(dt);
+
+    if (this.enabled.gaze) {
+      this._updateGaze(dt);
+      // Кости выше по цепочке уже повёрнуты в этом кадре, поэтому мировые
+      // матрицы надо пересчитать до наведения глаз — иначе компенсация
+      // движения головы отстанет ровно на кадр.
+      this.model.root.updateMatrixWorld(true);
+      this._gazePoint(this._target);
+      this._aimEye(this.bones.eyeL, this._target);
+      this._aimEye(this.bones.eyeR, this._target);
+
+      // Веко следует за взглядом: вниз — опускается, вверх — приподнимается.
+      const L = this.cfg.gaze.limitDeg;
+      const p = clamp(this.gaze.pitch / L.pitch, -1, 1) * this.cfg.gaze.lidFollow;
+      if (p < 0) {
+        m.writeSlot(LAYERS.IDLE, S.lookDownL, -p);
+        m.writeSlot(LAYERS.IDLE, S.lookDownR, -p);
+      } else if (p > 0) {
+        m.writeSlot(LAYERS.IDLE, S.lookUpL, p);
+        m.writeSlot(LAYERS.IDLE, S.lookUpR, p);
+      }
+    }
+
+    if (this.enabled.blink) {
+      this._updateBlink(dt);
+      const v = this.blink.value;
+      if (v > 0) {
+        m.writeSlot(LAYERS.IDLE, S.blinkL, v);
+        m.writeSlot(LAYERS.IDLE, S.blinkR, v);
+        // Микроопускание бровей: складывается с эмоцией, не подменяет её.
+        const dip = v * this.cfg.blink.browDip;
+        m.writeSlot(LAYERS.IDLE, S.browDL, dip);
+        m.writeSlot(LAYERS.IDLE, S.browDR, dip);
+      }
+    }
+  }
+
+  /** Состояние каналов для оверлея. */
+  debug() {
+    return {
+      gazePhase: this.gaze.phase,
+      gazeYaw: this.gaze.yaw, gazePitch: this.gaze.pitch,
+      blinkPhase: this.blink.phase, blinkValue: this.blink.value,
+      nextBlinkSec: this.blink.next,
+      breathPhase: this.breath.phase, breathPeriod: this.breath.period,
+      headFollowYaw: this.headFollow.yaw,
+    };
+  }
+}

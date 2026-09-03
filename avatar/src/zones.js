@@ -42,7 +42,8 @@ export const ZONE_MORPHS = Object.freeze({
     'tongueOut',
   ]),
   [LAYERS.EMOTION]: Object.freeze([
-    'browDownLeft', 'browDownRight', 'browInnerUp',
+    // browDown* делится с морганием — см. SHARED_MORPHS.
+    'browInnerUp',
     'browOuterUpLeft', 'browOuterUpRight',
     'eyeSquintLeft', 'eyeSquintRight',
     'eyeWideLeft', 'eyeWideRight',
@@ -54,12 +55,39 @@ export const ZONE_MORPHS = Object.freeze({
     'cheekPuff',
   ]),
   [LAYERS.IDLE]: Object.freeze([
-    'eyeBlinkLeft', 'eyeBlinkRight',
+    // Веки как таковые ведёт моргание, но eyeBlink* делится с эмоцией —
+    // см. SHARED_MORPHS ниже.
     'eyeLookDownLeft', 'eyeLookDownRight',
     'eyeLookUpLeft', 'eyeLookUpRight',
     'eyeLookInLeft', 'eyeLookInRight',
     'eyeLookOutLeft', 'eyeLookOutRight',
   ]),
+});
+
+/**
+ * Морфы, за которые слои спорят законно, и правило разрешения спора.
+ *
+ * Правило разное, и это не произвол:
+ *
+ * - `eyeBlink*` — MAX. Прищур скептика это `eyeSquint` плюс `eyeBlink` около
+ *   0.3. Сложить с ним моргание аддитивно нельзя: либо переполнение, либо
+ *   глаз, который не закрывается до конца. При максимуме моргание временно
+ *   перебивает эмоцию, полностью закрывает глаз и отпускает обратно на
+ *   уровень эмоции — ровно то поведение, которое нужно.
+ * - `browDown*` — SUM. Моргание подмешивает микроопускание бровей 0.1, и оно
+ *   должно складываться с тем, что делает эмоция, а не подменять его: бровь,
+ *   стоящая каменно, пока дёргается веко, читается как кукла.
+ *
+ * Написано таблицей, а не по месту в коде, потому что через день никто не
+ * вспомнит, где какое правило.
+ */
+export const COMBINE = Object.freeze({ SUM: 'sum', MAX: 'max' });
+
+export const SHARED_MORPHS = Object.freeze({
+  eyeBlinkLeft:  { layers: [LAYERS.IDLE, LAYERS.EMOTION], combine: COMBINE.MAX },
+  eyeBlinkRight: { layers: [LAYERS.IDLE, LAYERS.EMOTION], combine: COMBINE.MAX },
+  browDownLeft:  { layers: [LAYERS.IDLE, LAYERS.EMOTION], combine: COMBINE.SUM },
+  browDownRight: { layers: [LAYERS.IDLE, LAYERS.EMOTION], combine: COMBINE.SUM },
 });
 
 // Агрегаты Avaturn: симметричные обёртки над парами L/R и дубли уже имеющихся
@@ -74,24 +102,38 @@ export const UNUSED_MORPHS = Object.freeze([
   'eyesLookDown',   // дубль eyeLookDownLeft/Right
 ]);
 
-/** Морф -> слой-владелец. Собирается один раз при импорте. */
-export const OWNER = (() => {
+/**
+ * Морф -> { layers: Set<слой>, combine }. Собирается один раз при импорте.
+ * Эксклюзивный морф — частный случай: разрешён один слой, правило SUM
+ * (слой может складывать несколько вкладов, например висему и дожим).
+ */
+export const RULES = (() => {
   const map = new Map();
   for (const [layer, names] of Object.entries(ZONE_MORPHS)) {
     for (const name of names) {
       const prev = map.get(name);
       if (prev) {
         throw new Error(
-          `zones.js: морф «${name}» объявлен и в «${prev}», и в «${layer}». ` +
-          `У морфа должен быть ровно один владелец.`);
+          `zones.js: морф «${name}» объявлен и в «${[...prev.layers][0]}», и в «${layer}». ` +
+          `Морф с несколькими слоями объявляется в SHARED_MORPHS с правилом смешивания.`);
       }
-      map.set(name, layer);
+      map.set(name, { layers: new Set([layer]), combine: COMBINE.SUM, shared: false });
     }
+  }
+  for (const [name, spec] of Object.entries(SHARED_MORPHS)) {
+    if (map.has(name)) {
+      throw new Error(`zones.js: морф «${name}» есть и в ZONE_MORPHS, и в SHARED_MORPHS.`);
+    }
+    map.set(name, { layers: new Set(spec.layers), combine: spec.combine, shared: true });
   }
   for (const name of UNUSED_MORPHS) {
     if (map.has(name)) {
-      throw new Error(`zones.js: морф «${name}» одновременно в UNUSED_MORPHS и в зоне «${map.get(name)}».`);
+      throw new Error(`zones.js: морф «${name}» одновременно в UNUSED_MORPHS и в зоне.`);
     }
   }
   return map;
 })();
+
+/** Совместимость с прежним API: имя -> единственный слой, если он один. */
+export const OWNER = new Map(
+  [...RULES].map(([name, r]) => [name, r.layers.size === 1 ? [...r.layers][0] : null]));

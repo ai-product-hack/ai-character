@@ -12,7 +12,7 @@
 // пишут в Float32Array, commit() проходит по плоским типизированным массивам.
 // Аллокаций в рендер-лупе нет.
 
-import { LAYERS, OWNER, UNUSED_MORPHS, ZONE_MORPHS } from './zones.js';
+import { COMBINE, LAYERS, RULES, SHARED_MORPHS, UNUSED_MORPHS, ZONE_MORPHS } from './zones.js';
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -34,8 +34,10 @@ export class MorphWriter {
     /** слот -> плоские пары (массив весов меша, индекс в нём) */
     this._targetArrays = [];   // Array<Array<Float64Array|number[]>>
     this._targetIndices = [];  // Array<Int32Array>
-    /** слот -> имя слоя-владельца (или null, если морфа нет в таблице зон) */
-    this._owner = [];
+    /** слот -> Set разрешённых слоёв (или null, если морфа нет в таблице зон) */
+    this._layers = [];
+    /** слот -> правило смешивания вкладов: 0 = сумма, 1 = максимум */
+    this._maxCombine = [];
     /** слот -> список имён мешей, где морф объявлен. Для диагностики и тестов. */
     this.meshesOf = new Map();
 
@@ -59,7 +61,9 @@ export class MorphWriter {
       this.names.push(name);
       this._targetArrays.push(entries.map((e) => e.influences));
       this._targetIndices.push(Int32Array.from(entries.map((e) => e.index)));
-      this._owner.push(OWNER.get(name) || null);
+      const rule = RULES.get(name);
+      this._layers.push(rule ? rule.layers : null);
+      this._maxCombine.push(rule ? rule.combine === COMBINE.MAX : false);
       this.meshesOf.set(name, entries.map((e) => e.mesh));
     }
 
@@ -72,11 +76,14 @@ export class MorphWriter {
     // Морфы модели, которых нет ни в одной зоне и ни в списке неиспользуемых:
     // такое означает, что модель разошлась с таблицей зон.
     this.unclaimed = this.names.filter(
-      (n) => !OWNER.has(n) && !UNUSED_MORPHS.includes(n));
+      (n) => !RULES.has(n) && !UNUSED_MORPHS.includes(n));
     // И наоборот: зоны ссылаются на морф, которого в модели нет.
     this.missing = [];
     for (const names of Object.values(ZONE_MORPHS)) {
       for (const n of names) if (!this.slots.has(n)) this.missing.push(n);
+    }
+    for (const n of Object.keys(SHARED_MORPHS)) {
+      if (!this.slots.has(n)) this.missing.push(n);
     }
   }
 
@@ -92,11 +99,13 @@ export class MorphWriter {
   }
 
   /**
-   * Записать вес. Владение проверяется здесь же, на записи: чужой слой
-   * отбрасывается и считается, а не переписывает владельца «последним словом».
-   * @returns {boolean} была ли запись принята
+   * Внести вклад слоя в морф. Как вклады соединяются, решает таблица зон:
+   * сумма по умолчанию, максимум для `eyeBlink*`. Слой, которому морф не
+   * принадлежит, отбрасывается здесь же — «последняя запись побеждает» не
+   * бывает ни при каком порядке вызовов.
+   * @returns {boolean} принят ли вклад
    */
-  set(layer, name, weight) {
+  write(layer, name, weight) {
     const slot = this.slots.get(name);
     if (slot === undefined) {
       this.stats.unknownWrites++;
@@ -104,49 +113,28 @@ export class MorphWriter {
       if (this.strict) throw new Error(`MorphWriter: морфа «${name}» нет в модели`);
       return false;
     }
-    return this.setSlot(layer, slot, weight);
+    return this.writeSlot(layer, slot, weight);
   }
 
   /** То же по слоту — без хеширования строки, для рендер-лупа. */
-  setSlot(layer, slot, weight) {
-    if (this._owner[slot] !== layer) {
+  writeSlot(layer, slot, weight) {
+    const layers = this._layers[slot];
+    if (layers === null || !layers.has(layer)) {
       this.stats.trespassWrites++;
-      this.stats.lastTrespass = `${layer} -> ${this.names[slot]} (владелец: ${this._owner[slot] || 'никто'})`;
+      this.stats.lastTrespass =
+        `${layer} -> ${this.names[slot]} (разрешено: ${layers ? [...layers].join(', ') : 'никому'})`;
       if (this.strict) {
         throw new Error(
           `MorphWriter: слой «${layer}» пишет в «${this.names[slot]}», ` +
-          `которым владеет «${this._owner[slot] || 'никто'}»`);
+          `который разрешён слоям: ${layers ? [...layers].join(', ') : 'никому'}`);
       }
       return false;
     }
-    this.values[slot] = weight;
-    return true;
-  }
-
-  /** Прибавить к уже записанному в этом кадре. Сумма клампится в commit(). */
-  add(layer, name, weight) {
-    const slot = this.slots.get(name);
-    if (slot === undefined) {
-      this.stats.unknownWrites++;
-      this.stats.lastUnknown = name;
-      if (this.strict) throw new Error(`MorphWriter: морфа «${name}» нет в модели`);
-      return false;
+    if (this._maxCombine[slot]) {
+      if (weight > this.values[slot]) this.values[slot] = weight;
+    } else {
+      this.values[slot] += weight;
     }
-    return this.addSlot(layer, slot, weight);
-  }
-
-  addSlot(layer, slot, weight) {
-    if (this._owner[slot] !== layer) {
-      this.stats.trespassWrites++;
-      this.stats.lastTrespass = `${layer} -> ${this.names[slot]} (владелец: ${this._owner[slot] || 'никто'})`;
-      if (this.strict) {
-        throw new Error(
-          `MorphWriter: слой «${layer}» прибавляет к «${this.names[slot]}», ` +
-          `которым владеет «${this._owner[slot] || 'никто'}»`);
-      }
-      return false;
-    }
-    this.values[slot] += weight;
     return true;
   }
 
@@ -172,18 +160,28 @@ export class MorphWriter {
     return slot === undefined ? undefined : this.values[slot];
   }
 
+  /** Правило смешивания морфа — для отладочной панели и тестов. */
+  combineOf(name) {
+    const slot = this.slots.get(name);
+    if (slot === undefined) return undefined;
+    return this._maxCombine[slot] ? COMBINE.MAX : COMBINE.SUM;
+  }
+
   /** Отчёт о расхождении модели и таблицы зон. Печатается один раз на загрузке. */
   describe() {
     const byLayer = {};
     for (const layer of Object.values(LAYERS)) byLayer[layer] = 0;
-    let unowned = 0;
-    for (const owner of this._owner) {
-      if (owner) byLayer[owner]++; else unowned++;
+    let unowned = 0, shared = 0;
+    for (const layers of this._layers) {
+      if (!layers) { unowned++; continue; }
+      if (layers.size > 1) shared++;
+      for (const l of layers) byLayer[l]++;
     }
     return {
       morphs: this.names.length,
       meshes: new Set([...this.meshesOf.values()].flat()).size,
       byLayer,
+      shared,
       unowned,
       unclaimed: this.unclaimed,
       missing: this.missing,
