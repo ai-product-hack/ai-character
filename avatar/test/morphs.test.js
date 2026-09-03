@@ -218,6 +218,30 @@ describe('модель и таблица зон не разошлись', () => 
     assert.equal(d.unowned, UNUSED_MORPHS.length);
   });
 
+  test('нечисловой вес отбрасывается и не превращается в NaN', () => {
+    // Найдено на dev-странице: undefined в матрице висем дошёл до
+    // morphTargetInfluences, и геометрия головы разлетелась — голова исчезла,
+    // зубы остались висеть. По картинке такое не отлаживается.
+    const meshes = fixtureMeshes();
+    const w2 = new MorphWriter(meshes);
+    const m = byName(meshes);
+    w2.begin();
+    w2.write(LAYERS.VISEME, 'jawOpen', 0.5);
+    for (const bad of [undefined, NaN, Infinity, -Infinity, '0.5', null]) {
+      assert.equal(w2.write(LAYERS.VISEME, 'jawOpen', bad), false, `вес ${bad} должен быть отброшен`);
+    }
+    w2.commit();
+    near(w2.get('jawOpen'), 0.5, 'выживает последний корректный вес');
+    assert.ok(Number.isFinite(influence(m.Teeth_Mesh, 'jawOpen')));
+    assert.equal(w2.stats.nonFiniteWrites, 6);
+  });
+
+  test('в strict нечисловой вес — исключение', () => {
+    const w2 = new MorphWriter(fixtureMeshes(), { strict: true });
+    w2.begin();
+    assert.throws(() => w2.write(LAYERS.VISEME, 'jawOpen', undefined), /нечисловой вес/);
+  });
+
   test('запись в несуществующий морф считается, а не молча теряется', () => {
     const w2 = new MorphWriter(fixtureMeshes());
     w2.begin();

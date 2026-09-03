@@ -2,38 +2,88 @@
 <meta charset="utf-8">
 <title>Аватар — dev</title>
 <style>
- :root { color-scheme: dark; }
- html,body { margin:0; height:100%; background:#05060a; overflow:hidden; }
+ :root { color-scheme: dark; --bg:#0b0e14cc; --line:#232a38; --fg:#cfd6e4; --accent:#7fd1ff; }
+ html,body { margin:0; height:100%; background:#05060a; overflow:hidden;
+             font:12px/1.5 -apple-system,system-ui,sans-serif; color:var(--fg); }
  #stage { position:fixed; inset:0; }
  canvas { display:block; width:100%; height:100%; }
- #hud { position:fixed; top:10px; left:10px; z-index:5;
-        font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
-        color:#cfd6e4; background:#0b0e14cc; border:1px solid #232a38;
-        border-radius:6px; padding:8px 10px; min-width:250px;
-        backdrop-filter:blur(6px); white-space:pre; }
- #hud b { color:#7fd1ff; font-weight:600; }
- #panel { position:fixed; top:10px; right:10px; z-index:5;
-          font:12px/1.5 -apple-system,system-ui,sans-serif; color:#cfd6e4;
-          background:#0b0e14cc; border:1px solid #232a38; border-radius:6px;
-          padding:10px; backdrop-filter:blur(6px); }
- button { font:inherit; padding:4px 9px; margin:2px 2px 2px 0; cursor:pointer;
-          background:#171d29; color:#cfd6e4; border:1px solid #2c3547; border-radius:5px; }
+ .card { position:fixed; z-index:5; background:var(--bg); border:1px solid var(--line);
+         border-radius:6px; padding:9px 10px; backdrop-filter:blur(6px); }
+ #hud { top:10px; left:10px; font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+        white-space:pre; min-width:290px; }
+ #hud b { color:var(--accent); font-weight:600; }
+ #hud .warn { color:#ffb454; }
+ #panel { top:10px; right:10px; width:310px; max-height:calc(100vh - 20px); overflow:auto; }
+ h3 { margin:10px 0 5px; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+      color:#8b96a8; font-weight:600; border-top:1px solid var(--line); padding-top:8px; }
+ h3:first-child { border-top:0; margin-top:0; padding-top:0; }
+ button, select, input[type=text] { font:inherit; padding:4px 8px; margin:2px 3px 2px 0;
+   background:#171d29; color:var(--fg); border:1px solid #2c3547; border-radius:5px; cursor:pointer; }
  button:hover { background:#1f2735; }
- #err { position:fixed; left:10px; bottom:10px; right:10px; z-index:9;
+ button.on { border-color:var(--accent); color:var(--accent); }
+ button.off { opacity:.4; text-decoration:line-through; }
+ input[type=text] { width:100%; cursor:text; box-sizing:border-box; margin:3px 0; }
+ .row { display:flex; align-items:center; gap:6px; margin:3px 0; }
+ .row label { flex:0 0 128px; font:11px ui-monospace,monospace; color:#a9b3c4;
+              overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+ .row input[type=range] { flex:1; min-width:0; accent-color:var(--accent); }
+ .row .v { flex:0 0 34px; text-align:right; font:11px ui-monospace,monospace; color:var(--accent); }
+ #err { position:fixed; left:10px; bottom:10px; right:340px; z-index:9;
         font:12px/1.5 ui-monospace,monospace; color:#ff9a9a; background:#1a0d0dcc;
         border:1px solid #4a2222; border-radius:6px; padding:8px 10px;
-        white-space:pre-wrap; display:none; max-height:35vh; overflow:auto; }
+        white-space:pre-wrap; display:none; max-height:30vh; overflow:auto; }
+ .hint { color:#7c8697; font-size:11px; margin:3px 0 6px; }
 </style>
+
 <div id="stage"><canvas id="c"></canvas></div>
-<div id="hud">загрузка…</div>
-<div id="panel">
-  <div><b>шаг 3: микроповедение</b></div>
-  <button id="wire">каркас</button>
-  <button id="eyesOff">блики вкл/выкл</button>
-  <button id="post">пост вкл/выкл</button>
-  <button id="reload">перечитать конфиг</button>
+<div id="hud" class="card">загрузка…</div>
+
+<div id="panel" class="card">
+  <h3>состояние</h3>
+  <div id="states"></div>
+
+  <h3>эмоция</h3>
+  <div id="emotions"></div>
+  <div class="row"><label>интенсивность</label>
+    <input type="range" id="emoInt" min="0" max="1" step="0.05" value="1">
+    <span class="v" id="emoIntV">1.00</span></div>
+
+  <h3>фейковый трек висем</h3>
+  <div class="hint">Синтетический PTS с шагом 40 мс, как у GigaAM. Конвейер не нужен.</div>
+  <input type="text" id="phrase" value="Понятно. А что именно делали лично вы?">
+  <div>
+    <button id="play">проиграть</button>
+    <button id="barge">перебить</button>
+    <select id="rate">
+      <option value="1">1× темп</option>
+      <option value="0.7">0.7× медленно</option>
+      <option value="1.6">1.6× быстро</option>
+    </select>
+  </div>
+
+  <h3>источник рта</h3>
+  <div id="sources"></div>
+
+  <h3>микроповедение</h3>
+  <div id="channels"></div>
+
+  <h3>матрица висем</h3>
+  <div class="row"><label>висема</label><select id="visemeSel"></select></div>
+  <div><button id="hold">удержать</button><button id="release">отпустить</button></div>
+  <div id="sliders"></div>
+  <div class="row"><label>добавить морф</label><select id="addMorph"></select></div>
+  <div><button id="export">экспорт visemes.json</button><button id="resetMatrix">сброс</button></div>
+
+  <h3>рендер</h3>
+  <div>
+    <button id="post">пост</button>
+    <button id="wire">каркас</button>
+    <button id="reload">перечитать конфиги</button>
+  </div>
 </div>
+
 <div id="err"></div>
+
 <script type="importmap">
 {
   "imports": {

@@ -71,7 +71,8 @@ export class MorphWriter {
 
     // Диагностика для оверлея: писать в морф, которого в модели нет, или в
     // чужую зону — это ошибка кода, а не состояние сцены. Считаем и показываем.
-    this.stats = { unknownWrites: 0, trespassWrites: 0, lastUnknown: null, lastTrespass: null };
+    this.stats = { unknownWrites: 0, trespassWrites: 0, nonFiniteWrites: 0,
+                   lastUnknown: null, lastTrespass: null, lastNonFinite: null };
 
     // Морфы модели, которых нет ни в одной зоне и ни в списке неиспользуемых:
     // такое означает, что модель разошлась с таблицей зон.
@@ -127,6 +128,19 @@ export class MorphWriter {
         throw new Error(
           `MorphWriter: слой «${layer}» пишет в «${this.names[slot]}», ` +
           `который разрешён слоям: ${layers ? [...layers].join(', ') : 'никому'}`);
+      }
+      return false;
+    }
+    // Единственная точка входа для весов — здесь и ловим нечисловое. Матрицу
+    // висем правят слайдерами и руками в JSON, и один `undefined` или строка
+    // превращается в NaN, который расходится по morphTargetInfluences и рвёт
+    // геометрию в клочья: голова исчезает, зубы остаются висеть в воздухе.
+    // Отладить это по картинке практически невозможно, поэтому ловим на входе.
+    if (!Number.isFinite(weight)) {
+      this.stats.nonFiniteWrites++;
+      this.stats.lastNonFinite = `${layer} -> ${this.names[slot]} = ${weight}`;
+      if (this.strict) {
+        throw new Error(`MorphWriter: нечисловой вес ${weight} для «${this.names[slot]}»`);
       }
       return false;
     }
