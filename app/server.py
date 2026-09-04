@@ -160,7 +160,7 @@ class Session:
         DONE = object()
         em = {"offset_ms": None, "clause_base": 0, "used_bc": False,
               "t_first_audio": None, "t_first_speech": None, "bc_text": None,
-              "t_bc_emit": None}
+              "t_bc_emit": None, "panels": 0}
 
         emitter = threading.Thread(target=self._emit_loop,
                                    args=(gen, t0, pending, DONE, em), daemon=True)
@@ -191,6 +191,19 @@ class Session:
         with self.lock:
             happened = apply_action(self.state, reply, gen.id)
             self.completed.add(gen.id)
+        # Переход на новый этап — законный повод подвести промежуточный итог.
+        # Модель вызывает панель сама, но делает это редко: на 91 реплике
+        # прогона ни разу, даже с явным поводом в подсказке. Как и с эмоциями,
+        # разметка модели главнее, а механика продукта заполняет молчание —
+        # иначе агентная фича на показе просто не появится.
+        if happened.get("advanced") and not em.get("panels") and gen.check():
+            self._emit({"kind": "panels", "generation_id": gen.id,
+                        "clause": len(results), "from_stage": True,
+                        "marks": [{"pts_ms": self.pipe.last_timeline.total_ms
+                                   + (em["offset_ms"] or 0),
+                                   "panel": "skills", "arg": "",
+                                   "data": self._panel_data("skills")}]})
+
         self._emit({"kind": "agent", "generation_id": gen.id,
                     "text": reply.speakable, "stage": self.state.stage_id})
         self.evaluator.submit(self.state)
@@ -421,6 +434,7 @@ class Session:
                             "marks": [{"pts_ms": off, "emotion": mood.emotion,
                                        "intensity": mood.intensity}]})
         if r.panels:
+            em["panels"] = em.get("panels", 0) + len(r.panels)
             # Данные кладём сразу: панель рисуется из уже накопленного отчёта,
             # и второго запроса ради неё быть не должно.
             self._emit({"kind": "panels", "generation_id": r.generation_id,

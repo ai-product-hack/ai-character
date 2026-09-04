@@ -14,8 +14,11 @@ from app.emotion_drive import COLD_TO_WARM, mood_from        # noqa: E402
 from app.evaluator import Assessment, EvaluationLog          # noqa: E402
 from app.scenario import Criterion                           # noqa: E402
 
-CRITS = [Criterion(key="a", title="A", scale=5),
-         Criterion(key="b", title="B", scale=10)]
+# Шкала — СТРОКА, как в файлах сценариев. Первая версия тестов писала сюда
+# int, и из-за этого разошлась с боевыми данными: `mood_from` падал на живом
+# сценарии, а тесты были зелёные.
+CRITS = [Criterion(key="a", title="A", scale="1-5"),
+         Criterion(key="b", title="B", scale="1-10")]
 
 
 def log_of(*scores, key="a"):
@@ -45,8 +48,7 @@ class Mood(unittest.TestCase):
         self.assertEqual(m.intensity, 0.0)
 
     def test_scales_are_normalised(self):
-        """Критерии бывают с разными потолками: потолок пятибалльной и
-        десятибалльной шкалы обязан значить одно и то же."""
+        """Потолок пятибалльной и десятибалльной шкалы значит одно и то же."""
         top5 = mood_from(log_of(5, 5, 5, 5, key="a"), CRITS)
         top10 = mood_from(log_of(10, 10, 10, 10, key="b"), CRITS)
         self.assertEqual(top5.ratio, top10.ratio, 1.0)
@@ -82,3 +84,34 @@ class Mood(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RealScenarios(unittest.TestCase):
+    """На настоящих сценариях, а не на выдуманных критериях.
+
+    Шкала там записана строкой, и именно на этом расхождении первая версия
+    падала в бою при зелёных тестах.
+    """
+
+    def test_works_on_every_shipped_scenario(self):
+        from app.scenario import load_all
+        for sc in load_all(ROOT / "data" / "scenarios"):
+            with self.subTest(scenario=sc.id):
+                log = EvaluationLog()
+                for i, c in enumerate(sc.criteria):
+                    log.add(Assessment(criterion=c.key, score=2 + i % 3,
+                                       rationale=""))
+                m = mood_from(log, sc.criteria)
+                self.assertIn(m.emotion, COLD_TO_WARM)
+                self.assertGreaterEqual(m.ratio, 0.0)
+                self.assertLessEqual(m.ratio, 1.0)
+
+    def test_weak_answers_on_real_criteria_read_cold(self):
+        from app.scenario import load_all
+        sc = load_all(ROOT / "data" / "scenarios")[0]
+        log = EvaluationLog()
+        for c in sc.criteria:
+            log.add(Assessment(criterion=c.key, score=1, rationale=""))
+        m = mood_from(log, sc.criteria)
+        self.assertEqual(m.emotion, "skeptical")
+        self.assertGreater(m.intensity, 0)

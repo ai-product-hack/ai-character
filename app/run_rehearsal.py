@@ -26,6 +26,8 @@ import time
 import urllib.error
 import urllib.request
 
+import numpy as np
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -167,6 +169,55 @@ def type_like_a_human(port, text, rng, pause_ms=(60, 220)) -> float:
     return (time.perf_counter() - t0) * 1000
 
 
+def speak_aloud(port, text, rng) -> dict | None:
+    """Ход голосом: синтезируем реплику пользователя и шлём её как микрофон.
+
+    Другого способа проверить голосовой путь без человека нет, и подмена
+    честная: сервер получает ровно те же куски PCM, что от браузера, и гоняет
+    их через тот же VAD и тот же распознаватель.
+    """
+    pcm = _say(text)
+    step = int(16000 * 0.1)                     # куски по 100 мс, как у браузера
+    for i in range(0, len(pcm), step):
+        chunk = (np.clip(pcm[i:i + step], -1, 1) * 32767).astype("<i2").tobytes()
+        req = urllib.request.Request(f"{BASE.format(port=port)}/api/audio",
+                                     data=chunk,
+                                     headers={"Content-Type": "application/octet-stream"})
+        d = json.loads(urllib.request.urlopen(req, timeout=60).read())
+        if d.get("endpoint"):
+            return d
+    return None
+
+
+_TTS_CACHE: dict[str, "np.ndarray"] = {}
+
+
+def _say(text: str):
+    """Голос «пользователя». Другой синтезатор, чем у агента, — намеренно:
+    один и тот же голос по обе стороны мешал бы слушать прогон."""
+    import numpy as _np
+    if text in _TTS_CACHE:
+        return _TTS_CACHE[text]
+    global _USER_TTS
+    if _USER_TTS is None:
+        from app.media import SileroTTS
+        # Silero умеет только 8/24/48 кГц, а распознавателю нужно 16 —
+        # пересэмплируем тем же кодом, что и весь остальной тракт.
+        _USER_TTS = SileroTTS(voice="ru_oksana", version="v5_cis_base",
+                              sample_rate=24000)
+    from app.media import resample_linear
+    pcm, sr = _USER_TTS(text)
+    pcm = resample_linear(_np.asarray(pcm, dtype=_np.float32), sr, 16000)
+    # Хвост тишины: живой микрофон продолжает передавать её после того, как
+    # человек замолчал, и именно её ждёт эндпоинтер.
+    pcm = _np.concatenate([pcm, _np.zeros(int(16000 * 1.5), dtype=_np.float32)])
+    _TTS_CACHE[text] = pcm
+    return pcm
+
+
+_USER_TTS = None
+
+
 def run_scenario(port, sc, args, rng) -> dict:
     # Затравку запускает сам /api/start — отдельного сообщения на неё нет.
     t_start = time.perf_counter()
@@ -175,7 +226,9 @@ def run_scenario(port, sc, args, rng) -> dict:
     frames.start()
 
     lines = USER_LINES.get(sc.id, FALLBACK_LINES)
-    turns, interrupts = [], []
+    turns, interrupts, voice_turns = [], [], []
+    if args.voice_every:
+        post(port, "/api/voice", {"on": True})
     print(f"\n########## {sc.id} | {sc.title}")
 
     # Приёмка требует «минимум по два перебивания в каждом сценарии», а
@@ -195,13 +248,32 @@ def run_scenario(port, sc, args, rng) -> dict:
         base = frames.count()
         user = None if turn == 0 else lines[(turn - 1) % len(lines)]
         typed_ms = 0.0
+        by_voice = False
         if user is not None:
-            typed_ms = type_like_a_human(port, user, rng)
-            print(f"\nпольз. ({typed_ms:.0f} мс набора): {user}")
+            # Голосом идёт каждый n-й ход: оба пути должны быть в одном
+            # отчёте, иначе «работает» проверяется только для одного из них.
+            by_voice = args.voice_every and (turn % args.voice_every == 0)
 
         if user is None:
             t_enter = t_start
+        elif by_voice:
+            print(f"\nпольз. ГОЛОСОМ: {user}")
+            t_enter = time.perf_counter()
+            d = speak_aloud(port, user, rng)
+            if d is None:
+                print("  !! эндпоинтер не сработал — ход пропущен")
+                continue
+            # Нуль отсчёта для голоса — решение эндпоинтера, а не начало речи:
+            # ровно так его считает сервер, и мерить иначе значило бы записать
+            # в задержку время, пока человек ещё говорил.
+            t_enter = time.perf_counter()
+            voice_turns.append({"turn": turn, "asr_ms": d.get("asr_ms"),
+                                "chars": len(d.get("text") or ""),
+                                "text": d.get("text")})
+            print(f"  распознано за {d.get('asr_ms')} мс: «{d.get('text')}»")
         else:
+            typed_ms = type_like_a_human(port, user, rng)
+            print(f"\nпольз. ({typed_ms:.0f} мс набора): {user}")
             t_enter = time.perf_counter()
             post(port, "/api/message", {"text": user})
 
@@ -254,7 +326,10 @@ def run_scenario(port, sc, args, rng) -> dict:
             "reported_first_audio_ms": st.get("t_first_audio_ms"),
             "reported_first_speech_ms": st.get("t_first_speech_ms"),
             "clauses": len(clauses), "filler": bool(filler),
+            "by_voice": by_voice,
             "emotions": [m.get("emotion") for m in emos],
+            "panels": [m.get("panel") for f in got if f.get("kind") == "panels"
+                       for m in (f.get("marks") or [])],
             "action": st.get("action"), "interrupted": cut,
         })
         t = turns[-1]
@@ -270,7 +345,7 @@ def run_scenario(port, sc, args, rng) -> dict:
     rep = get(port, "/api/report")
     frames.stop_flag = True
     return {"scenario_id": sc.id, "title": sc.title, "turns": turns,
-            "interrupts": interrupts, "report": rep,
+            "interrupts": interrupts, "voice_turns": voice_turns, "report": rep,
             "audio_bytes": frames.audio_bytes}
 
 
@@ -292,6 +367,12 @@ def summarise(runs) -> dict:
     spec_hits = sum(1 for m in marks if m.get("spec_hit"))
     spec_tries = sum(1 for m in marks if m.get("spec_cover") is not None)
     fb = [m for m in marks if m.get("fell_back")]
+    voice = [v for r in runs for v in r.get("voice_turns", [])]
+    voice_first = [t["t_first_audio_ms"] for t in turns
+                   if t.get("by_voice") and t.get("t_first_audio_ms")]
+    text_first = [t["t_first_audio_ms"] for t in turns
+                  if not t.get("by_voice") and t.get("t_first_audio_ms")]
+    panels = [p for r in runs for t in r["turns"] for p in (t.get("panels") or [])]
     return {
         "scenarios": len(runs),
         "finished": sum(1 for r in runs if r["report"].get("completed")),
@@ -303,6 +384,14 @@ def summarise(runs) -> dict:
         "speculation": {"tries": spec_tries, "hits": spec_hits,
                         "hit_rate": round(spec_hits / spec_tries, 2) if spec_tries else None},
         "emotions": len([e for t in turns for e in t["emotions"]]),
+        "emotion_share": (round(sum(1 for t in turns if t["emotions"]) / len(turns), 2)
+                          if turns else 0),
+        "panels": len(panels),
+        # Голосовой путь считается отдельно: первый звук у него меряется от
+        # решения эндпоинтера, и смешивать его с текстовым нельзя.
+        "voice": {"turns": len(voice), "asr_ms": med([v["asr_ms"] for v in voice]),
+                  "first_audio_ms": med(voice_first)},
+        "text_first_audio_ms": med(text_first),
         "interrupts": {"count": len(cuts),
                        "per_scenario": [len(r["interrupts"]) for r in runs],
                        "leaked_frames": sum(c["leaked_frames"] for c in cuts),
@@ -334,7 +423,12 @@ def report(runs, out: pathlib.Path, tts=None, args=None) -> dict:
     sp = s["speculation"]
     print(f"спекуляция: попаданий {sp['hits']}/{sp['tries']}"
           + (f" ({sp['hit_rate']:.0%})" if sp["hit_rate"] is not None else ""))
-    print(f"эмоций проставлено: {s['emotions']}")
+    print(f"эмоций проставлено: {s['emotions']} "
+          f"({s['emotion_share']:.0%} реплик), панелей {s['panels']}")
+    v = s["voice"]
+    print(f"голосом: ходов {v['turns']}, распознавание {v['asr_ms']} мс, "
+          f"первый звук от эндпоинтера {v['first_audio_ms']} мс "
+          f"(текстом {s['text_first_audio_ms']} мс)")
     it = s["interrupts"]
     print(f"перебиваний {it['count']} {it['per_scenario']}, "
           f"просочилось кадров {it['leaked_frames']}"
@@ -370,6 +464,8 @@ def main():
     ap.add_argument("--port", type=int, default=8021)
     ap.add_argument("--interrupt-rate", type=float, default=0.35,
                     help="доля реплик, которые перебиваем")
+    ap.add_argument("--voice-every", type=int, default=3,
+                    help="каждый n-й ход идёт голосом; 0 — только текст")
     ap.add_argument("--min-interrupts", type=int, default=2,
                     help="сколько перебиваний гарантировать в каждом сценарии")
     ap.add_argument("--interrupt-after", type=float, nargs=2, default=(0.4, 2.0),

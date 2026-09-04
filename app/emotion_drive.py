@@ -35,16 +35,21 @@ class Mood:
                 "scored": self.scored, "trend": round(self.trend, 3)}
 
 
-def _ratio(assessments, scales: dict) -> list[float]:
-    """Оценки в долях от своей шкалы: критерии бывают с разными потолками."""
+def _ratio(assessments, bounds: dict) -> list[float]:
+    """Оценки в долях от своей шкалы: критерии бывают с разными потолками.
+
+    Границы берутся у самого критерия. Шкала в сценарии записана строкой
+    («1-5»), и первая версия принимала её за число — падало на живых данных,
+    хотя юнит-тесты с int-шкалой проходили.
+    """
     out = []
     for a in assessments:
-        scale = scales.get(a.criterion) or 5
-        if a.score is None or scale <= 1:
+        lo, hi = bounds.get(a.criterion) or (1, 5)
+        if a.score is None or hi <= lo:
             continue
-        # Шкала начинается с единицы, а не с нуля: балл 1 из 5 — это дно, 0.0,
-        # а не 0.2. Иначе худший ответ выглядел бы как пятая часть отличного.
-        out.append(max(0.0, min(1.0, (a.score - 1) / (scale - 1))))
+        # Низ шкалы — это дно, 0.0, а не доля от потолка. Иначе худший ответ
+        # выглядел бы как пятая часть отличного.
+        out.append(max(0.0, min(1.0, (a.score - lo) / (hi - lo))))
     return out
 
 
@@ -54,8 +59,7 @@ def mood_from(log, criteria, min_scored: int = 2, recent: int = 4) -> Mood:
     Пока оценок мало, настроения нет: судить о человеке по одному ответу
     нечестно и на лице читается как случайность.
     """
-    scales = {c.key: c.scale for c in criteria}
-    vals = _ratio(log.snapshot(), scales)
+    vals = _ratio(log.snapshot(), {c.key: c.bounds for c in criteria})
     if len(vals) < min_scored:
         return Mood("neutral", 0.0, None, len(vals), 0.0)
 
