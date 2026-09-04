@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Face mocap — authoring</title>
+<style>
+  :root { color-scheme:dark; --bg:#090c12; --card:#111722; --line:#263043; --fg:#dbe5f4; --muted:#8d9bb0; --accent:#68d3ff; --red:#ff6b7f; }
+  * { box-sizing:border-box } body { margin:0; min-height:100vh; background:var(--bg); color:var(--fg); font:14px/1.45 system-ui,sans-serif }
+  header { display:flex; gap:12px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line) }
+  header b { font-size:17px } #status { color:var(--muted) } main { display:grid; grid-template-columns:minmax(320px,1fr) minmax(360px,1fr) 330px; gap:10px; padding:10px; height:calc(100vh - 58px) }
+  .card { position:relative; min-height:0; overflow:hidden; border:1px solid var(--line); border-radius:10px; background:var(--card) }
+  video,canvas { display:block; width:100%; height:100%; object-fit:cover } video { transform:scaleX(-1) }
+  .tag { position:absolute; left:10px; top:10px; padding:4px 7px; border-radius:5px; background:#070a10c9; color:var(--muted) }
+  aside { padding:12px; overflow:auto } h2 { margin:4px 0 8px; font-size:13px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em }
+  .row { display:flex; gap:6px; align-items:center; margin:7px 0 } .row>* { min-width:0 }
+  button,select,input { font:inherit; color:var(--fg); background:#192232; border:1px solid #334158; border-radius:6px; padding:7px 9px }
+  button { cursor:pointer } button.primary { border-color:var(--accent); color:var(--accent) } button.recording { border-color:var(--red); color:var(--red) }
+  input[type=range] { flex:1; padding:0 } input[type=text],select { width:100% } button:disabled { opacity:.35; cursor:not-allowed }
+  #coeffs { font:11px/1.35 ui-monospace,monospace; display:grid; grid-template-columns:1fr auto; gap:2px 8px }
+  #coeffs span:nth-child(2n) { color:var(--accent); text-align:right } .muted { color:var(--muted); font-size:12px }
+  #timeline { padding-top:8px; border-top:1px solid var(--line) } #error { white-space:pre-wrap; color:#ff9aaa; display:none }
+  @media(max-width:1050px){ main { grid-template-columns:1fr 1fr; height:auto } aside { grid-column:1/-1; max-height:none } .card { height:52vh } }
+</style>
+<header><b>Face mocap</b><span id="status">загрузка MediaPipe…</span></header>
+<main>
+  <section class="card"><video id="camera" autoplay muted playsinline></video><span class="tag">камера</span></section>
+  <section class="card"><canvas id="avatar"></canvas><span class="tag">предпросмотр на модели</span></section>
+  <aside class="card">
+    <h2>Запись</h2>
+    <div class="row"><select id="clipName">
+      <option>neutral</option><option>skeptical</option><option>pressing</option><option>warming</option><option>impressed</option>
+      <option>nod-agreement</option><option>raised-brow</option><option>slight-doubt</option>
+    </select></div>
+    <div class="row"><button id="cameraBtn" class="primary">включить камеру</button><button id="recordBtn" disabled>записать</button></div>
+    <div class="muted" id="recordInfo">Нужны 3–6 секунд спокойной мимики. Первые и последние полсекунды держите одну позу.</div>
+    <div id="timeline" hidden>
+      <h2>Обрезка и просмотр</h2>
+      <div class="row"><span>начало</span><input id="trimStart" type="range" min="0" step="10"><span id="trimStartV"></span></div>
+      <div class="row"><span>конец</span><input id="trimEnd" type="range" min="0" step="10"><span id="trimEndV"></span></div>
+      <div class="row"><button id="previewBtn">просмотр</button><button id="saveBtn" class="primary">сохранить в avatar/clips</button></div>
+      <div class="row"><input id="loadClip" type="file" accept="application/json"></div>
+    </div>
+    <h2>52 коэффициента</h2>
+    <div id="coeffs"><span class="muted">лицо не найдено</span></div>
+    <pre id="error"></pre>
+  </aside>
+</main>
+<script type="importmap">
+{"imports":{
+  "three":"/avatar/node_modules/three/build/three.module.js",
+  "three/addons/":"/avatar/node_modules/three/examples/jsm/",
+  "@mediapipe/tasks-vision":"/avatar/node_modules/@mediapipe/tasks-vision/vision_bundle.mjs"
+}}
+</script>
+<script type="module" src="./main.js"></script>
+</html>
