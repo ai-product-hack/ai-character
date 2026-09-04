@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 node_modules/
 bench/r3-tts/compare/**/*.wav
+bench/r3-tts/round2/**/*.wav
