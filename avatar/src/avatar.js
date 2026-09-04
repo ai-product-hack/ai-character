@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import { Look } from './look.js';
 import { loadAvatarModel } from './model.js';
 import { Microbehavior } from './behavior.js';
+import { BodyIdle } from './body-idle.js';
 import { VisemeLayer, SOURCE } from './viseme.js';
 import { EmotionLayer } from './emotion.js';
 import { StateMachine } from './states.js';
@@ -35,6 +36,7 @@ export class Avatar {
     this.look = new Look(canvas, configs.look);
     this.model = null;
     this.behavior = null;
+    this.bodyIdle = null;
     this.visemes = null;
     this.emotionLayer = null;
     this.states = null;
@@ -56,6 +58,8 @@ export class Avatar {
 
     this.behavior = new Microbehavior(this.model, this.configs.behavior);
     this.behavior.setAnchor(this.look.camera.position);
+    this.bodyIdle = new BodyIdle(this.model, this.configs.behavior);
+    await this.bodyIdle.loadClips();
 
     this.visemes = new VisemeLayer(this.model.morphs, this.configs.visemes);
     const missing = this.visemes.validate();
@@ -180,6 +184,7 @@ export class Avatar {
           ? this.visemes.activity : 0;
         this.emotionLayer.update(dt, fastMs, speechActivity);
       }
+      if (this.bodyIdle) this.bodyIdle.update(dt);
       if (this.behavior) this.behavior.update(dt, nowMs / 1000);
       morphs.commit();
     }
@@ -208,6 +213,7 @@ export class Avatar {
       audioMs: this.clock ? this.clock.nowMs() : null,
       viseme: this.visemes ? this.visemes.debug() : null,
       behavior: this.behavior ? this.behavior.debug() : null,
+      bodyIdle: this.bodyIdle ? this.bodyIdle.debug() : null,
       states: this.states ? this.states.debug() : null,
       emotionLayer: this.emotionLayer ? this.emotionLayer.debug() : null,
       postEnabled: this.look.postEnabled,

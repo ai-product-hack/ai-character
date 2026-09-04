@@ -140,6 +140,9 @@ function drawHud() {
       `${(b.gazeYaw ?? 0).toFixed(1)}° / ${(b.gazePitch ?? 0).toFixed(1)}°\n` +
     `моргание       ${b.blinkPhase || '—'}  ${(b.blinkValue ?? 0).toFixed(2)}\n` +
     `дыхание        ${((b.breathPhase ?? 0) * 100).toFixed(0)}%`;
+  const body = d.bodyIdle;
+  if (body) $('hud').innerHTML += `\nтело            ${body.enabled ? 'движется' : 'заморожено'}  ` +
+    `${body.clips.join(', ') || 'нет клипов'}`;
 }
 
 // ------------------------------------------------------- состояния и эмоции
@@ -204,6 +207,18 @@ function buildAnimationLayers() {
     avatar.emotionLayer.setClipMotionEnabled(on);
   };
   $('animationLayers').appendChild(face);
+
+  const body = document.createElement('button');
+  body.textContent = 'body idle';
+  body.title = 'Заморозить фазы телесных idle-клипов, сохранив текущую позу';
+  body.classList.add('on');
+  body.onclick = () => {
+    const on = !body.classList.contains('on');
+    body.classList.toggle('on', on);
+    body.classList.toggle('off', !on);
+    avatar.bodyIdle.setMotionEnabled(on);
+  };
+  $('animationLayers').appendChild(body);
 }
 
 function buildSources() {

@@ -1,0 +1,10 @@
+{
+  "schema": "avatar-body-clip@1",
+  "name": "shoulder-settle-rehearsal",
+  "durationMs": 4300,
+  "source": { "kind": "procedural-rehearsal", "replaceWithMixamo": true, "capturedAt": null },
+  "tracks": {
+    "LeftArm": [[0,0.4,0,1.8],[900,-0.6,0,-0.4],[2100,0.25,0,-1.5],[3300,-0.2,0,0.3],[4300,0.4,0,1.8]],
+    "RightArm": [[0,-0.25,0,-1.4],[900,0.35,0,0.5],[2100,-0.45,0,1.7],[3300,0.3,0,-0.2],[4300,-0.25,0,-1.4]]
+  }
+}
