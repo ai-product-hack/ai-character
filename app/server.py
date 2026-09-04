@@ -24,6 +24,8 @@ import threading
 import time
 import urllib.parse
 
+import numpy as np
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -42,6 +44,7 @@ from app.scenario import Criterion, load_all                # noqa: E402
 from app.speculation import Speculator                      # noqa: E402
 from app.typing_signal import TypingTracker                 # noqa: E402
 from app.visemes_bridge import VisemeBridge                 # noqa: E402
+from app.voice import VoiceInput, transcribe                # noqa: E402
 
 PORT = 8010
 
@@ -86,6 +89,10 @@ class Session:
         # у клиента нет момента, когда персонаж договорил.
         self.typing = TypingTracker()
         self.t_agent_done_ms: float | None = None
+        # Голосовой ввод под тумблером. Текстовый путь остаётся основным и
+        # ничего о голосе не знает: сюда приходит уже готовая реплика.
+        self.voice = VoiceInput(models.get("endpointer"))
+        self.voice_stats: list[dict] = []
         self.frames: list[tuple[dict, bytes]] = []
         self.frame_cv = threading.Condition()
         self.marks: list[dict] = []
@@ -93,7 +100,7 @@ class Session:
 
     # ------------------------------------------------------------- генерация
 
-    def speak(self, user_text: str | None) -> None:
+    def speak(self, user_text: str | None, t_start: float | None = None) -> None:
         """Сгенерировать реплику агента и разложить её в кадры.
 
         Кадры отдаёт НЕ конвейер, а этот метод: между готовностью клаузы и её
@@ -103,7 +110,12 @@ class Session:
         # Нуль отсчёта — вход в метод, то есть фактически нажатие Enter.
         # Ставится ДО разбора и построения промпта: иначе замер начинался бы
         # уже после части работы и льстил бы себе.
-        t0 = time.perf_counter()
+        #
+        # При голосовом вводе нуль приходит снаружи — это момент, когда
+        # эндпоинтер решил, что человек договорил. Заполнитель обязан
+        # стартовать оттуда, а не от конца распознавания: иначе к паузе
+        # добавилось бы ещё и время расшифровки.
+        t0 = t_start if t_start is not None else time.perf_counter()
         with self.lock:
             if user_text is not None:
                 # Нуль отсчёта — момент, когда агент договорил. Он мог
@@ -230,8 +242,54 @@ class Session:
         # Нуль отсчёта набора: с этого момента ход человека. Наблюдения НЕ
         # сбрасываются — набранное, пока агент ещё говорил, тоже сигнал.
         self.t_agent_done_ms = time.perf_counter() * 1000
+        # Агент договорил — микрофон снова слушает.
+        self.voice.muted_by_agent = False
+        self.voice.start()
         if self.state.finished:
             self._emit({"kind": "finished"})
+
+    def push_audio(self, pcm) -> dict:
+        """Кусок с микрофона. Если ход закончился — запускаем ответ.
+
+        Распознавание идёт здесь, но нулём отсчёта для ответа служит момент
+        решения эндпоинтера: заполнитель обязан стартовать оттуда, иначе к
+        паузе добавится ещё и расшифровка.
+        """
+        utt = self.voice.push(pcm)
+        if utt is None:
+            return {"ok": True, "endpoint": False}
+        return self._on_utterance(utt)
+
+    def end_utterance(self) -> dict:
+        """Push-to-talk отпущена: ход кончился по воле человека."""
+        utt = self.voice.flush()
+        if utt is None:
+            return {"ok": True, "endpoint": False}
+        return self._on_utterance(utt, forced=True)
+
+    def _on_utterance(self, utt, forced: bool = False) -> dict:
+        t0 = time.perf_counter()
+        text = transcribe(self.models["aligner"], utt)
+        asr_ms = (time.perf_counter() - t0) * 1000
+        self.voice_stats.append({
+            "duration_ms": round(utt.duration_ms),
+            "speech_ms": round(utt.speech_ms),
+            "asr_ms": round(asr_ms),
+            "chars": len(text),
+            "forced": forced,
+        })
+        if not text:
+            # Распозналась пустота — это не реплика. Молчим, микрофон дальше
+            # слушает: иначе агент отвечал бы на шум.
+            self.voice.start()
+            return {"ok": True, "endpoint": True, "text": "", "asr_ms": round(asr_ms)}
+        # Пока агент говорит, микрофон закрыт: на колонках VAD услышал бы его
+        # самого и перебил бы его же репликой.
+        self.voice.muted_by_agent = True
+        self.cancel()
+        threading.Thread(target=self.speak, args=(text, utt.t_endpoint),
+                         daemon=True).start()
+        return {"ok": True, "endpoint": True, "text": text, "asr_ms": round(asr_ms)}
 
     def note_typing(self, text: str) -> None:
         """Наблюдение за набором. Часы абсолютные, нуль ставится при подведении.
@@ -479,6 +537,17 @@ class App:
                                 self.models["bridge"],
                                 cache_key=self.models["tts"].provider)
         self.models["backchannel"] = bc
+        # Эндпоинтер не обязателен: без него голосовой ввод просто не включится,
+        # а текстовый путь — основной и его судят — не должен от этого страдать.
+        try:
+            from app.voice import SileroEndpointer
+            self.models["endpointer"] = SileroEndpointer()
+            print(f"  голосовой ввод: порог тишины "
+                  f"{self.models['endpointer'].silence_ms} мс")
+        except Exception as e:                                # noqa: BLE001
+            self.models["endpointer"] = None
+            print(f"  голосовой ввод недоступен ({type(e).__name__}: {e}); "
+                  f"текстовый путь работает как обычно")
         # after_ms — сколько ждать ответа, прежде чем ставить заполнитель.
         # Порог короткий намеренно: полсекунды тишины и есть то, что заполнитель
         # убирает. Случай «ответ пришёл быстро» — это попадание спекуляции с
@@ -575,6 +644,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             tts = APP.models["tts"]
             return self._json({"tts": tts.describe(),
                                "scenarios": len(APP.scenarios),
+                               "voice": APP.models.get("endpointer") is not None,
                                "session": bool(APP.session)})
         if u.path == "/api/report":
             if not APP.session:
@@ -619,6 +689,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         u = urllib.parse.urlparse(self.path)
         body = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+
+        # Звук приходит сырым PCM16, а не JSON: разбирать его как текст нельзя,
+        # поэтому ветка стоит до общего разбора тела.
+        if u.path == "/api/audio":
+            if not APP.session:
+                return self._json({"error": "сессия не начата"}, 400)
+            pcm = np.frombuffer(body, dtype="<i2").astype(np.float32) / 32768
+            return self._json(APP.session.push_audio(pcm))
+
         data = json.loads(body or b"{}")
 
         if u.path == "/api/start":
@@ -646,6 +725,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return self._json({"error": str(e)}, 400)
             except Exception as e:             # noqa: BLE001 — сеть, API, что угодно
                 return self._json({"error": f"{type(e).__name__}: {e}"}, 400)
+        if u.path == "/api/voice":
+            if not APP.session:
+                return self._json({"error": "сессия не начата"}, 400)
+            v = APP.session.voice
+            if v.endpointer is None:
+                return self._json({"error": "эндпоинтер не поднялся: "
+                                            "нет пакета silero-vad"}, 400)
+            if "on" in data:
+                v.enabled = bool(data["on"])
+                v.start()
+            if data.get("ptt") == "up":
+                return self._json(APP.session.end_utterance())
+            return self._json({"ok": True, "on": v.enabled,
+                               "silence_ms": v.endpointer.silence_ms,
+                               "stats": v.stats})
         if u.path == "/api/cancel":
             return self._json({"ok": True, "cancelled": APP.session.cancel()})
         return self._json({"error": "нет такого метода"}, 404)

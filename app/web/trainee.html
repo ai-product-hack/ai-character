@@ -33,6 +33,15 @@
  #voice{font:inherit;background:#151a23;color:#dde3ec;border:1px solid #2c3547;
    border-radius:5px;padding:4px 6px}
  #voiceNote{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #micRow{display:flex;gap:8px;align-items:center;padding:0 0 8px;
+   font:12px ui-monospace,monospace;color:#8b96a8}
+ #micRow label{display:flex;gap:5px;align-items:center;cursor:pointer}
+ #ptt{font:inherit;padding:4px 10px}
+ #ptt[disabled]{opacity:.4;cursor:default}
+ #ptt.live{background:#2a3550;border-color:#4a5a80}
+ #micNote{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #micNote.bad{color:#ff9a9a}
+ #micNote.hot{color:#9ad7a0}
  #voiceNote.bad{color:#ff9a9a}
 </style>
 
@@ -46,6 +55,11 @@
     <label for="voice">голос</label>
     <select id="voice"></select>
     <span id="voiceNote"></span>
+  </div>
+  <div id="micRow">
+    <label><input type="checkbox" id="micOn"> микрофон</label>
+    <button id="ptt" disabled title="Удерживайте, пока говорите">говорить</button>
+    <span id="micNote">выключен</span>
   </div>
   <div id="history"></div>
   <div id="inputRow">
@@ -422,6 +436,108 @@ $('msg').addEventListener('input', () => {
       .catch(() => {});           // спекуляция не имеет права ломать ввод
   }, 250);
 });
+// ------------------------------------------------------------- микрофон
+
+// Голосовой ввод — второй путь, под тумблером. Текстовый остаётся основным и
+// ничего об этом коде не знает: сюда микрофон не вмешивается никак.
+//
+// VAD и распознавание живут на сервере: и Silero VAD, и GigaAM уже подняты
+// там, а тащить onnxruntime в браузер ради того, что уже работает, незачем.
+// Браузер шлёт сырой PCM кусками по 100 мс.
+const MIC_SR = 16000;
+let micCtx = null, micStream = null, micNode = null, micSending = false;
+
+function micSay(text, cls) {
+  $('micNote').className = cls || '';
+  $('micNote').textContent = text;
+}
+
+async function micStart() {
+  // echoCancellation обязателен: без наушников микрофон услышит аватара, и
+  // VAD оборвёт его же реплику. Наушники всё равно надёжнее, но это первая
+  // линия защиты, а не украшение.
+  micStream = await navigator.mediaDevices.getUserMedia({
+    audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true,
+            channelCount: 1, sampleRate: MIC_SR}
+  });
+  // Отдельный контекст на нужной частоте: ресемплить на стороне сервера
+  // значило бы гонять лишние байты и терять точность зря.
+  micCtx = new AudioContext({sampleRate: MIC_SR});
+  await micCtx.audioWorklet.addModule('/app/web/mic-worklet.js');
+  micNode = new AudioWorkletNode(micCtx, 'mic-capture',
+                                 {processorOptions: {chunkMs: 100}});
+  micNode.port.onmessage = e => sendChunk(e.data);
+  micCtx.createMediaStreamSource(micStream).connect(micNode);
+  // Воркету нужен сток, иначе граф не тикает. Нулевая громкость: слышать себя
+  // человек не должен.
+  const mute = micCtx.createGain();
+  mute.gain.value = 0;
+  micNode.connect(mute).connect(micCtx.destination);
+  micSending = true;
+}
+
+function micStop() {
+  micSending = false;
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (micCtx) micCtx.close();
+  micCtx = micStream = micNode = null;
+}
+
+async function sendChunk(f32) {
+  if (!micSending) return;
+  const i16 = new Int16Array(f32.length);
+  for (let i = 0; i < f32.length; i++) {
+    const v = Math.max(-1, Math.min(1, f32[i]));
+    i16[i] = v * 32767;
+  }
+  try {
+    const r = await fetch('/api/audio', {method: 'POST', body: i16.buffer});
+    const d = await r.json();
+    if (d.endpoint) {
+      if (d.text) micSay(`распознано за ${d.asr_ms} мс`, 'hot');
+      else micSay('тишина — говорите', '');
+    }
+  } catch (e) { /* пропущенный кусок не должен ломать поток */ }
+}
+
+$('micOn').onchange = async () => {
+  const on = $('micOn').checked;
+  if (!on) {
+    micStop();
+    $('ptt').disabled = true;
+    await fetch('/api/voice', {method:'POST', body: JSON.stringify({on: false})});
+    micSay('выключен');
+    return;
+  }
+  micSay('включаю…');
+  try {
+    const r = await fetch('/api/voice', {method:'POST',
+                                         body: JSON.stringify({on: true})});
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    await micStart();
+    $('ptt').disabled = false;
+    micSay(`слушаю, порог тишины ${d.silence_ms ?? '—'} мс`, 'hot');
+  } catch (e) {
+    $('micOn').checked = false;
+    micStop();
+    micSay(String(e.message || e), 'bad');
+  }
+};
+
+// Push-to-talk — аварийный режим: если VAD режет невпопад, конец хода можно
+// объявить рукой. Кнопка не отключает VAD, а добавляет ручной выход.
+async function pttUp() {
+  $('ptt').classList.remove('live');
+  if (!micSending) return;
+  const d = await (await fetch('/api/voice', {method:'POST',
+                                              body: JSON.stringify({ptt: 'up'})})).json();
+  if (d.text) micSay(`распознано за ${d.asr_ms} мс`, 'hot');
+}
+$('ptt').onpointerdown = () => { $('ptt').classList.add('live'); micSay('говорите…', 'hot'); };
+$('ptt').onpointerup = pttUp;
+$('ptt').onpointerleave = () => { if ($('ptt').classList.contains('live')) pttUp(); };
+
 // ---------------------------------------------------------------- голос
 
 // Переключение на ходу, без перезапуска сервера: на показе сравнивают голоса
