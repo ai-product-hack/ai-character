@@ -295,6 +295,15 @@ class Session:
         if em["t_first_speech"] is None:
             em["t_first_speech"] = (time.perf_counter() - t0) * 1000
 
+        # После заполнителя лицо успело перейти в thinking. Первая настоящая
+        # клауза обязана вернуть speaking ДО аудио: раньше такого события не
+        # было, и весь содержательный ответ аватар произносил, продолжая
+        # смотреть вверх-влево как при размышлении.
+        if em["used_bc"] and not em.get("_content_speaking"):
+            em["_content_speaking"] = True
+            self._emit({"kind": "state", "generation_id": r.generation_id,
+                        "face": "speaking"})
+
         pcm16 = (r.pcm * 32767).astype("<i2").tobytes()
         self._emit({"kind": "audio", "generation_id": r.generation_id,
                     "clause": idx, "start_ms": r.start_ms + off,

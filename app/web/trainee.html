@@ -273,6 +273,10 @@ function playAudio(h, payload) {
     avatar.speechAccent('backchannel');
   } else if (!contentAccented) {
     contentAccented = true;
+    // Страховка протокола: содержательная речь после заполнителя идёт в той
+    // же generation, поэтому ветка «новая генерация» выше не срабатывает.
+    // Без явного возврата лицо оставалось в thinking и смотрело мимо человека.
+    avatar.setState('speaking');
     avatar.speechAccent('speech');
   }
   if (!h.backchannel) lastContentSource = src;
@@ -362,6 +366,8 @@ function drawHud() {
     `outputLatency  ${d.outputLatencyMs?.toFixed(1) ?? '—'} мс\n` +
     `дрейф          ${(v.drift_ms ?? 0).toFixed(1)} мс\n` +
     `опоздание аудио ${stats.lateAudioMs} мс\n` +
+    `взгляд         ${(d.behavior?.gazeYaw ?? 0).toFixed(1)}° / ` +
+      `${(d.behavior?.gazePitch ?? 0).toFixed(1)}°\n` +
     `висема         ${v.viseme ?? '—'} ${v.trackIndex ?? 0}/${v.trackLength ?? 0}\n` +
     `подвисаний     ${v.underruns ?? 0}\n` +
     `клауз          ${stats.clauses}\n` +
