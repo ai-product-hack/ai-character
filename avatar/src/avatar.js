@@ -64,6 +64,7 @@ export class Avatar {
     }
 
     this.emotionLayer = new EmotionLayer(this.model.morphs, this.configs.expression);
+    await this.emotionLayer.loadClips();
     const missingEmo = this.emotionLayer.validate();
     if (missingEmo.length) {
       console.warn('avatar: морфов поз нет в модели:', missingEmo);

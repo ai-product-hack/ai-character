@@ -50,6 +50,7 @@ async function boot() {
   buildStates();
   buildEmotions();
   buildChannels();
+  buildAnimationLayers();
   buildSources();
   buildVisemePanel();
   buildTrackSource();
@@ -121,6 +122,7 @@ function drawHud() {
       ((d.states?.impatience ?? 0) > 0 ? `   нетерпение ${(d.states.impatience * 100).toFixed(0)}%` : '') + `\n` +
     `эмоция         ${d.emotion.name} ${d.emotion.intensity.toFixed(2)}` +
       `   морфов ${d.emotionLayer?.activeMorphs ?? 0}` +
+      `   клип ${d.emotionLayer?.clip || 'pose'}` +
       `   моргание ×${d.emotionLayer?.blinkScale ?? 1}` +
       `   темп ×${d.emotionLayer?.articulationRate ?? 1}\n` +
     `generation_id  ${v.genId === null || v.genId === undefined ? '—' : v.genId}\n` +
@@ -188,6 +190,20 @@ function buildChannels() {
   ev.textContent = 'событие (моргнуть)';
   ev.onclick = () => avatar.behavior.notifyEvent();
   $('channels').appendChild(ev);
+}
+
+function buildAnimationLayers() {
+  const face = document.createElement('button');
+  face.textContent = 'face clip';
+  face.title = 'Заморозить фазу записанного клипа, не убирая выражение с лица';
+  face.classList.add('on');
+  face.onclick = () => {
+    const on = !face.classList.contains('on');
+    face.classList.toggle('on', on);
+    face.classList.toggle('off', !on);
+    avatar.emotionLayer.setClipMotionEnabled(on);
+  };
+  $('animationLayers').appendChild(face);
 }
 
 function buildSources() {

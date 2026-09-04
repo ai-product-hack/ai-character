@@ -378,6 +378,62 @@ describe('перебивание', () => {
 });
 
 describe('эмоции', () => {
+  test('записанный клип отбрасывает артикуляционные каналы на импорте', () => {
+    const ctx = setup();
+    const clip = ctx.emotion.registerClip('warming', {
+      version: 1, kind: 'face-mocap', name: 'warming', durationMs: 1000,
+      channels: ['mouthSmileLeft', 'jawOpen', 'viseme_aa'],
+      frames: [
+        { tMs: 0, weights: [0.8, 1, 1] },
+        { tMs: 1000, weights: [0.8, 1, 1] },
+      ],
+    });
+    assert.deepEqual(clip.filtered, ['jawOpen', 'viseme_aa']);
+    ctx.emotion.setEmotion('warming', 1);
+    run(ctx, 1);
+    assert.ok(ctx.morphs.get('mouthSmileLeft') > 0.2, 'эмоциональная улыбка должна пройти');
+    assert.equal(ctx.morphs.get('jawOpen'), 0, 'клип не имеет права раскрывать челюсть');
+    assert.equal(ctx.morphs.get('viseme_aa'), 0, 'клип не имеет права писать висему');
+  });
+
+  test('смена записанных эмоций кроссфейдится за 400 мс', () => {
+    const ctx = setup();
+    const raw = (name, channel) => ({
+      version: 1, kind: 'face-mocap', name, durationMs: 1000, channels: [channel],
+      frames: [{ tMs: 0, weights: [1] }, { tMs: 1000, weights: [1] }],
+    });
+    ctx.emotion.registerClip('skeptical', raw('skeptical', 'browDownLeft'));
+    ctx.emotion.registerClip('warming', raw('warming', 'mouthSmileLeft'));
+    ctx.emotion.setEmotion('skeptical', 1);
+    run(ctx, 1);
+    const before = ctx.morphs.get('browDownLeft');
+    ctx.emotion.setEmotion('warming', 1);
+    run(ctx, 1 / 60);
+    assert.ok(ctx.morphs.get('browDownLeft') > before * 0.8,
+      'предыдущее выражение не должно исчезнуть за один кадр');
+    // The clip crossfade is followed by the existing 200 ms output smoother;
+    // by 0.8 s both stages must have settled completely.
+    run(ctx, 0.8);
+    assert.ok(ctx.morphs.get('mouthSmileLeft') > 0.25, 'новое выражение должно войти');
+    assert.ok(ctx.morphs.get('browDownLeft') < 0.04, 'старое выражение должно уйти');
+  });
+
+  test('заморозка клипа останавливает фазу, но оставляет вклад на лице', () => {
+    const ctx = setup();
+    ctx.emotion.registerClip('warming', {
+      version: 1, kind: 'face-mocap', name: 'warming', durationMs: 1000,
+      channels: ['mouthSmileLeft'],
+      frames: [{ tMs: 0, weights: [0.2] }, { tMs: 1000, weights: [0.9] }],
+    });
+    ctx.emotion.setEmotion('warming', 1);
+    run(ctx, 0.8);
+    ctx.emotion.setClipMotionEnabled(false);
+    const time = ctx.emotion.clipTimeMs;
+    run(ctx, 0.5);
+    assert.equal(ctx.emotion.clipTimeMs, time);
+    assert.ok(ctx.morphs.get('mouthSmileLeft') > 0, 'заморозка — не выключение слоя');
+  });
+
   test('пять эмоций дают пять разных поз', () => {
     const poses = {};
     for (const em of Object.keys(expr.emotions)) {

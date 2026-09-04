@@ -13,6 +13,7 @@
 // разводит, поэтому автомат отдаёт позу сюда.
 
 import { LAYERS } from './zones.js';
+import { compileFacialClip, sampleFacialClip } from './facial-clip.js';
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
@@ -35,6 +36,17 @@ export class EmotionLayer {
     this._slots = new Map();
     this.speechActivity = 0;
 
+    // Facial mocap clips are optional. Tests and emergency rollback keep using
+    // the static poses until loadClips() has registered a valid clip.
+    this.clips = new Map();
+    this.clipErrors = [];
+    this.clipTimeMs = 0;
+    this.clipMotionEnabled = true;
+    this._emotionFrame = new Map();
+    this._crossfadeFrom = new Map();
+    this._crossfadeMs = Infinity;
+    this._phaseMs = 0;
+
     this.missing = [];
   }
 
@@ -42,6 +54,46 @@ export class EmotionLayer {
     this.cfg = cfg;
     this.emotions = cfg.emotions;
     this.transitionMs = cfg.transitionMs ?? 200;
+  }
+
+  async loadClips(fetcher = fetch) {
+    const C = this.cfg.clips || {};
+    this.clips.clear();
+    this.clipErrors.length = 0;
+    if (!C.enabled) return;
+    await Promise.all(Object.entries(this.emotions).map(async ([name, emotion]) => {
+      if (name.startsWith('_') || !emotion?.clip) return;
+      try {
+        const path = `${C.basePath || '/avatar/clips'}/${emotion.clip}`;
+        const response = await fetcher(path);
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        this.registerClip(name, await response.json());
+      } catch (error) {
+        this.clipErrors.push(`${name}: ${error.message}`);
+      }
+    }));
+    this._pickPhase(this.emotion.name);
+  }
+
+  registerClip(name, raw) {
+    const clip = compileFacialClip(raw, this.morphs);
+    this.clips.set(name, clip);
+    return clip;
+  }
+
+  /** Dev freeze: contribution stays visible, only the recorded time stops. */
+  setClipMotionEnabled(on) { this.clipMotionEnabled = !!on; }
+
+  _pickPhase(name) {
+    const clip = this.clips.get(name);
+    if (!clip) { this._phaseMs = 0; return; }
+    if (this.cfg.clips?.randomizePhase === false) {
+      let hash = 2166136261;
+      for (const ch of name) hash = Math.imul(hash ^ ch.charCodeAt(0), 16777619);
+      this._phaseMs = (hash >>> 0) % clip.durationMs;
+    } else {
+      this._phaseMs = Math.random() * clip.durationMs;
+    }
   }
 
   /** Проверить, что все морфы поз есть в модели и лежат в разрешённых зонах. */
@@ -69,6 +121,13 @@ export class EmotionLayer {
   setEmotion(name, intensity = 1) {
     const e = this.emotions[name];
     if (!e) throw new Error(`EmotionLayer: неизвестная эмоция «${name}»`);
+    const changed = name !== this.emotion.name;
+    if (changed) {
+      this._crossfadeFrom.clear();
+      for (const [morph, value] of this._emotionFrame) this._crossfadeFrom.set(morph, value);
+      this._crossfadeMs = 0;
+      this._pickPhase(name);
+    }
     this.emotion = { name, intensity: clamp01(intensity) };
   }
 
@@ -109,12 +168,7 @@ export class EmotionLayer {
     target.clear();
 
     const e = this.emotions[this.emotion.name];
-    if (e && e.pose) {
-      for (const [morph, w] of Object.entries(e.pose)) {
-        if (morph.startsWith('_') || !Number.isFinite(w)) continue;
-        target.set(morph, w * this.emotion.intensity);
-      }
-    }
+    this._applyEmotion(target, e, dt);
     for (const [morph, w] of Object.entries(this.statePose)) {
       if (morph.startsWith('_') || !Number.isFinite(w)) continue;
       target.set(morph, (target.get(morph) || 0) + w);
@@ -153,6 +207,46 @@ export class EmotionLayer {
     this._write();
   }
 
+  _applyEmotion(target, emotion, dt) {
+    const C = this.cfg.clips || {};
+    const clip = C.enabled ? this.clips.get(this.emotion.name) : null;
+    if (!clip) {
+      this._emotionFrame.clear();
+      if (emotion?.pose) {
+        for (const [morph, w] of Object.entries(emotion.pose)) {
+          if (morph.startsWith('_') || !Number.isFinite(w)) continue;
+          const value = w * this.emotion.intensity;
+          this._emotionFrame.set(morph, value);
+          target.set(morph, value);
+        }
+      }
+      return;
+    }
+
+    if (this.clipMotionEnabled) this.clipTimeMs += dt * 1000;
+    const sample = sampleFacialClip(clip, this.clipTimeMs + this._phaseMs, C.seamMs ?? 400);
+    const amplitude = (emotion.clipAmplitude ?? C.amplitude ?? 0.4) * this.emotion.intensity;
+    const duration = C.crossfadeMs ?? 400;
+    this._crossfadeMs += dt * 1000;
+    const x = duration > 0 ? Math.min(1, this._crossfadeMs / duration) : 1;
+    const mix = x * x * (3 - 2 * x);
+
+    // First fade channels that only existed in the previous emotion to zero.
+    this._emotionFrame.clear();
+    for (const [morph, from] of this._crossfadeFrom) {
+      const value = from * (1 - mix);
+      if (value > 1e-5) this._emotionFrame.set(morph, value);
+    }
+    for (let i = 0; i < clip.channels.length; i++) {
+      const morph = clip.channels[i].name;
+      const want = sample[i] * amplitude;
+      const from = this._crossfadeFrom.get(morph) || 0;
+      this._emotionFrame.set(morph, from + (want - from) * mix);
+    }
+    for (const [morph, value] of this._emotionFrame) target.set(morph, value);
+    if (mix >= 1 && this._crossfadeFrom.size) this._crossfadeFrom.clear();
+  }
+
   _write() {
     for (const [morph, value] of this.current) {
       if (value <= 0) continue;
@@ -173,6 +267,9 @@ export class EmotionLayer {
       blinkScale: +this.blinkScale.toFixed(2),
       articulationRate: +this.articulationRate.toFixed(2),
       speechActivity: +this.speechActivity.toFixed(2),
+      clip: this.clips.has(this.emotion.name) ? this.emotion.name : null,
+      clipMotion: this.clipMotionEnabled,
+      clipErrors: this.clipErrors.length,
     };
   }
 }

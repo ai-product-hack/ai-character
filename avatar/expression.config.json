@@ -4,6 +4,17 @@
   "transitionMs": 200,
   "_transitionMs": "Переходы между состояниями плавные, 150-250 мс по заданию.",
 
+  "clips": {
+    "_": "Записанная мимика. enabled=false мгновенно возвращает прежние pose без правки кода; отсутствующий или битый клип тоже автоматически откатывается на pose.",
+    "enabled": true,
+    "basePath": "/avatar/clips",
+    "amplitude": 0.42,
+    "_amplitude": "Полуреалистичное лицо использует 42% записанной амплитуды: полный mocap выглядит мультяшно.",
+    "crossfadeMs": 400,
+    "seamMs": 420,
+    "randomizePhase": true
+  },
+
   "speechMotion": {
     "_": "Связывает артикуляцию с верхней частью лица: без этого двигается только рот, а голова выглядит как маска. Сигнал сглаживается отдельно, чтобы сетка 40 мс не превратила щёки в тремор.",
     "attackMs": 100,
@@ -111,9 +122,10 @@
   "emotions": {
     "_": "Эмоция владеет бровями, веками и уголками рта. Рот не трогает — им распоряжаются висемы. Уголки рта (mouthSmile/mouthFrown/mouthDimple) в зоне эмоции законно: это ДРУГИЕ морфы, чем те, что двигают висемы (челюсть, смыкание, вытягивание), и таблица зон это разделение стережёт.",
 
-    "neutral": { "pose": {}, "blinkScale": 1.0, "articulationRate": 1.0, "headPitchDeg": 0 },
+    "neutral": { "clip": "neutral.json", "pose": {}, "blinkScale": 1.0, "articulationRate": 1.0, "headPitchDeg": 0 },
 
     "skeptical": {
+      "clip": "skeptical.json",
       "_": "Скепсис: асимметрия. Одна бровь вниз, другая вверх — симметричный скепсис читается как недоумение.",
       "pose": {
         "browDownLeft": 0.42, "browOuterUpRight": 0.38, "browInnerUp": 0.1,
@@ -129,6 +141,7 @@
     },
 
     "pressing": {
+      "clip": "pressing.json",
       "_": "Давит: брови вниз и сведены, веки прищурены, голова подана вперёд.",
       "pose": {
         "browDownLeft": 0.5, "browDownRight": 0.5, "browInnerUp": 0.22,
@@ -142,6 +155,7 @@
     },
 
     "warming": {
+      "clip": "warming.json",
       "_": "Теплеет: брови расслаблены, уголки рта чуть вверх, веки мягкие.",
       "pose": {
         "browInnerUp": 0.16, "browOuterUpLeft": 0.14, "browOuterUpRight": 0.14,
@@ -156,6 +170,7 @@
     },
 
     "impressed": {
+      "clip": "impressed.json",
       "_": "Впечатлён: брови вверх, глаза шире, лёгкая улыбка.",
       "pose": {
         "browInnerUp": 0.36, "browOuterUpLeft": 0.42, "browOuterUpRight": 0.38,
