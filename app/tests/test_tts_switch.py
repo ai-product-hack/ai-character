@@ -31,6 +31,9 @@ class FakeTTS:
     def describe(self):
         return {"name": self.name}
 
+    def synthesize_many(self, texts):
+        return [self(text) for text in texts]
+
 
 class Fallback(unittest.TestCase):
     def test_silent_while_primary_works(self):
@@ -50,6 +53,15 @@ class Fallback(unittest.TestCase):
         self.assertEqual(sr, 24000)
         self.assertTrue(tts.failed_over)
         self.assertEqual(backup.calls, ["реплика"])
+
+    def test_batch_survives_network_failure_once(self):
+        primary, backup = FakeTTS("net", fail=True), FakeTTS("local")
+        tts = FallbackTTS(primary, backup)
+        out = tts.synthesize_many(["раз", "два"])
+        self.assertEqual(len(out), 2)
+        self.assertTrue(tts.failed_over)
+        self.assertEqual(backup.calls, ["раз", "два"])
+        self.assertEqual(len(tts.failures), 1)
 
     def test_does_not_flap_back(self):
         """Голос не должен меняться посреди диалога, даже если сеть вернулась."""
@@ -101,7 +113,7 @@ class Selection(unittest.TestCase):
 
     @patch("app.media.build_tts")
     def test_switch_uses_each_providers_own_voice_and_caches(self, build):
-        build.side_effect = lambda cfg: FakeTTS(cfg["provider"])
+        build.side_effect = lambda cfg, **kw: FakeTTS(cfg["provider"])
         tts = SwitchableTTS({
             "provider": "silero",
             "silero": {"voice": "ru_roman"},
@@ -115,7 +127,7 @@ class Selection(unittest.TestCase):
 
     @patch("app.media.build_tts")
     def test_failed_switch_keeps_working_provider(self, build):
-        def factory(cfg):
+        def factory(cfg, **kw):
             if cfg["provider"] == "elevenlabs":
                 raise SystemExit("нет ELEVENLABS_API_KEY")
             return FakeTTS("silero")
@@ -135,6 +147,18 @@ class Selection(unittest.TestCase):
             {"provider": "silero", "label": "Silero (ru_roman)"},
             {"provider": "elevenlabs", "label": "ElevenLabs"},
         ])
+
+    @patch("app.media.ElevenLabsTTS")
+    @patch("app.media.SileroTTS")
+    def test_elevenlabs_reuses_loaded_silero_as_fallback(self, silero, eleven):
+        local, remote = FakeTTS("silero"), FakeTTS("elevenlabs")
+        silero.return_value, eleven.return_value = local, remote
+        tts = SwitchableTTS({"provider": "silero",
+                             "silero": {"voice": "ru_roman"},
+                             "elevenlabs": {"voice": "voice-id"}})
+        tts.switch("elevenlabs")
+        self.assertIs(tts.engine.backup, local)
+        self.assertEqual(silero.call_count, 1)
 
 
 if __name__ == "__main__":

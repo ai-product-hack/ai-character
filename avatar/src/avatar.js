@@ -107,6 +107,18 @@ export class Avatar {
     return this;
   }
 
+  /** Осмысленный жест на начале заполнителя или содержательной реплики. */
+  speechAccent(kind = 'speech') {
+    if (!this.behavior) return this;
+    const cfg = this.configs.expression.speechMotion || {};
+    const amp = kind === 'backchannel'
+      ? (cfg.backchannelNodDeg ?? 3.0)
+      : (cfg.nodDeg ?? 1.6);
+    this.behavior.nod(amp, cfg.nodDurationMs ?? 520);
+    this.behavior.notifyEvent();
+    return this;
+  }
+
   setEmotion(emotion, intensity = 1) {
     if (!this.emotionLayer) throw new Error('avatar: модель ещё не загружена');
     this.emotionLayer.setEmotion(emotion, intensity);
@@ -162,7 +174,11 @@ export class Avatar {
       const fastMs = this.states ? this.states.update(dt) : null;
       morphs.begin();
       if (this.visemes) this.visemes.update(dt * this.emotionLayer.articulationRate);
-      if (this.emotionLayer) this.emotionLayer.update(dt, fastMs);
+      if (this.emotionLayer) {
+        const speechActivity = this.visemes && this.visemes.isPlaying
+          ? this.visemes.activity : 0;
+        this.emotionLayer.update(dt, fastMs, speechActivity);
+      }
       if (this.behavior) this.behavior.update(dt, nowMs / 1000);
       morphs.commit();
     }

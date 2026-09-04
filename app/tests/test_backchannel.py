@@ -46,7 +46,36 @@ class Preparation(unittest.TestCase):
             self.assertGreater(f.audio_ms, 0)
             self.assertGreater(len(f.visemes), 0,
                                "трек висем считается заранее, а не по Enter")
+            self.assertEqual(f.visemes[-1]["viseme"], "SIL",
+                             "после заполнителя рот должен закрыться")
+            self.assertGreaterEqual(f.visemes[-1]["pts_ms"], f.audio_ms)
             self.assertTrue(f.text)
+
+    def test_explicit_silence_survives_future_appended_clause(self):
+        bc = warm(texts=["Угу."])
+        track = bc.fillers[0].visemes + [{"pts_ms": 2000, "viseme": "AA"}]
+        between = [v for v in track
+                   if bc.fillers[0].audio_ms <= v["pts_ms"] < 2000]
+        self.assertEqual(between[-1]["viseme"], "SIL")
+
+    def test_warm_cache_avoids_resynthesizing_known_voice(self):
+        calls = []
+
+        def counting_tts(text):
+            calls.append(text)
+            return fake_tts(text)
+
+        bc = Backchannel(texts=["Угу."])
+        bc.warm(counting_tts, fake_align, fake_visemes, cache_key="silero")
+        first = bc.fillers[0]
+        bc.warm(counting_tts, fake_align, fake_visemes,
+                cache_key="elevenlabs")
+        self.assertEqual(len(calls), 2)
+        bc.warm(counting_tts, fake_align, fake_visemes, cache_key="silero")
+        self.assertEqual(len(calls), 2)
+        self.assertIs(bc.fillers[0], first)
+        self.assertTrue(bc.cache_hit)
+        self.assertEqual(bc.warmup_ms, 0)
 
     def test_not_ready_before_warm(self):
         self.assertFalse(Backchannel().ready)

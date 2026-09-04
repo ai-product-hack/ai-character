@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
@@ -70,7 +71,8 @@ class ElevenLabsTTS:
     ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech/{voice}/stream"
 
     def __init__(self, voice: str | None = None, model: str = "eleven_flash_v2_5",
-                 sample_rate: int = SR_TTS, timeout: float = 20):
+                 sample_rate: int = SR_TTS, timeout: float = 20,
+                 warm: bool = True):
         import httpx
         from app.llm import load_env
         load_env()
@@ -89,7 +91,8 @@ class ElevenLabsTTS:
         self.voice = voice or self._pick_voice()
         self.downgraded_from: str | None = None
         t0 = time.perf_counter()
-        self._warm()
+        if warm:
+            self._warm()
         self.load_s = time.perf_counter() - t0
 
     def _warm(self) -> None:
@@ -166,6 +169,58 @@ class ElevenLabsTTS:
         pcm = np.frombuffer(r.content, dtype="<i2").astype(np.float32) / 32768.0
         return pcm, self.sr
 
+    def synthesize_many(self, texts: list[str]) -> list[tuple]:
+        """Короткие независимые фразы параллельно, не больше двух запросов.
+
+        Нужен при смене голоса для заполнителей. Последовательные шесть HTTP
+        round-trip делали UI «зависшим» на несколько секунд, хотя одна фраза
+        укладывается в измеренные сотни миллисекунд. Два потока не упираются в
+        типичный лимит конкурентности ElevenLabs и переиспользуют тот же пул.
+        """
+        def synthesize_with_concurrency_retry(text):
+            try:
+                return self(text)
+            except Exception as e:                         # noqa: BLE001
+                response = getattr(e, "response", None)
+                if getattr(response, "status_code", None) != 429:
+                    raise
+                # На тарифах с concurrency=1 второй из двух запросов может
+                # получить 429, пока первый ещё звучит. Это не обрыв сервиса
+                # и не повод навсегда уходить на Silero: повторяем только
+                # отклонённую реплику после короткой серверной паузы.
+                retry_after = (response.headers.get("retry-after", "0.2")
+                               if response is not None else "0.2")
+                try:
+                    delay = min(1.0, max(0.1, float(retry_after)))
+                except (TypeError, ValueError):
+                    delay = 0.2
+                time.sleep(delay)
+                return self(text)
+
+        def run_batch():
+            if len(texts) < 2:
+                return [synthesize_with_concurrency_retry(text) for text in texts]
+            with ThreadPoolExecutor(max_workers=min(2, len(texts)),
+                                    thread_name_prefix="elevenlabs-tts") as pool:
+                return list(pool.map(synthesize_with_concurrency_retry, texts))
+
+        try:
+            return run_batch()
+        except Exception as e:                             # noqa: BLE001
+            # SwitchableTTS откладывает отдельный прогрев: первая пачка сама
+            # проверяет голос и не платит лишний HTTP round-trip. Поэтому тот
+            # же тарифный fallback, что в _warm(), нужен и здесь.
+            if "402" not in str(e) and "paid_plan_required" not in str(e):
+                raise
+            fallback = self._first_premade()
+            if fallback == self.voice:
+                raise
+            print(f"  !! голос {self.voice} требует платного тарифа ElevenLabs; "
+                  "пересобираю заполнители встроенным голосом")
+            self.downgraded_from, self.voice = self.voice, fallback
+            self.picked_russian = False
+            return run_batch()
+
     def describe(self) -> dict:
         return {"name": self.name, "model": self.model, "voice": self.voice,
                 "russian_voice": self.picked_russian,
@@ -210,6 +265,24 @@ class FallbackTTS:
             print(f"  !! синтез {self.primary.name} отвалился ({self.failures[-1]}), "
                   f"переключаюсь на {self.backup.name} до перезапуска")
             return self.backup(text)
+
+    def synthesize_many(self, texts: list[str]) -> list[tuple]:
+        """Пакетный путь с тем же однократным failover, что у одной фразы."""
+        active = self.active
+        many = getattr(active, "synthesize_many", None)
+        if self.failed_over:
+            return many(texts) if many else [active(text) for text in texts]
+        try:
+            return many(texts) if many else [active(text) for text in texts]
+        except Exception as e:                             # noqa: BLE001
+            self.failures.append(f"{type(e).__name__}: {str(e)[:120]}")
+            self.failed_over = True
+            print(f"  !! пакетный синтез {self.primary.name} отвалился "
+                  f"({self.failures[-1]}), переключаюсь на {self.backup.name} "
+                  "до перезапуска")
+            backup_many = getattr(self.backup, "synthesize_many", None)
+            return (backup_many(texts) if backup_many
+                    else [self.backup(text) for text in texts])
 
     def describe(self) -> dict:
         return {"name": self.name, "active": self.active.describe(),
@@ -268,7 +341,23 @@ class SwitchableTTS:
 
     def _build(self, provider: str):
         if provider not in self._built:
-            self._built[provider] = build_tts(self.config_for(provider))
+            cfg = self.config_for(provider)
+            # Сразу после сборки App прогревает пакет заполнителей. Для
+            # ElevenLabs это одновременно проверка голоса и прогрев HTTP;
+            # отдельная фраза здесь удваивала время первого переключения.
+            if provider == "elevenlabs":
+                cfg["warm"] = False
+            backup = self._built.get("silero") if provider == "elevenlabs" else None
+            if backup is None:
+                built = build_tts(cfg)
+            else:
+                built = build_tts(cfg, backup_tts=backup)
+            self._built[provider] = built
+            # Если сервер сразу стартовал на ElevenLabs, сохранить созданный
+            # внутри fallback Silero: обратное переключение не должно снова
+            # загружать ту же тяжёлую модель.
+            if provider == "elevenlabs" and isinstance(built, FallbackTTS):
+                self._built.setdefault("silero", built.backup)
         return self._built[provider]
 
     def config_for(self, provider: str) -> dict:
@@ -296,6 +385,10 @@ class SwitchableTTS:
 
     def __call__(self, text: str):
         return self.engine(text)
+
+    def synthesize_many(self, texts: list[str]) -> list[tuple]:
+        many = getattr(self.engine, "synthesize_many", None)
+        return many(texts) if many else [self.engine(text) for text in texts]
 
     def switch(self, provider: str):
         """Сменить движок. Возвращает True, если что-то изменилось."""
@@ -335,7 +428,7 @@ def tts_config() -> dict:
     return tts or {"provider": "silero"}
 
 
-def build_tts(cfg: dict | None = None):
+def build_tts(cfg: dict | None = None, backup_tts=None):
     """Синтезатор по конфигу. Переключение — одна строка.
 
     Silero остаётся офлайновым запасным независимо от выбора: сеть на площадке
@@ -357,12 +450,13 @@ def build_tts(cfg: dict | None = None):
     if provider == "elevenlabs":
         primary = ElevenLabsTTS(voice=cfg.get("voice"),
                                 model=cfg.get("model", "eleven_flash_v2_5"),
-                                sample_rate=sr)
+                                sample_rate=sr, warm=cfg.get("warm", True))
         if not cfg.get("fallback", True):
             return primary
         # `voice` у сетевого провайдера — это voice_id, локальному он не
         # подходит: запасной голос задаётся отдельным полем.
-        return FallbackTTS(primary, silero(cfg.get("voice_offline", "ru_roman")))
+        backup = backup_tts or silero(cfg.get("voice_offline", "ru_roman"))
+        return FallbackTTS(primary, backup)
     raise SystemExit(f"провайдер синтеза «{provider}» не реализован")
 
 

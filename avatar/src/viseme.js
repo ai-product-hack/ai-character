@@ -153,6 +153,13 @@ export class VisemeLayer {
 
   get isPlaying() { return this.track !== null && this.genId !== null; }
 
+  /** 0..1 — насколько сейчас активно артикулирует рот, для остального лица. */
+  get activity() {
+    let value = 0;
+    for (const weight of this.current.values()) value = Math.max(value, weight);
+    return clamp01(value);
+  }
+
   /**
    * Найти пару висем, между которыми сейчас находится время, двоичным поиском.
    * Возвращает индекс левой висемы или -1, если время левее трека.

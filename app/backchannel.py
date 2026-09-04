@@ -45,11 +45,14 @@ class Backchannel:
     def __init__(self, texts: list[str] | None = None, seed: int | None = None):
         self.texts = list(texts or self.DEFAULT)
         self.fillers: list[Filler] = []
+        self._cache: dict[str, list[Filler]] = {}
         self._last = -1
         self._rnd = random.Random(seed)
         self.warmup_ms = 0.0
+        self.cache_hit = False
 
-    def warm(self, tts, align, to_visemes) -> "Backchannel":
+    def warm(self, tts, align, to_visemes,
+             cache_key: str | None = None) -> "Backchannel":
         """Синтезировать и разметить всё заранее.
 
         Зовётся на старте и ещё раз при смене голоса: заполнитель обязан
@@ -58,18 +61,39 @@ class Backchannel:
         заменяет заполнители, а не добавляет вторые.
         """
         t0 = time.perf_counter()
+        if cache_key is not None and cache_key in self._cache:
+            self.fillers = list(self._cache[cache_key])
+            self._last = -1
+            self.warmup_ms = 0.0
+            self.cache_hit = True
+            return self
+
         self.fillers.clear()
         self._last = -1
-        for text in self.texts:
+        self.cache_hit = False
+        spoken = [normalize(text) for text in self.texts]
+        synthesize_many = getattr(tts, "synthesize_many", None)
+        audio = (synthesize_many(spoken) if synthesize_many
+                 else [tts(text) for text in spoken])
+        for text, (pcm, sr) in zip(self.texts, audio):
             # По умолчанию заполнители чисто русские, но методист может задать
             # свои — правило «в синтез идёт нормализованное» действует и здесь.
-            pcm, sr = tts(normalize(text))
             chars = align(pcm, sr)
+            audio_ms = len(pcm) / sr * 1000
+            visemes = list(to_visemes(chars))
+            # Основная реплика может приехать и дополнить тот же трек ещё до
+            # конца заполнителя. Без явной тишины её первая висема становится
+            # ``b`` после последней висемы «угу», и рендер держит последнюю
+            # форму рта до начала ответа. SIL в фактическом конце аудио делает
+            # паузу настоящей независимо от того, когда приехал хвост трека.
+            if not visemes or visemes[-1].get("viseme") != "SIL":
+                visemes.append({"pts_ms": audio_ms, "viseme": "SIL"})
             self.fillers.append(Filler(
                 text=text, pcm=pcm, sample_rate=sr,
-                audio_ms=len(pcm) / sr * 1000,
-                visemes=to_visemes(chars), chars=chars,
+                audio_ms=audio_ms, visemes=visemes, chars=chars,
             ))
+        if cache_key is not None:
+            self._cache[cache_key] = list(self.fillers)
         self.warmup_ms = (time.perf_counter() - t0) * 1000
         return self
 
@@ -92,6 +116,7 @@ class Backchannel:
         return {
             "count": len(self.fillers),
             "warmup_ms": round(self.warmup_ms),
+            "cache_hit": self.cache_hit,
             "items": [{"text": f.text, "audio_ms": round(f.audio_ms),
                        "visemes": len(f.visemes)} for f in self.fillers],
         }

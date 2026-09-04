@@ -61,7 +61,7 @@
 </script>
 <script type="module">
 import { createAvatar } from '/avatar/src/avatar.js';
-import { AudioClock } from '/avatar/src/clock.js';
+import { AudioClock, scheduleAudioClause, shiftTimeline } from '/avatar/src/clock.js';
 
 const $ = id => document.getElementById(id);
 const fail = e => { $('err').style.display='block';
@@ -71,10 +71,17 @@ window.addEventListener('unhandledrejection', e => fail(e.reason));
 
 let avatar, ctx, clock, analyser, currentGen = null, anchored = false;
 let cues = [], emoMarks = [], emoApplied = -1;
+let contentAccented = false;
+let lastContentSource = null;
+const clauseSlipMs = new Map();
+const backchannelSources = new Map();
+const endedSources = new WeakSet();
 const stats = {firstAudioMs: null, firstSpeechMs: null, firstTokenMs: null,
                clauses: 0, drops: 0, seq: 0, backchannels: 0,
                specHits: 0, specTries: 0, specCover: null,
-               repaired: 0, emotions: 0, typing: null};
+               repaired: 0, emotions: 0, typing: null, lateAudioMs: 0};
+
+const clauseKey = h => `${h.generation_id}:${h.clause}`;
 
 async function boot() {
   avatar = await createAvatar($('c'), {
@@ -103,7 +110,7 @@ async function boot() {
   // Ошибка в цикле чтения раньше терялась молча, и выглядело это как «агент
   // замолчал»: кадры на сервере есть, клиент их не берёт. Теперь падение
   // видно, и поток переподключается.
-  connect().catch(e => { fail(e); setTimeout(() => connect().catch(fail), 500); });
+  connectForever();
 }
 
 function ensureAudio() {
@@ -126,6 +133,12 @@ function ensureAudio() {
 
 async function connect() {
   const resp = await fetch('/api/stream?from=0');
+  // Экран сотрудника часто открывают раньше, чем методист нажал «начать».
+  // Сервер в этот момент честно отвечает 400; это ожидание сессии, а не
+  // фатальная ошибка клиента. Старый код дочитывал JSON как бинарный поток и
+  // больше уже не подключался, поэтому после старта страница оставалась немой.
+  if (resp.status === 400) return;
+  if (!resp.ok) throw new Error(`поток: HTTP ${resp.status}`);
   const reader = resp.body.getReader();
   let acc = new Uint8Array(0);
   for (;;) {
@@ -143,6 +156,14 @@ async function connect() {
       // Разбор одного кадра не имеет права уронить чтение остальных.
       try { handle(hdr, payload); } catch (e) { fail(e); }
     }
+  }
+}
+
+async function connectForever() {
+  for (;;) {
+    try { await connect(); }
+    catch (e) { fail(e); }
+    await new Promise(resolve => setTimeout(resolve, 500));
   }
 }
 
@@ -174,7 +195,28 @@ function handle(h, payload) {
     if (h.repaired) stats.repaired++;
     // Сервер сам говорит, в каком состоянии быть лицу: после заполнителя это
     // thinking, пока идёт модель, и только потом speaking.
-    avatar.setState(h.face || (h.finished ? 'listening' : 'speaking'));
+    const face = h.face || (h.finished ? 'listening' : 'speaking');
+    if (h.after_ms) {
+      // Состояние «thinking» после заполнителя должно начаться, когда «угу»
+      // закончилось, а не в том же сетевом пакете, где оно только стартовало.
+      const src = backchannelSources.get(h.generation_id);
+      if (src) src.addEventListener('ended', () => {
+        if (currentGen === h.generation_id) avatar.setState(face);
+        backchannelSources.delete(h.generation_id);
+      }, {once:true});
+    } else if (h.after_audio) {
+      // Финальное состояние приходит, когда все клаузы ОТПРАВЛЕНЫ, а не когда
+      // колонки их доиграли. Держим speaking до конца последнего источника и
+      // только затем возвращаем живое слушающее поведение.
+      const src = lastContentSource;
+      const apply = () => {
+        if (currentGen === h.generation_id) avatar.setState(face);
+      };
+      if (!src || endedSources.has(src)) apply();
+      else src.addEventListener('ended', apply, {once:true});
+    } else {
+      avatar.setState(face);
+    }
     return;
   }
   if (h.kind === 'audio') {
@@ -182,17 +224,19 @@ function handle(h, payload) {
     return playAudio(h, payload);
   }
   if (h.kind === 'visemes') {
-    if (h.clause === 0) avatar.playGeneration(h.generation_id, h.track);
-    else avatar.visemes.appendVisemes(h.generation_id, h.track);
+    const track = shiftTimeline(h.track, clauseSlipMs.get(clauseKey(h)) || 0);
+    if (h.clause === 0) avatar.playGeneration(h.generation_id, track);
+    else avatar.visemes.appendVisemes(h.generation_id, track);
     return;
   }
   if (h.kind === 'subtitles') {
-    cues = cues.concat(h.cues);
+    cues = cues.concat(shiftTimeline(h.cues, clauseSlipMs.get(clauseKey(h)) || 0));
     return;
   }
   if (h.kind === 'emotions') {
     stats.emotions += h.marks.length;
-    emoMarks = emoMarks.concat(h.marks).sort((a, b) => a.pts_ms - b.pts_ms);
+    const marks = shiftTimeline(h.marks, clauseSlipMs.get(clauseKey(h)) || 0);
+    emoMarks = emoMarks.concat(marks).sort((a, b) => a.pts_ms - b.pts_ms);
     return;
   }
 }
@@ -205,6 +249,11 @@ function playAudio(h, payload) {
     anchored = false;
     cues = [];
     emoMarks = []; emoApplied = -1;
+    clauseSlipMs.clear();
+    backchannelSources.clear();
+    contentAccented = false;
+    lastContentSource = null;
+    stats.lateAudioMs = 0;
     stats.clauses = 0;
     avatar.setState('speaking');
   }
@@ -216,8 +265,19 @@ function playAudio(h, payload) {
   const src = ctx.createBufferSource();
   src.buffer = buf;
   src.connect(analyser);
-  const at = clock.t0 + h.start_ms / 1000;
-  src.start(Math.max(at, ctx.currentTime));
+  const schedule = scheduleAudioClause(clock.t0, ctx.currentTime, h.start_ms);
+  clauseSlipMs.set(clauseKey(h), schedule.slipMs);
+  stats.lateAudioMs = Math.max(stats.lateAudioMs, Math.round(schedule.slipMs));
+  if (h.backchannel) {
+    backchannelSources.set(h.generation_id, src);
+    avatar.speechAccent('backchannel');
+  } else if (!contentAccented) {
+    contentAccented = true;
+    avatar.speechAccent('speech');
+  }
+  if (!h.backchannel) lastContentSource = src;
+  src.addEventListener('ended', () => endedSources.add(src), {once:true});
+  src.start(schedule.atSec);
   stats.clauses++;
   live.push(src);
 }
@@ -231,6 +291,10 @@ function onCancel(gid) {
   avatar.cancel(gid);
   cues = [];
   emoMarks = []; emoApplied = -1;
+  clauseSlipMs.clear();
+  backchannelSources.clear();
+  contentAccented = false;
+  lastContentSource = null;
   avatar.setEmotion('neutral', 1);      // эмоция откатывается вместе со всем
   $('subs').textContent = '';
   currentGen = null;
@@ -249,7 +313,7 @@ function loop(now) {
 
 // Амплитуда умеренная: на полуреалистичном лице большая мимика превращает
 // персонажа в мультик. Натекание и спад делает сам слой эмоции за 200 мс.
-const EMO_INTENSITY = 0.45;
+const EMO_INTENSITY = 0.68;
 
 function applyEmotions() {
   if (!clock || clock.t0 === null || !emoMarks.length) return;
@@ -297,6 +361,7 @@ function drawHud() {
     `generation_id  ${v.genId ?? '—'}\n` +
     `outputLatency  ${d.outputLatencyMs?.toFixed(1) ?? '—'} мс\n` +
     `дрейф          ${(v.drift_ms ?? 0).toFixed(1)} мс\n` +
+    `опоздание аудио ${stats.lateAudioMs} мс\n` +
     `висема         ${v.viseme ?? '—'} ${v.trackIndex ?? 0}/${v.trackLength ?? 0}\n` +
     `подвисаний     ${v.underruns ?? 0}\n` +
     `клауз          ${stats.clauses}\n` +

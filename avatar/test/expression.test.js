@@ -77,7 +77,7 @@ function run(ctx, seconds, onFrame) {
     const fast = ctx.states.update(dt);
     ctx.morphs.begin();
     ctx.visemes.update(dt * ctx.emotion.articulationRate);
-    ctx.emotion.update(dt, fast);
+    ctx.emotion.update(dt, fast, ctx.visemes.activity);
     ctx.behavior.update(dt, i * dt);
     ctx.morphs.commit();
     if (onFrame) onFrame(i * dt, i);
@@ -431,6 +431,31 @@ describe('эмоции', () => {
     const expected = expr.states.thinking.blinkScale * expr.emotions.pressing.blinkScale;
     assert.ok(Math.abs(ctx.behavior.blinkScale - expected) < 1e-6,
       `${ctx.behavior.blinkScale} против ожидаемого ${expected}`);
+  });
+});
+
+describe('живость во время речи', () => {
+  test('артикуляция подключает щёки и брови, а тишина их отпускает', () => {
+    const ctx = setup();
+    ctx.clock.anchor(0);
+    ctx.states.set('speaking');
+    ctx.visemes.playGeneration('g', [
+      {pts_ms: 0, viseme: 'AA'}, {pts_ms: 1000, viseme: 'SIL'},
+    ]);
+    run(ctx, 0.6);
+    assert.ok(ctx.morphs.get('cheekSquintLeft') > 0.025,
+      'при речи должны работать не только морфы рта');
+    assert.ok(ctx.morphs.get('browInnerUp') > 0.015,
+      'брови должны слегка сопровождать артикуляцию');
+    run(ctx, 1.2);
+    assert.ok(ctx.morphs.get('cheekSquintLeft') < 0.01,
+      'после речи лицо должно вернуться в покой');
+  });
+
+  test('акцент заполнителя заметнее обычного речевого', () => {
+    assert.ok(expr.speechMotion.backchannelNodDeg > expr.speechMotion.nodDeg);
+    assert.ok(expr.speechMotion.backchannelNodDeg >= 3,
+      '«угу» должен сопровождаться читаемым кивком');
   });
 });
 

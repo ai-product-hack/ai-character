@@ -131,7 +131,8 @@ def to_timeline(marks: list[EmotionMark], chars: list[dict],
 
 
 SYSTEM_HINT = """
-Эмоцию реплики ставь тегом в самом начале: [emo:neutral], [emo:skeptical],
+КАЖДУЮ реплику обязательно начинай ровно с одного тега эмоции:
+[emo:neutral], [emo:skeptical],
 [emo:pressing], [emo:warming] или [emo:impressed]. Если по ходу реплики
 отношение меняется, поставь тег в этом месте ещё раз.
 

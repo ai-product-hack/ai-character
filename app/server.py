@@ -187,7 +187,10 @@ class Session:
             "stages_total": len(self.scenario.stages),
             "finished": self.state.finished,
             "action": happened["action"],
-            "face": "listening" if self.state.finished else "speaking",
+            # Реплика уже целиком отправлена, но браузер ещё может её доигрывать.
+            # Он применит listening по окончании последнего AudioBufferSource.
+            "face": "listening",
+            "after_audio": True,
             "t_first_audio_ms": round(em["t_first_audio"] or 0),
             "t_first_speech_ms": round(em["t_first_speech"] or 0),
             # Оверлею: то, что видно только серверу. Без этих полей на показе
@@ -425,7 +428,8 @@ class App:
         # ничего, иначе смысл теряется.
         bc = Backchannel().warm(self.models["tts"],
                                 lambda pcm, sr: self.models["aligner"](pcm, sr),
-                                self.models["bridge"])
+                                self.models["bridge"],
+                                cache_key=self.models["tts"].provider)
         self.models["backchannel"] = bc
         # after_ms — сколько ждать ответа, прежде чем ставить заполнитель.
         # Порог короткий намеренно: полсекунды тишины и есть то, что заполнитель
@@ -473,7 +477,7 @@ class App:
                 self.session.cancel()
             self.models["backchannel"].warm(
                 tts, lambda pcm, sr: self.models["aligner"](pcm, sr),
-                self.models["bridge"])
+                self.models["bridge"], cache_key=provider)
         return {"changed": changed, "took_ms": round((time.perf_counter() - t0) * 1000),
                 "tts": tts.describe(),
                 "backchannel": self.models["backchannel"].describe()}

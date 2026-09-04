@@ -8,6 +8,30 @@
 // Класс намеренно тонкий и без зависимости от three.js: его подменяют в тестах
 // и на dev-странице, где звука может не быть вовсе.
 
+/**
+ * Запланировать пришедшую клаузу и посчитать, насколько пришлось сдвинуть её
+ * относительно серверного PTS. Медленный TTS может прислать следующий кусок
+ * уже после его nominal start: Web Audio тогда всё равно запускает звук
+ * сейчас, а висемы без этой поправки остаются в прошлом.
+ */
+export function scheduleAudioClause(t0Sec, currentTimeSec, startMs, minLeadMs = 40) {
+  const plannedAtSec = t0Sec + startMs / 1000;
+  const atSec = Math.max(plannedAtSec, currentTimeSec + minLeadMs / 1000);
+  return {
+    plannedAtSec,
+    atSec,
+    // Миллисекундный PTS не должен тащить двоичный шум вроде
+    // 339.9999999999999 во все последующие треки.
+    slipMs: Math.max(0, Math.round((atSec - plannedAtSec) * 10000) / 10),
+  };
+}
+
+/** Сдвинуть произвольные элементы общего PTS на фактическое опоздание аудио. */
+export function shiftTimeline(items, slipMs) {
+  if (!slipMs) return items;
+  return (items || []).map((item) => ({ ...item, pts_ms: item.pts_ms + slipMs }));
+}
+
 export class AudioClock {
   /**
    * @param {AudioContext} ctx

@@ -33,6 +33,7 @@ export class EmotionLayer {
     this.current = new Map();
     this._target = new Map();
     this._slots = new Map();
+    this.speechActivity = 0;
 
     this.missing = [];
   }
@@ -103,7 +104,7 @@ export class EmotionLayer {
    * @param {number} [transitionMs] время перехода; автомат состояний просит
    *        более быстрый вход в `interrupted`
    */
-  update(dt, transitionMs) {
+  update(dt, transitionMs, speechActivity = 0) {
     const target = this._target;
     target.clear();
 
@@ -117,6 +118,20 @@ export class EmotionLayer {
     for (const [morph, w] of Object.entries(this.statePose)) {
       if (morph.startsWith('_') || !Number.isFinite(w)) continue;
       target.set(morph, (target.get(morph) || 0) + w);
+    }
+
+    // Речь двигает не только челюсть: мягко подключаем щёки, нос и брови к
+    // активности артикуляции. Отдельное сглаживание не даёт им дёргаться на
+    // каждом 40-миллисекундном таймкоде.
+    const speech = this.cfg.speechMotion || {};
+    const wantSpeech = clamp01(speechActivity);
+    const speechMs = wantSpeech > this.speechActivity
+      ? (speech.attackMs ?? 100) : (speech.decayMs ?? 180);
+    const speechK = speechMs > 0 ? 1 - Math.exp(-dt * 1000 / speechMs) : 1;
+    this.speechActivity += (wantSpeech - this.speechActivity) * speechK;
+    for (const [morph, w] of Object.entries(speech.pose || {})) {
+      if (morph.startsWith('_') || !Number.isFinite(w)) continue;
+      target.set(morph, (target.get(morph) || 0) + w * this.speechActivity);
     }
 
     // Один экспоненциальный подход на всё: у эмоции нет причин иметь
@@ -157,6 +172,7 @@ export class EmotionLayer {
       activeMorphs: this.current.size,
       blinkScale: +this.blinkScale.toFixed(2),
       articulationRate: +this.articulationRate.toFixed(2),
+      speechActivity: +this.speechActivity.toFixed(2),
     };
   }
 }
