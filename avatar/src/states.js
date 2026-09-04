@@ -105,7 +105,11 @@ export class StateMachine {
     // Множители моргания от состояния и от эмоции перемножаются: «думает и при
     // этом скептичен» должно давать оба эффекта, а не последний назначенный.
     this.behavior.setBlinkScale(blink * this.emotion.blinkScale);
-    this.behavior.setHeadPose(c.headTiltDeg ?? 0, this.emotion.headPitchDeg);
+    this.behavior.setHeadPose(
+      c.headTiltDeg ?? 0,
+      this.emotion.headPitchDeg,
+      c.enterMs ?? this.cfg.transitionMs ?? 200,
+    );
   }
 
   /**

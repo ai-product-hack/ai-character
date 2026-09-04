@@ -109,8 +109,10 @@ export class Microbehavior {
     this.gazeBias = { yaw: 0, pitch: 0 };       // куда смещены точки фиксации
     this.gazeStyle = null;                      // профиль состояния: контакт/отводы
     this.blinkScale = 1;                        // множитель интервала моргания
-    this.headTiltDeg = 0;                       // наклон головы от состояния
-    this.headPitchDeg = 0;                      // наклон от эмоции
+    this.headTiltDeg = 0;                       // текущий наклон от состояния
+    this.headPitchDeg = 0;                      // текущий наклон от эмоции
+    this.headPoseTarget = { tilt: 0, pitch: 0 };
+    this.headPoseSmoothMs = 200;
     this._nod = null;                           // текущий микрокивок
 
     // --- переиспользуемые объекты ---
@@ -147,9 +149,10 @@ export class Microbehavior {
   setBlinkScale(k) { this.blinkScale = k > 0 ? k : 1; }
 
   /** Постоянные наклоны головы: от состояния (крен) и от эмоции (тангаж). */
-  setHeadPose(tiltDeg, pitchDeg) {
-    this.headTiltDeg = tiltDeg || 0;
-    this.headPitchDeg = pitchDeg || 0;
+  setHeadPose(tiltDeg, pitchDeg, transitionMs = 200) {
+    this.headPoseTarget.tilt = tiltDeg || 0;
+    this.headPoseTarget.pitch = pitchDeg || 0;
+    this.headPoseSmoothMs = Math.max(0, transitionMs);
   }
 
   /**
@@ -348,6 +351,14 @@ export class Microbehavior {
   _updateHead(dt) {
     const H = this.cfg.head;
     const G = H.gazeFollow;
+
+    // Морфы состояния натекают через EmotionLayer, а наклон головы раньше
+    // применялся мгновенно. На speaking -> listening это был скачок 3.5° за
+    // один кадр — лицо выглядело плавным, но весь силуэт заметно дёргался.
+    const poseK = this.headPoseSmoothMs > 0
+      ? 1 - Math.exp(-dt * 1000 / this.headPoseSmoothMs) : 1;
+    this.headTiltDeg += (this.headPoseTarget.tilt - this.headTiltDeg) * poseK;
+    this.headPitchDeg += (this.headPoseTarget.pitch - this.headPitchDeg) * poseK;
 
     // Линия задержки: голова доворачивает туда же, куда ушёл взгляд, но позже
     // и на меньший угол.

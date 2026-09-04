@@ -514,6 +514,28 @@ describe('переходы плавные', () => {
     assert.ok(at80 > 100, `переход прошёл за ${at80} мс — слишком резко`);
     assert.ok(at80 < 600, `переход занял ${at80} мс — слишком вяло`);
   });
+
+  test('голова не прыгает при speaking → listening', () => {
+    const ctx = setup();
+    ctx.states.set('speaking');
+    run(ctx, 1.0);
+    const target = expr.states.listening.headTiltDeg;
+    const before = ctx.behavior.headTiltDeg;
+    ctx.states.set('listening');
+    // Установка состояния меняет цель, но не текущую кость в тот же момент.
+    assert.equal(ctx.behavior.headTiltDeg, before);
+
+    let previous = before;
+    let maxStep = 0;
+    run(ctx, 1.2, () => {
+      const current = ctx.behavior.headTiltDeg;
+      maxStep = Math.max(maxStep, Math.abs(current - previous));
+      previous = current;
+    });
+    assert.ok(maxStep < 0.4, `наклон прыгнул на ${maxStep.toFixed(2)}° за кадр`);
+    assert.ok(Math.abs(ctx.behavior.headTiltDeg - target) < 0.05,
+      `голова не дошла до listening: ${ctx.behavior.headTiltDeg.toFixed(2)}°`);
+  });
 });
 
 describe('бюджет кадра', () => {
