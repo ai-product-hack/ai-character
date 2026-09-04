@@ -73,6 +73,18 @@ async function boot() {
   await avatar.load();
   avatar.setSize(innerWidth, innerHeight);
   avatar.setState('listening');
+  // Отладочный хук: те же числа, что на оверлее, плюс доступ к аудиографу.
+  // Нужен для замеров пункта 9 и пригождается на защите.
+  window.__app = {
+    get avatar() { return avatar; },
+    get ctx() { return ctx; },
+    get clock() { return clock; },
+    get analyser() { return analyser; },
+    get currentGen() { return currentGen; },
+    get cues() { return cues; },
+    stats,
+    send,
+  };
   requestAnimationFrame(loop);
   // Ошибка в цикле чтения раньше терялась молча, и выглядело это как «агент
   // замолчал»: кадры на сервере есть, клиент их не берёт. Теперь падение
