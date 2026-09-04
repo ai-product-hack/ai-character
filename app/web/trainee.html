@@ -117,7 +117,13 @@ const endedSources = new WeakSet();
 const stats = {firstAudioMs: null, firstSpeechMs: null, firstTokenMs: null,
                clauses: 0, drops: 0, seq: 0, backchannels: 0,
                specHits: 0, specTries: 0, specCover: null,
-               repaired: 0, emotions: 0, typing: null, lateAudioMs: 0};
+               repaired: 0, emotions: 0, panels: 0, typing: null, lateAudioMs: 0,
+               // Замеры БРАУЗЕРА, а не сервера: сервер знает, когда отдал
+               // кадр, а слышно ли его — знает только эта сторона.
+               heardMs: null, heardKind: '—', ctxState: '—'};
+
+// Момент, когда человек передал ход: Enter или решение эндпоинтера.
+let tAsk = null;
 
 const clauseKey = h => `${h.generation_id}:${h.clause}`;
 
