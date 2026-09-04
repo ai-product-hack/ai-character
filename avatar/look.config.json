@@ -70,16 +70,27 @@
       "shadowNormalBias": 0.02,
       "shadowRadius": 4
     },
-    "rim": {
-      "_": "Контровой сзади-сверху, холодный голубоватый, довольно резкий. Именно он рисует контур головы на тёмном фоне.",
+    "rimLeft": {
+      "_": "Слабый холодный контровой слева-сзади. В паре со вторым рисует обе щеки при фронтальной камере.",
       "color": "#9ec8ff",
-      "intensity": 30,
-      "azimuthDeg": 218,
-      "elevationDeg": 44,
-      "distance": 1.0,
-      "angleDeg": 24,
-      "penumbra": 0.35,
-      "_placement": "Подобрано на кадре. На 152 град свет бил в капюшон и выбивался в белый, на 218 рисует контур черепа и скулы, что и требуется.",
+      "intensity": 12,
+      "azimuthDeg": 148,
+      "elevationDeg": 38,
+      "distance": 1.1,
+      "angleDeg": 30,
+      "penumbra": 0.58,
+      "decay": 2,
+      "castShadow": false
+    },
+    "rimRight": {
+      "_": "Слабый холодный контровой справа-сзади; намеренно чуть темнее левого, чтобы свет не стал симметричной маской.",
+      "color": "#91bbf4",
+      "intensity": 10.5,
+      "azimuthDeg": 214,
+      "elevationDeg": 40,
+      "distance": 1.1,
+      "angleDeg": 30,
+      "penumbra": 0.6,
       "decay": 2,
       "castShadow": false
     },

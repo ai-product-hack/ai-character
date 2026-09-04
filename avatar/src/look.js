@@ -187,7 +187,8 @@ export class Look {
     const point = (c) => new THREE.PointLight(new THREE.Color(c.color), c.intensity, c.distance * 4, 2);
 
     this.lights.key = spot(L.key);
-    this.lights.rim = spot(L.rim);
+    this.lights.rimLeft = spot(L.rimLeft);
+    this.lights.rimRight = spot(L.rimRight);
     this.lights.fill = point(L.fill);
     this.lights.bounce = point(L.bounce);
     this.lights.ambient = new THREE.AmbientLight(new THREE.Color(L.ambient.color), L.ambient.intensity);
@@ -203,7 +204,7 @@ export class Look {
   /** Расставить свет вокруг текущей цели кадра. */
   placeLights() {
     const L = this.cfg.lights;
-    for (const key of ['key', 'rim', 'fill', 'bounce']) {
+    for (const key of ['key', 'rimLeft', 'rimRight', 'fill', 'bounce']) {
       const c = L[key], light = this.lights[key];
       polarTo(this.target, c.azimuthDeg, c.elevationDeg, c.distance, light.position);
       if (light.target) light.target.position.copy(this.target);
