@@ -73,19 +73,45 @@ class Launching(unittest.TestCase):
         self.assertEqual(len(streams), 1, "каждый символ не должен родить запрос")
         self.assertEqual(sp.stats.relaunches, 0)
 
-    def test_big_growth_relaunches(self):
+    def test_big_growth_launches_another(self):
         sp, streams = make_spec(min_chars=10, relaunch_growth=0.4)
         sp.on_typing("Двадцать символов")
         sp.on_typing("Двадцать символов и ещё столько же сверху")
         self.assertEqual(len(streams), 2)
-        self.assertEqual(sp.stats.relaunches, 1)
 
-    def test_only_freshest_stays_in_flight(self):
+    def test_early_flight_survives_growth(self):
+        """В раннем запросе вся фора — гасить его при росте буфера нельзя.
+
+        Первая версия гасила, и замер показал ровно ноль накопленных токенов к
+        моменту Enter: последний перезапуск приходился на конец набора.
+        """
         sp, streams = make_spec(min_chars=10, relaunch_growth=0.3)
         sp.on_typing("Первый вариант текста")
         sp.on_typing("Первый вариант текста и продолжение подлиннее")
-        self.assertTrue(streams[0].cancelled, "старый запрос обязан быть отменён")
+        self.assertFalse(streams[0].cancelled, "ранний запрос — это и есть фора")
         self.assertFalse(streams[1].cancelled)
+        self.assertEqual(len(sp.flights), 2)
+
+    def test_flights_are_capped(self):
+        """Держать в воздухе всё подряд — платить токенами без выигрыша."""
+        sp, streams = make_spec(min_chars=5, relaunch_growth=0.2, max_flights=2)
+        text = "начало"
+        for _ in range(6):
+            text += " ещё немного текста"
+            sp.on_typing(text)
+        self.assertLessEqual(len(sp.flights), 2)
+
+    def test_take_prefers_the_flight_with_most_tokens(self):
+        """Среди годных берём накопивший больше — это самый ранний из живых."""
+        sp, streams = make_spec(min_chars=5, relaunch_growth=0.2, reuse_cover=0.1)
+        sp.on_typing("Ранний текст")
+        sp.on_typing("Ранний текст и продолжение подлиннее")
+        early, late = sp.flights
+        early.tokens.extend(["раз", "два", "три"])
+        late.tokens.append("раз")
+        flight, cover = sp.take("Ранний текст и продолжение подлиннее ещё")
+        self.assertIs(flight, early)
+        self.assertTrue(late.stream.cancelled, "невыбранные полёты гасятся")
 
     def test_disabled_never_launches(self):
         sp, streams = make_spec(enabled=False, min_chars=5)
@@ -178,7 +204,7 @@ class Lifecycle(unittest.TestCase):
         sp.on_typing("Достаточно длинный текст")
         sp.drop()
         self.assertTrue(streams[0].cancelled, "перебивание гасит и спекуляцию")
-        self.assertIsNone(sp.flight)
+        self.assertEqual(sp.flights, [])
 
     def test_drop_is_not_called_on_ordinary_send(self):
         """Отправка сообщения не должна гасить спекуляцию под это же сообщение.
@@ -191,7 +217,7 @@ class Lifecycle(unittest.TestCase):
         text = "Достаточно длинный текст сообщения"
         sp.on_typing(text)
         # так это делает сервер: сначала гасит текущую реплику агента…
-        self.assertIsNotNone(sp.flight, "перебивание не трогает спекуляцию")
+        self.assertTrue(sp.flights, "перебивание не трогает спекуляцию")
         flight, cover = sp.take(text)
         self.assertIsNotNone(flight)
         self.assertEqual(sp.stats.hits, 1)

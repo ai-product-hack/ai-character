@@ -103,11 +103,21 @@ class InFlight:
 
 
 class Speculator:
-    """Один спекулятивный запрос в полёте на сессию.
+    """Несколько спекулятивных запросов в полёте одновременно.
 
-    В полёте держится только самый свежий: старые отменяются. Один ранний
-    запуск бесполезен — к моменту отправки его промпт покрывает лишь начало
-    сообщения, и результат приходится выбрасывать.
+    Первая версия держала ровно один — самый свежий, отменяя предыдущий при
+    росте буфера. Логика выглядела разумно (свежий промпт полнее), но убивала
+    ровно то, ради чего всё делается. Замерено на 65 попаданиях: фора до
+    нажатия Enter — 344 мс медианы, **накопленных токенов ноль**. Каждый
+    перезапуск обнулял полёт, а последний приходился на конец набора. Сводка
+    показывала «65 попаданий из 65», потому что попадание считалось по
+    совпадению префикса, а не по сэкономленному времени.
+
+    Теперь ранний запрос живёт до отправки, а поздние летят рядом с ним. К
+    моменту Enter есть из чего выбрать: берётся тот, что успел накопить больше
+    токенов среди подходящих по префиксу. Промах стоит потраченных токенов, а
+    не задержки — этот размен принят с самого начала, просто раньше мы платили
+    и не получали.
     """
 
     def __init__(self, make_stream, build_prompt, system: str, cfg: dict | None = None):
@@ -120,8 +130,11 @@ class Speculator:
         self.growth = cfg.get("relaunch_growth", 0.4)
         self.reuse_cover = cfg.get("reuse_cover", 0.6)
         self.enabled = cfg.get("enabled", True)
+        # Сколько запросов держать в воздухе. Больше трёх — плата токенами без
+        # выигрыша: четвёртый стартует уже под конец набора, где фора мала.
+        self.max_flights = cfg.get("max_flights", 3)
 
-        self.flight: InFlight | None = None
+        self.flights: list[InFlight] = []
         self.stats = SpecStats()
         self._last_typed_at = 0.0
         self._pending_text = ""
@@ -140,18 +153,25 @@ class Speculator:
             self._last_typed_at = now
             if len(text) < self.min_chars:
                 return False
-            cur = self.flight
-            if cur is not None and cur.user_text == text:
+            if any(f.user_text == text for f in self.flights):
                 return False
-            # Перезапуск только когда буфер заметно вырос: иначе каждый символ
-            # порождал бы новый запрос.
-            if cur is not None and len(text) < len(cur.user_text) * (1 + self.growth):
-                return False
-            if cur is not None:
-                cur.cancel()
+            # Новый запрос — только когда буфер заметно вырос относительно
+            # САМОГО СВЕЖЕГО полёта: иначе каждый символ порождал бы запрос.
+            # Ранние при этом не гасятся — в них вся фора.
+            if self.flights:
+                newest = self.flights[-1]
+                if len(text) < len(newest.user_text) * (1 + self.growth):
+                    return False
+            if len(self.flights) >= self.max_flights:
+                # Вытесняем середину, а не край. Оба края ценны и по-разному:
+                # у самого раннего больше накоплено токенов (это фора), у
+                # самого свежего выше покрытие финального текста (это шанс
+                # вообще пройти проверку префикса). Что из них пригодится,
+                # выяснится только на Enter, поэтому держим размах.
+                self.flights.pop(len(self.flights) // 2).cancel()
                 self.stats.relaunches += 1
-            self.flight = InFlight(self.make_stream(), self.system,
-                                   self.build_prompt(text), text)
+            self.flights.append(InFlight(self.make_stream(), self.system,
+                                         self.build_prompt(text), text))
             self.stats.launches += 1
             return True
 
@@ -162,25 +182,31 @@ class Speculator:
     # -------------------------------------------------------------- отправка
 
     def take(self, final_text: str) -> tuple[InFlight | None, float]:
-        """Забрать результат под финальный текст.
+        """Забрать лучший из полётов под финальный текст.
 
-        Годится только если ранний промпт — префикс финального и покрыл его
-        заметную часть. Иначе платим потраченными токенами, а не задержкой.
+        Годится тот, чей ранний промпт — префикс финального и покрыл его
+        заметную часть. Среди годных берём накопивший больше токенов: это и
+        есть самый ранний из ещё актуальных, то есть максимальная фора.
         """
         final = (final_text or "").strip()
         with self._lock:
-            cur, self.flight = self.flight, None
-            if cur is None:
+            flights, self.flights = self.flights, []
+            usable = [f for f in flights
+                      if final.startswith(f.user_text)
+                      and len(f.user_text) / max(1, len(final)) >= self.reuse_cover]
+            best = max(usable, key=lambda f: len(f.tokens), default=None)
+            for f in flights:
+                if f is not best:
+                    f.cancel()
+            if best is None:
+                self.stats.last_cover = (max((len(f.user_text) for f in flights),
+                                             default=0) / max(1, len(final)))
                 self.stats.misses += 1
-                return None, 0.0
-            cover = len(cur.user_text) / max(1, len(final))
+                return None, self.stats.last_cover
+            cover = len(best.user_text) / max(1, len(final))
             self.stats.last_cover = cover
-            if final.startswith(cur.user_text) and cover >= self.reuse_cover:
-                self.stats.hits += 1
-                return cur, cover
-            cur.cancel()
-            self.stats.misses += 1
-            return None, cover
+            self.stats.hits += 1
+            return best, cover
 
     def note_ttft(self, ms: float, hit: bool) -> None:
         """TTFT считается ОТ НАЖАТИЯ ENTER, а не от запуска спекулятивного
@@ -192,6 +218,6 @@ class Speculator:
     def drop(self) -> None:
         """Погасить всё, что в полёте. Зовётся при перебивании."""
         with self._lock:
-            if self.flight is not None:
-                self.flight.cancel()
-                self.flight = None
+            for f in self.flights:
+                f.cancel()
+            self.flights = []
