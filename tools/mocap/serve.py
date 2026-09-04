@@ -11,6 +11,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 CLIPS = ROOT / "avatar" / "clips"
+BODY_CLIPS = ROOT / "avatar" / "body-clips"
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8092
 SAFE_NAME = re.compile(r"^[a-z][a-z0-9_-]{0,63}$")
 
@@ -31,7 +32,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_POST(self):
-        if self.path != "/tools/mocap/api/save-clip":
+        destinations = {
+            "/tools/mocap/api/save-clip": CLIPS,
+            "/tools/mocap/api/save-body-clip": BODY_CLIPS,
+        }
+        clip_dir = destinations.get(self.path)
+        if clip_dir is None:
             self.send_error(404)
             return
         try:
@@ -43,8 +49,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             clip = payload.get("clip")
             if not SAFE_NAME.fullmatch(name) or not isinstance(clip, dict):
                 raise ValueError("invalid clip")
-            CLIPS.mkdir(parents=True, exist_ok=True)
-            destination = CLIPS / f"{name}.json"
+            clip_dir.mkdir(parents=True, exist_ok=True)
+            destination = clip_dir / f"{name}.json"
             destination.write_text(json.dumps(clip, ensure_ascii=False, indent=2) + "\n")
             body = json.dumps({"ok": True, "path": str(destination.relative_to(ROOT))}).encode()
             self.send_response(200)
