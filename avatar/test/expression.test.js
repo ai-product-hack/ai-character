@@ -166,6 +166,30 @@ describe('состояния визуально различимы', () => {
       `взгляд в нужной области только ${(100 * inRegion / total).toFixed(0)}% времени`);
   });
 
+  test('начало речи возвращает взгляд к собеседнику', () => {
+    const ctx = setup();
+    ctx.states.set('thinking');
+    ctx.behavior.gaze.yaw = -18;
+    ctx.behavior.gaze.pitch = 8;
+    ctx.states.set('speaking');
+    assert.equal(ctx.behavior.gaze.yaw, 0);
+    assert.equal(ctx.behavior.gaze.pitch, 0);
+    assert.equal(ctx.behavior.gazeStyle.returnChance, 0.88);
+  });
+
+  test('во время речи зрительный контакт доминирует, но отводы остаются', () => {
+    const ctx = setup();
+    ctx.states.set('speaking');
+    let contact = 0;
+    let away = 0;
+    run(ctx, 60, () => {
+      if (Math.hypot(ctx.behavior.gaze.yaw, ctx.behavior.gaze.pitch) <= 0.75) contact++;
+      else away++;
+    });
+    assert.ok(contact > away * 2, `контакт ${contact}, отвод ${away}`);
+    assert.ok(away > 0, 'редкие естественные отводы не должны исчезнуть совсем');
+  });
+
   test('в thinking моргания редеют', () => {
     const listening = setup();
     listening.states.set('listening');

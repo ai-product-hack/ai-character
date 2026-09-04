@@ -101,6 +101,7 @@ export class StateMachine {
 
     this.emotion.setStatePose(pose);
     this.behavior.setGazeBias(biasYaw, biasPitch);
+    this.behavior.setGazeStyle(c.gazeStyle);
     // Множители моргания от состояния и от эмоции перемножаются: «думает и при
     // этом скептичен» должно давать оба эффекта, а не последний назначенный.
     this.behavior.setBlinkScale(blink * this.emotion.blinkScale);

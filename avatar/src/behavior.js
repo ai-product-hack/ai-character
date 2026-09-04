@@ -107,6 +107,7 @@ export class Microbehavior {
     // Писать в чужие морфы им нельзя — таблица зон не даст, — поэтому они
     // СМЕЩАЮТ поведение, а не подменяют его.
     this.gazeBias = { yaw: 0, pitch: 0 };       // куда смещены точки фиксации
+    this.gazeStyle = null;                      // профиль состояния: контакт/отводы
     this.blinkScale = 1;                        // множитель интервала моргания
     this.headTiltDeg = 0;                       // наклон головы от состояния
     this.headPitchDeg = 0;                      // наклон от эмоции
@@ -138,6 +139,9 @@ export class Microbehavior {
     this.gazeBias.yaw = yawDeg || 0;
     this.gazeBias.pitch = pitchDeg || 0;
   }
+
+  /** Переопределения характера саккад для текущего состояния. */
+  setGazeStyle(style) { this.gazeStyle = style || null; }
 
   /** Множитель интервала моргания: больше единицы — моргания реже. */
   setBlinkScale(k) { this.blinkScale = k > 0 ? k : 1; }
@@ -190,10 +194,12 @@ export class Microbehavior {
 
   _startSaccade() {
     const S = this.cfg.gaze.saccade, L = this.cfg.gaze.limitDeg;
+    const P = this.gazeStyle || {};
     const g = this.gaze;
-    const big = this.gazeRnd.uniform() < S.largeChance;
+    const big = this.gazeRnd.uniform() < (P.largeChance ?? S.largeChance);
     const [lo, hi] = big ? S.largeAmplitudeDeg : S.amplitudeDeg;
     const dir = this.gazeRnd.uniform() * Math.PI * 2;
+    const amplitudeScale = P.amplitudeScale ?? 1;
 
     g.fromYaw = g.yaw; g.fromPitch = g.pitch;
 
@@ -205,11 +211,12 @@ export class Microbehavior {
     // взгляд уходит вверх-влево и разглядывает уже ТУ область, а не мечется
     // между ней и собеседником.
     const bx = this.gazeBias.yaw, by = this.gazeBias.pitch;
-    if (this.gazeRnd.uniform() < S.returnChance) {
-      g.toYaw = bx + (this.gazeRnd.uniform() * 2 - 1) * S.returnJitterDeg;
-      g.toPitch = by + (this.gazeRnd.uniform() * 2 - 1) * S.returnJitterDeg;
+    if (this.gazeRnd.uniform() < (P.returnChance ?? S.returnChance)) {
+      const jitter = P.returnJitterDeg ?? S.returnJitterDeg;
+      g.toYaw = bx + (this.gazeRnd.uniform() * 2 - 1) * jitter;
+      g.toPitch = by + (this.gazeRnd.uniform() * 2 - 1) * jitter;
     } else {
-      const amp = lo + this.gazeRnd.uniform() * (hi - lo);
+      const amp = (lo + this.gazeRnd.uniform() * (hi - lo)) * amplitudeScale;
       g.toYaw = bx + Math.cos(dir) * amp;
       g.toPitch = by + Math.sin(dir) * amp * 0.65;
     }
