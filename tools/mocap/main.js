@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { Look } from '../../avatar/src/look.js';
 import { loadAvatarModel } from '../../avatar/src/model.js';
-import { LAYERS, RULES } from '../../avatar/src/zones.js';
+import { previewLayerFor } from './preview-zones.js';
 import { makeClip, sampleClip, trimClip, validateClip } from './clip.js';
 
 const $ = (id) => document.getElementById(id);
@@ -97,11 +97,11 @@ function previewWeights(weights, head) {
   const morphs = model.morphs;
   morphs.begin();
   for (const [name, value] of Object.entries(weights)) {
-    const rule = RULES.get(name);
-    if (!rule?.layers.has(LAYERS.EMOTION)) continue;
+    const layer = previewLayerFor(name);
+    if (!layer) continue;
     let slot = slots.get(name);
     if (slot === undefined) { slot = morphs.slotOf(name); slots.set(name, slot); }
-    if (slot >= 0) morphs.writeSlot(LAYERS.EMOTION, slot, value);
+    if (slot >= 0) morphs.writeSlot(layer, slot, value);
   }
   morphs.commit();
   if (head && model.bones.Head) {

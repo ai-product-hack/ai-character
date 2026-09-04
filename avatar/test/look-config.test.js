@@ -20,6 +20,13 @@ test('camera remains the approved frontal camera', () => {
   assert.equal(look.camera.frameHeightM, 0.46);
 });
 
+test('catchlights reveal the iris instead of masking gaze', () => {
+  assert.ok(look.eyes.catchlight.sizeRel <= 0.04,
+    'catchlight must stay small enough for pupil motion to remain readable');
+  assert.ok(look.eyes.catchlight.intensity <= 1,
+    'untone-mapped catchlight must not clip to a flat white disc');
+});
+
 test('expensive post path has a measured pixel budget and no redundant DOF', () => {
   assert.equal(look.post.maxPixelRatio, 1.2);
   assert.equal(look.post.dof.enabled, false);
