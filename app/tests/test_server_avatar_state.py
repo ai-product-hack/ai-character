@@ -2,6 +2,7 @@
 import pathlib
 import sys
 import time
+import types
 import unittest
 
 import numpy as np
@@ -9,6 +10,7 @@ import numpy as np
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from app.evaluator import EvaluationLog                       # noqa: E402
 from app.pipeline import ClauseResult                         # noqa: E402
 from app.server import Session                               # noqa: E402
 
@@ -27,6 +29,10 @@ class SpeakingAfterBackchannel(unittest.TestCase):
         session = Session.__new__(Session)
         session.bc_cfg = {}
         session.spoken = {}          # обычно ставится в __init__
+        # Настроение по оценкам берётся на первой клаузе — без этих двух
+        # полей проверка состояния лица падала бы на постороннем.
+        session.evaluator = types.SimpleNamespace(log=EvaluationLog())
+        session.scenario = types.SimpleNamespace(criteria=[])
         frames = []
         session._emit = lambda header, payload=b"": frames.append((header, payload))
         em = {

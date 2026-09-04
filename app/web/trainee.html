@@ -42,10 +42,33 @@
  #micNote{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
  #micNote.bad{color:#ff9a9a}
  #micNote.hot{color:#9ad7a0}
+ /* Панель — обычный HTML рядом с аватаром, к модулю лица отношения не имеет. */
+ #panel{position:fixed;right:calc(36% + 18px);top:18px;width:300px;z-index:5;
+   background:#0d1119ee;border:1px solid #232a38;border-radius:8px;padding:12px 14px;
+   font:13px/1.5 system-ui,sans-serif;color:#dde3ec;
+   opacity:0;transform:translateY(-6px);pointer-events:none;
+   transition:opacity .22s ease,transform .22s ease}
+ #panel.on{opacity:1;transform:none}
+ #panelHead{font:12px ui-monospace,monospace;color:#8b96a8;letter-spacing:.04em;
+   text-transform:uppercase;margin-bottom:10px}
+ .skill{margin-bottom:9px}
+ .skillTop{display:flex;justify-content:space-between;gap:10px}
+ .skillTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .skillScore{font-variant-numeric:tabular-nums;color:#9ad7a0}
+ .skillScore.none{color:#5c6678}
+ .bar{height:4px;background:#1c2230;border-radius:2px;margin-top:4px;overflow:hidden}
+ .bar i{display:block;height:100%;background:#4a7f5a;border-radius:2px}
+ .skillWhy{color:#8b96a8;font-size:12px;margin-top:3px}
+ .stageRow{display:flex;gap:8px;padding:2px 0;color:#8b96a8}
+ .stageRow.now{color:#dde3ec}
+ .stageRow b{font-weight:600;color:#6f7c93;font-variant-numeric:tabular-nums}
+ #panel pre{background:#0a0d13;border:1px solid #1c2230;border-radius:6px;
+   padding:9px;overflow:auto;max-height:40vh;font:12px/1.45 ui-monospace,monospace}
  #voiceNote.bad{color:#ff9a9a}
 </style>
 
 <div id="stage"><canvas id="c"></canvas></div>
+<div id="panel"><div id="panelHead"></div><div id="panelBody"></div></div>
 <div id="subs"></div>
 <button id="hudBtn">цифры</button>
 <div id="hud"></div>
@@ -85,6 +108,7 @@ window.addEventListener('unhandledrejection', e => fail(e.reason));
 
 let avatar, ctx, clock, analyser, currentGen = null, anchored = false;
 let cues = [], emoMarks = [], emoApplied = -1;
+let panelMarks = [], panelApplied = -1;
 let contentAccented = false;
 let lastContentSource = null;
 const clauseSlipMs = new Map();
@@ -331,6 +355,7 @@ function loop(now) {
   avatar.frame(now);
   drawSubs();
   applyEmotions();
+  applyPanels();
   if ($('hud').style.display !== 'none') drawHud();
 }
 
@@ -349,6 +374,68 @@ function applyEmotions() {
   emoApplied = i;
   const m = emoMarks[i];
   avatar.setEmotion(m.emotion, EMO_INTENSITY * (m.intensity ?? 1));
+}
+
+// ------------------------------------------------------------------ панель
+
+// Панель едет по тому же PTS, что висемы, субтитры и эмоции: своего таймера у
+// неё нет, и гасится она той же отменой.
+const PANEL_TITLES = {skills: 'карта навыков', scenario: 'этапы разговора',
+                      code: 'код'};
+
+function hidePanel() {
+  $('panel').classList.remove('on');
+}
+
+function applyPanels() {
+  if (!clock || clock.t0 === null || !panelMarks.length) return;
+  const ms = clock.nowMs();
+  if (ms === null) return;
+  let i = panelApplied;
+  while (i + 1 < panelMarks.length && panelMarks[i + 1].pts_ms <= ms) i++;
+  if (i === panelApplied || i < 0) return;
+  panelApplied = i;
+  showPanel(panelMarks[i]);
+}
+
+function showPanel(mark) {
+  if (mark.panel === 'close') return hidePanel();
+  $('panelHead').textContent = PANEL_TITLES[mark.panel] || mark.panel;
+  $('panelBody').innerHTML = renderPanel(mark);
+  $('panel').classList.add('on');
+}
+
+const esc = t => String(t == null ? '' : t)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function renderPanel(mark) {
+  const d = mark.data || {};
+  if (mark.panel === 'skills') {
+    if (!(d.rows || []).length) return '<div class="skillWhy">оценок пока нет</div>';
+    // Данные уже посчитаны фоновой сессией — рисуем накопленное, не запрашиваем.
+    return (d.rows || []).map(r => {
+      const scale = r.scale || 5;
+      const has = r.score !== null && r.score !== undefined;
+      const pct = has ? Math.max(0, Math.min(100, r.score / scale * 100)) : 0;
+      return `<div class="skill">
+        <div class="skillTop">
+          <span class="skillTitle">${esc(r.title || r.key)}</span>
+          <span class="skillScore${has ? '' : ' none'}">${has ? r.score : '—'}</span>
+        </div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        ${r.rationale ? `<div class="skillWhy">${esc(r.rationale)}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+  if (mark.panel === 'scenario') {
+    return (d.stages || []).map((st, i) =>
+      `<div class="stageRow${i === d.current ? ' now' : ''}">` +
+      `<b>${i + 1}</b><span>${esc(st.goal || st.id)}</span></div>`).join('');
+  }
+  if (mark.panel === 'code') {
+    return `<pre>${esc(d.code || '// код не передан')}</pre>`;
+  }
+  return '';
 }
 
 function drawSubs() {
@@ -375,6 +462,7 @@ function drawHud() {
       (stats.specCover === null ? '' : `  покрытие ${stats.specCover}`) + `\n` +
     `эмоций         ${stats.emotions}  (сейчас ${d.emotion.name} ` +
       `${d.emotion.intensity.toFixed(2)})\n` +
+    `панелей        ${stats.panels}\n` +
     `починок JSON   ${stats.repaired}\n` +
     `набор          ${t ? `${t.confidence}, пауза ${t.longest_pause_ms} мс` : '—'}\n` +
     `голос          ${$('voice').value || '—'}\n` +

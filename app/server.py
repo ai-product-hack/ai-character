@@ -34,7 +34,9 @@ from app.actions import parse_reply, repair_action          # noqa: E402
 from app.agent import SYSTEM, apply as apply_action, build_prompt   # noqa: E402
 from app.backchannel import Backchannel                     # noqa: E402
 from app.dialogue import DialogueState                      # noqa: E402
+from app.emotion_drive import mood_from                     # noqa: E402
 from app.emotion_tags import SYSTEM_HINT as EMO_HINT        # noqa: E402
+from app.panels import SYSTEM_HINT as PANEL_HINT, skills_payload   # noqa: E402
 from app.evaluator import BackgroundEvaluator               # noqa: E402
 from app.generation import GenerationRegistry               # noqa: E402
 from app.media import (GigaAMAligner, PROVIDERS, SwitchableTTS,   # noqa: E402
@@ -164,8 +166,9 @@ class Session:
                                    args=(gen, t0, pending, DONE, em), daemon=True)
         emitter.start()
 
-        results = self.pipe.run(SYSTEM + "\n\n" + EMO_HINT, prompt, gen,
-                                on_result=pending.put)
+        results = self.pipe.run(
+            "\n\n".join((SYSTEM, EMO_HINT, PANEL_HINT)), prompt, gen,
+            on_result=pending.put)
         pending.put(DONE)
         emitter.join(timeout=10)
 
@@ -406,6 +409,40 @@ class Session:
                         "clause": idx,
                         "marks": [{**e, "pts_ms": e["pts_ms"] + off}
                                   for e in r.emotions]})
+        elif r.index == 0:
+            # Модель ничего не разметила — берём настроение из накопленных
+            # оценок. Разметка от модели главнее: если она сказала
+            # «impressed», это точнее среднего балла. Но молчит она часто, а
+            # ровное лицо весь показ — хуже, чем эмоция от механики продукта.
+            mood = mood_from(self.evaluator.log, self.scenario.criteria)
+            if mood.intensity > 0:
+                self._emit({"kind": "emotions", "generation_id": r.generation_id,
+                            "clause": idx, "from_scores": True,
+                            "marks": [{"pts_ms": off, "emotion": mood.emotion,
+                                       "intensity": mood.intensity}]})
+        if r.panels:
+            # Данные кладём сразу: панель рисуется из уже накопленного отчёта,
+            # и второго запроса ради неё быть не должно.
+            self._emit({"kind": "panels", "generation_id": r.generation_id,
+                        "clause": idx,
+                        "marks": [{**c, "pts_ms": c["pts_ms"] + off,
+                                   "data": self._panel_data(c["panel"])}
+                                  for c in r.panels]})
+
+    def _panel_data(self, panel: str) -> dict:
+        """Содержимое панели из состояния, которое уже есть.
+
+        Карта навыков — это оценки фоновой сессии, они считаются по ходу
+        разговора независимо от панели. Ничего не генерируется.
+        """
+        if panel == "skills":
+            return skills_payload(report_mod.build(self.state,
+                                                   self.evaluator.log).to_dict())
+        if panel == "scenario":
+            return {"stages": [{"id": st.id, "goal": st.goal}
+                               for st in self.scenario.stages],
+                    "current": self.state.stage_index}
+        return {}
 
     def cancel(self) -> str | None:
         """Перебивание: гасим ВСЮ цепочку одним движением."""

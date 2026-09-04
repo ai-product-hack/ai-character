@@ -76,7 +76,7 @@ class AgentReply:
 
     @property
     def speakable(self) -> str:
-        """Только произносимое: без управляющего JSON и без тегов эмоций.
+        """Только произносимое: без управляющего JSON, тегов эмоций и панелей.
 
         Теги вырезаются и здесь, а не только перед синтезом. Первая версия
         снимала их лишь в конвейере, и в озвучку они действительно не попадали
@@ -85,7 +85,8 @@ class AgentReply:
         произносимое во всех трёх местах.
         """
         from .emotion_tags import parse as _parse_emotions
-        return _parse_emotions(self.text).text
+        from .panels import parse as _parse_panels
+        return _parse_emotions(_parse_panels(self.text).text).text
 
 
 def _coerce_score(v) -> int | None:

@@ -25,6 +25,7 @@ from .actions import strip_control
 from .emotion_tags import parse as parse_emotions, to_timeline
 from .clauses import Clause, ClauseSplitter
 from .generation import Generation, GenerationRegistry, PTSTimeline
+from .panels import parse as parse_panels, to_timeline as panels_timeline
 from .pronounce import normalize, word_map
 
 
@@ -42,6 +43,7 @@ class ClauseResult:
     visemes: list[dict]
     chars: list[dict]
     emotions: list[dict] = field(default_factory=list)
+    panels: list[dict] = field(default_factory=list)
     timings: dict = field(default_factory=dict)
     # Сколько произносимых слов дало каждое слово оригинала. Нужно субтитрам:
     # без этого «p95» съезжает на три слова, и весь хвост клаузы выскакивает
@@ -177,6 +179,17 @@ class ReplyPipeline:
 
         # Теги эмоций вырезаются ДО синтеза, но их позиции запоминаются: дальше
         # они превратятся в pts_ms по тем же таймкодам, что и висемы.
+        # Панели вырезаются ДО эмоций и до синтеза, по той же причине: тег,
+        # доехавший до TTS, будет произнесён вслух.
+        panels = parse_panels(text)
+        if panels.dropped:
+            stats["panel_tags_dropped"] = stats.get("panel_tags_dropped", 0) + panels.dropped
+        if panels.marks:
+            stats["panel_marks"] = stats.get("panel_marks", 0) + len(panels.marks)
+        text = panels.text
+        if not text:
+            return None                     # клауза целиком была тегом
+
         parsed = parse_emotions(text)
         if parsed.dropped:
             stats["emotion_tags_dropped"] = stats.get("emotion_tags_dropped", 0) + parsed.dropped
@@ -217,6 +230,9 @@ class ReplyPipeline:
         emotions = to_timeline(_scale_marks(parsed.marks, len(clause.text),
                                             len(spoken)),
                                chars, clause_start_ms=start_ms)
+        panel_cues = panels_timeline(_scale_marks(panels.marks, len(clause.text),
+                                                  len(spoken)),
+                                     chars, clause_start_ms=start_ms)
 
         if stats["t_first_audio"] is None:
             stats["t_first_audio"] = (time.perf_counter() - t_start) * 1000
@@ -225,7 +241,7 @@ class ReplyPipeline:
             generation_id=gen.id, index=clause.index, text=clause.text,
             first=clause.first, start_ms=start_ms, audio_ms=audio_ms,
             pcm=pcm, sample_rate=sr, visemes=shifted, chars=chars,
-            emotions=emotions, word_map=wmap,
+            emotions=emotions, panels=panel_cues, word_map=wmap,
             timings={"tts_ms": round(t_tts), "align_ms": round(t_align)},
         )
 
