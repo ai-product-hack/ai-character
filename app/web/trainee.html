@@ -282,6 +282,15 @@ function handle(h, payload) {
     emoMarks = emoMarks.concat(marks).sort((a, b) => a.pts_ms - b.pts_ms);
     return;
   }
+  if (h.kind === 'panels') {
+    stats.panels += h.marks.length;
+    // Панель едет по тому же PTS, что висемы и субтитры, и на ту же поправку
+    // опоздавшего аудио: иначе она выедет раньше слов, которые объясняют,
+    // что это такое.
+    const marks = shiftTimeline(h.marks, clauseSlipMs.get(clauseKey(h)) || 0);
+    panelMarks = panelMarks.concat(marks).sort((a, b) => a.pts_ms - b.pts_ms);
+    return;
+  }
 }
 
 function playAudio(h, payload) {
@@ -292,6 +301,9 @@ function playAudio(h, payload) {
     anchored = false;
     cues = [];
     emoMarks = []; emoApplied = -1;
+    panelMarks = []; panelApplied = -1;
+    stats.heardMs = null; stats.heardKind = '—';
+    hidePanel();
     clauseSlipMs.clear();
     backchannelSources.clear();
     contentAccented = false;
@@ -323,6 +335,14 @@ function playAudio(h, payload) {
     avatar.speechAccent('speech');
   }
   if (!h.backchannel) lastContentSource = src;
+  // Когда звук РЕАЛЬНО зазвучит: время старта источника, а не прихода кадра.
+  // Расхождение с серверными 125 мс означает, что кадр доехал, но не прозвучал.
+  if (tAsk !== null && stats.heardMs === null) {
+    stats.heardMs = Math.round(performance.now() - tAsk
+                               + Math.max(0, schedule.atSec - ctx.currentTime) * 1000);
+    stats.heardKind = h.backchannel ? 'заполнитель' : 'реплика';
+  }
+  stats.ctxState = ctx.state;
   src.addEventListener('ended', () => endedSources.add(src), {once:true});
   src.start(schedule.atSec);
   stats.clauses++;
@@ -338,6 +358,8 @@ function onCancel(gid) {
   avatar.cancel(gid);
   cues = [];
   emoMarks = []; emoApplied = -1;
+  panelMarks = []; panelApplied = -1;
+  hidePanel();                          // панель гаснет вместе со всем
   clauseSlipMs.clear();
   backchannelSources.clear();
   contentAccented = false;
@@ -454,8 +476,9 @@ function drawHud() {
   // Порядок строк — по важности на показе: сверху то, ради чего вся работа
   // (первый звук), снизу отладочное. Смотреть на него будут искоса.
   $('hud').textContent =
-    `первый звук    ${stats.firstAudioMs ?? '—'} мс` +
-      (stats.backchannels ? '  (заполнитель)' : '') + `\n` +
+    `первый звук    ${stats.firstAudioMs ?? '—'} мс (сервер)\n` +
+    `СЛЫШНО         ${stats.heardMs ?? '—'} мс — ${stats.heardKind}\n` +
+    `аудиоконтекст  ${stats.ctxState}\n` +
     `реплика        ${stats.firstSpeechMs ?? '—'} мс\n` +
     `первый токен   ${stats.firstTokenMs ?? '—'} мс\n` +
     `спекуляция     ${stats.specHits}/${stats.specTries}` +
@@ -499,6 +522,7 @@ async function send() {
   if (!text) return;
   $('msg').value = '';
   ensureAudio();
+  tAsk = performance.now();
   // Enter во время речи агента = перебивание: гасим локально сразу, не дожидаясь
   // сервера, иначе между нажатием и ответом сети звучит уже отменённое.
   if (currentGen) { onCancel(currentGen); avatar.setState('interrupted'); }
@@ -582,6 +606,7 @@ async function sendChunk(f32) {
     const r = await fetch('/api/audio', {method: 'POST', body: i16.buffer});
     const d = await r.json();
     if (d.endpoint) {
+      tAsk = performance.now();
       if (d.text) micSay(`распознано за ${d.asr_ms} мс`, 'hot');
       else micSay('тишина — говорите', '');
     }
