@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import http.server
+import queue
 import pathlib
 import socketserver
 import struct
@@ -28,6 +29,7 @@ sys.path.insert(0, str(ROOT))
 from app import llm as llm_mod, report as report_mod        # noqa: E402
 from app.actions import parse_reply                         # noqa: E402
 from app.agent import SYSTEM, apply as apply_action, build_prompt   # noqa: E402
+from app.backchannel import Backchannel                     # noqa: E402
 from app.dialogue import DialogueState                      # noqa: E402
 from app.evaluator import BackgroundEvaluator               # noqa: E402
 from app.generation import GenerationRegistry               # noqa: E402
@@ -59,6 +61,8 @@ class Session:
         # услышал, и стирать их из истории при следующей отмене нельзя.
         self.completed: set[str] = set()
         self.evaluator = BackgroundEvaluator(models["llm"])
+        self.backchannel = models.get("backchannel")
+        self.bc_cfg = models.get("bc_cfg", {})
         self.frames: list[tuple[dict, bytes]] = []
         self.frame_cv = threading.Condition()
         self.marks: list[dict] = []
@@ -67,7 +71,12 @@ class Session:
     # ------------------------------------------------------------- генерация
 
     def speak(self, user_text: str | None) -> None:
-        """Сгенерировать реплику агента и разложить её в кадры."""
+        """Сгенерировать реплику агента и разложить её в кадры.
+
+        Кадры отдаёт НЕ конвейер, а этот метод: между готовностью клаузы и её
+        отправкой стоит решение про заполнитель, и принять его может только
+        тот, кто видит обе стороны.
+        """
         with self.lock:
             if user_text is not None:
                 self.state.add_user(user_text)
@@ -78,27 +87,20 @@ class Session:
             self.pipe.llm_stream = self.stream
 
         t0 = time.perf_counter()
-        marks = {"t_request": t0, "t_first_audio": None}
+        pending: queue.Queue = queue.Queue()
+        DONE = object()
+        em = {"offset_ms": None, "clause_base": 0, "used_bc": False,
+              "t_first_audio": None, "t_first_speech": None, "bc_text": None,
+              "t_bc_emit": None}
 
-        def on_result(r):
-            if marks["t_first_audio"] is None:
-                marks["t_first_audio"] = (time.perf_counter() - t0) * 1000
-            pcm16 = (r.pcm * 32767).astype("<i2").tobytes()
-            self._emit({
-                "kind": "audio", "generation_id": r.generation_id,
-                "clause": r.index, "start_ms": r.start_ms,
-                "sample_rate": r.sample_rate, "audio_ms": r.audio_ms,
-            }, pcm16)
-            self._emit({
-                "kind": "visemes", "generation_id": r.generation_id,
-                "clause": r.index, "track": r.visemes,
-            })
-            self._emit({
-                "kind": "subtitles", "generation_id": r.generation_id,
-                "clause": r.index, "cues": subtitle_cues(r),
-            })
+        emitter = threading.Thread(target=self._emit_loop,
+                                   args=(gen, t0, pending, DONE, em), daemon=True)
+        emitter.start()
 
-        results = self.pipe.run(SYSTEM, prompt, gen, on_result=on_result)
+        results = self.pipe.run(SYSTEM, prompt, gen, on_result=pending.put)
+        pending.put(DONE)
+        emitter.join(timeout=10)
+
         if not gen.check():
             return                              # перебили — ничего не дописываем
 
@@ -106,17 +108,18 @@ class Session:
         with self.lock:
             happened = apply_action(self.state, reply, gen.id)
             self.completed.add(gen.id)
-        # Реплика агента целиком — для истории на экране. Субтитры едут по
-        # клаузам и по PTS, а истории нужен готовый текст.
         self._emit({"kind": "agent", "generation_id": gen.id,
                     "text": reply.speakable, "stage": self.state.stage_id})
-        # Оценка уходит в фон и диалог не задерживает.
         self.evaluator.submit(self.state)
 
         self.marks.append({
             "generation_id": gen.id,
             "t_first_token_ms": round(self.pipe.last_stats.get("t_first_token") or 0),
-            "t_first_audio_ms": round(marks["t_first_audio"] or 0),
+            # Первый звук — то, что слышит человек. Первая содержательная
+            # реплика — другая величина, и знать надо обе.
+            "t_first_audio_ms": round(em["t_first_audio"] or 0),
+            "t_first_speech_ms": round(em["t_first_speech"] or 0),
+            "backchannel": em["bc_text"],
             "clauses": len(results),
             "action": happened["action"],
             "forced": happened.get("forced", False),
@@ -128,10 +131,101 @@ class Session:
             "stages_total": len(self.scenario.stages),
             "finished": self.state.finished,
             "action": happened["action"],
-            "t_first_audio_ms": round(marks["t_first_audio"] or 0),
+            "face": "listening" if self.state.finished else "speaking",
+            "t_first_audio_ms": round(em["t_first_audio"] or 0),
+            "t_first_speech_ms": round(em["t_first_speech"] or 0),
         })
         if self.state.finished:
             self._emit({"kind": "finished"})
+
+    # ------------------------------------------------------------- отправка
+
+    def _emit_loop(self, gen, t0, pending, DONE, em) -> None:
+        """Отдаёт клаузы клиенту, вставляя заполнитель, если ответ задерживается."""
+        after_s = (self.bc_cfg.get("after_ms", 600)) / 1000
+
+        first = None
+        try:
+            first = pending.get(timeout=after_s)
+        except queue.Empty:
+            pass
+
+        # Заполнитель нужен только когда ответа ещё нет. Если модель ответила
+        # быстро, он звучит навязчиво.
+        if first is None and self.backchannel and self.backchannel.ready \
+                and self.bc_cfg.get("enabled", True) and gen.check():
+            f = self.backchannel.pick()
+            if f is not None:
+                self._emit_filler(gen, f)
+                em["used_bc"] = True
+                em["bc_text"] = f.text
+                em["offset_ms"] = f.audio_ms
+                em["clause_base"] = 1
+                em["t_first_audio"] = (time.perf_counter() - t0) * 1000
+                em["t_bc_emit"] = time.perf_counter()
+                # Заполнитель отзвучал — лицо уходит думать, пока идёт модель.
+                self._emit({"kind": "state", "generation_id": gen.id,
+                            "face": "thinking", "after_ms": f.audio_ms})
+
+        while True:
+            r = first if first is not None else pending.get()
+            first = None
+            if r is DONE:
+                break
+            if not gen.check():
+                continue                    # перебили: дочитываем очередь молча
+            self._emit_clause(gen, r, em, t0)
+
+    def _emit_filler(self, gen, f) -> None:
+        """Заполнитель — клауза 0 той же генерации.
+
+        Не отдельный поток и не отдельный таймлайн: тот же `generation_id`, тот
+        же PTS, та же отмена. Аватар получает его через `playGeneration`, и
+        основная реплика потом досылается в тот же трек — поэтому рот между
+        ними не захлопывается, если пауза короткая.
+        """
+        pcm16 = (f.pcm * 32767).astype("<i2").tobytes()
+        self._emit({"kind": "audio", "generation_id": gen.id, "clause": 0,
+                    "start_ms": 0.0, "sample_rate": f.sample_rate,
+                    "audio_ms": f.audio_ms, "backchannel": True}, pcm16)
+        self._emit({"kind": "visemes", "generation_id": gen.id, "clause": 0,
+                    "track": f.visemes, "backchannel": True})
+        self._emit({"kind": "subtitles", "generation_id": gen.id, "clause": 0,
+                    "cues": [{"pts_ms": 0, "text": f.text, "clause": 0,
+                              "generation_id": gen.id}], "backchannel": True})
+
+    def _emit_clause(self, gen, r, em, t0) -> None:
+        if em["offset_ms"] is None:
+            em["offset_ms"] = 0.0
+        elif em["clause_base"] and em.get("_placed") is None:
+            # Первая содержательная клауза после заполнителя. Смещение НЕЛЬЗЯ
+            # брать равным длине заполнителя: клауза может быть готова гораздо
+            # позже, и тогда звук уедет от таймлайна висем — плеер поставит его
+            # «не раньше сейчас», а мимика останется на своих 700 мс.
+            # Берём фактическое время готовности плюс запас на сеть и декод.
+            elapsed = (time.perf_counter() - em["t_bc_emit"]) * 1000
+            lead = self.bc_cfg.get("lead_ms", 150)
+            em["offset_ms"] = max(em["offset_ms"], elapsed + lead)
+        em["_placed"] = True
+
+        off = em["offset_ms"]
+        idx = r.index + em["clause_base"]
+        if em["t_first_audio"] is None:
+            em["t_first_audio"] = (time.perf_counter() - t0) * 1000
+        if em["t_first_speech"] is None:
+            em["t_first_speech"] = (time.perf_counter() - t0) * 1000
+
+        pcm16 = (r.pcm * 32767).astype("<i2").tobytes()
+        self._emit({"kind": "audio", "generation_id": r.generation_id,
+                    "clause": idx, "start_ms": r.start_ms + off,
+                    "sample_rate": r.sample_rate, "audio_ms": r.audio_ms}, pcm16)
+        self._emit({"kind": "visemes", "generation_id": r.generation_id,
+                    "clause": idx,
+                    "track": [{**v, "pts_ms": v["pts_ms"] + off} for v in r.visemes]})
+        self._emit({"kind": "subtitles", "generation_id": r.generation_id,
+                    "clause": idx,
+                    "cues": [{**c, "pts_ms": c["pts_ms"] + off, "clause": idx}
+                             for c in subtitle_cues(r)]})
 
     def cancel(self) -> str | None:
         """Перебивание: гасим ВСЮ цепочку одним движением."""
@@ -204,6 +298,18 @@ class App:
             "bridge": VisemeBridge(),
             "llm": llm_mod.DeepSeekLLM(),
         }
+        # Заполнители готовятся здесь и лежат в памяти: по Enter не считается
+        # ничего, иначе смысл теряется.
+        bc = Backchannel().warm(self.models["tts"],
+                                lambda pcm, sr: self.models["aligner"](pcm, sr),
+                                self.models["bridge"])
+        self.models["backchannel"] = bc
+        # after_ms — сколько ждать ответа, прежде чем ставить заполнитель.
+        # Порог короткий намеренно: полсекунды тишины и есть то, что заполнитель
+        # убирает. Случай «ответ пришёл быстро» — это попадание спекуляции с
+        # уже готовым результатом, а не ожидание в шестьсот миллисекунд.
+        self.models["bc_cfg"] = {"enabled": True, "after_ms": 120, "lead_ms": 150}
+        print(f"  заполнители: {bc.describe()}")
         self.scenarios = load_all(ROOT / "data" / "scenarios")
         self.session: Session | None = None
         print(f"готово за {time.perf_counter() - t0:.1f} с, "

@@ -280,6 +280,67 @@ describe('три вещи, отличающие живую артикуляци�
   });
 });
 
+describe('короткий трек заполнителя', () => {
+  // Заполнитель — это 300-800 мс речи и 3-9 висем. Проверяем, что такой трек
+  // реально двигает рот: на живом стенде это померить не удалось, потому что
+  // браузер тормозит requestAnimationFrame у вкладки без фокуса, и рендер-луп
+  // аватара просто не работал во время замера.
+  const FILLER = [
+    { pts_ms: 80, viseme: 'KG' }, { pts_ms: 120, viseme: 'OH' },
+    { pts_ms: 200, viseme: 'KG' }, { pts_ms: 240, viseme: 'OH' },
+    { pts_ms: 360, viseme: 'WQ' }, { pts_ms: 400, viseme: 'OH' },
+  ];
+
+  test('рот открывается на заполнителе', () => {
+    const { layer, writer, clock } = setup();
+    clock.anchor(0);
+    layer.playGeneration('bc', FILLER);
+    let maxMouth = 0;
+    run(layer, writer, clock, 0.7, () => {
+      maxMouth = Math.max(maxMouth,
+        writer.get('jawOpen') + writer.get('viseme_O') + writer.get('viseme_kk'));
+    });
+    assert.ok(maxMouth > 0.3, `рот на заполнителе дошёл только до ${maxMouth.toFixed(3)}`);
+  });
+
+  test('после заполнителя рот возвращается в покой', () => {
+    const { layer, writer, clock } = setup();
+    clock.anchor(0);
+    layer.playGeneration('bc', FILLER);
+    run(layer, writer, clock, 1.2);
+    assert.ok(writer.get('jawOpen') < 0.02, 'короткий трек кончился — рот закрыт');
+    assert.equal(layer.finished, true);
+  });
+
+  test('досланная реплика продолжает ту же генерацию без сброса', () => {
+    // Заполнитель и реплика — одна генерация: рот не должен захлопываться
+    // между ними, если пауза короткая.
+    const { layer, writer, clock } = setup();
+    clock.anchor(0);
+    layer.playGeneration('bc', FILLER, { complete: false });
+    run(layer, writer, clock, 0.35);
+    const during = writer.get('viseme_O') + writer.get('jawOpen');
+    assert.ok(during > 0.2, 'заполнитель должен звучать');
+
+    // Реплика приезжает встык, через 60 мс после конца заполнителя.
+    layer.appendVisemes('bc', [
+      { pts_ms: 460, viseme: 'AA' }, { pts_ms: 540, viseme: 'MBP' },
+      { pts_ms: 620, viseme: 'AA' }, { pts_ms: 2000, viseme: 'SIL' },
+    ], { complete: true });
+
+    let minMouth = 1;
+    run(layer, writer, clock, 0.25, (t) => {
+      const ms = t * 1000 + 350;
+      if (ms > 400 && ms < 470) {
+        minMouth = Math.min(minMouth,
+          writer.get('jawOpen') + writer.get('viseme_O') + writer.get('viseme_aa'));
+      }
+    });
+    assert.ok(minMouth > 0.01,
+      `на стыке рот захлопнулся до ${minMouth.toFixed(3)} — пауза короче 150 мс, так нельзя`);
+  });
+});
+
 describe('дрейф и предпрокрутка — разные вещи', () => {
   test('до начала трека дрейф нулевой, а не равен запасу планирования', () => {
     const { layer, writer, clock } = setup();

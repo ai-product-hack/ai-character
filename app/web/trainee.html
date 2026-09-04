@@ -60,7 +60,8 @@ window.addEventListener('unhandledrejection', e => fail(e.reason));
 
 let avatar, ctx, clock, analyser, currentGen = null, anchored = false;
 let cues = [], subsUntil = 0;
-const stats = {firstAudioMs: null, clauses: 0, drops: 0, seq: 0};
+const stats = {firstAudioMs: null, firstSpeechMs: null, clauses: 0,
+               drops: 0, seq: 0, backchannels: 0};
 
 async function boot() {
   avatar = await createAvatar($('c'), {
@@ -146,10 +147,16 @@ function handle(h, payload) {
   if (h.kind === 'finished') { addTurn('agent', '— диалог завершён —'); return; }
   if (h.kind === 'state') {
     if (h.t_first_audio_ms) stats.firstAudioMs = h.t_first_audio_ms;
-    avatar.setState(h.finished ? 'listening' : 'speaking');
+    if (h.t_first_speech_ms) stats.firstSpeechMs = h.t_first_speech_ms;
+    // Сервер сам говорит, в каком состоянии быть лицу: после заполнителя это
+    // thinking, пока идёт модель, и только потом speaking.
+    avatar.setState(h.face || (h.finished ? 'listening' : 'speaking'));
     return;
   }
-  if (h.kind === 'audio') return playAudio(h, payload);
+  if (h.kind === 'audio') {
+    if (h.backchannel) stats.backchannels++;
+    return playAudio(h, payload);
+  }
   if (h.kind === 'visemes') {
     if (h.clause === 0) avatar.playGeneration(h.generation_id, h.track);
     else avatar.visemes.appendVisemes(h.generation_id, h.track);
@@ -223,7 +230,9 @@ function drawHud() {
     `FPS            ${d.fps.toFixed(0)}\n` +
     `состояние      ${d.state}\n` +
     `generation_id  ${v.genId ?? '—'}\n` +
-    `первый звук    ${stats.firstAudioMs ?? '—'} мс\n` +
+    `первый звук    ${stats.firstAudioMs ?? '—'} мс` +
+      (stats.backchannels ? '  (заполнитель)' : '') + `\n` +
+    `реплика        ${stats.firstSpeechMs ?? '—'} мс\n` +
     `outputLatency  ${d.outputLatencyMs?.toFixed(1) ?? '—'} мс\n` +
     `дрейф          ${(v.drift_ms ?? 0).toFixed(1)} мс\n` +
     `висема         ${v.viseme ?? '—'} ${v.trackIndex ?? 0}/${v.trackLength ?? 0}\n` +
