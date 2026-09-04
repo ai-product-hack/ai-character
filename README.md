@@ -4,6 +4,45 @@
 16 ГБ unified, macOS 26.6.2. Всё, что названо измеренным, померено здесь;
 сырьё лежит в `bench/results/`.
 
+## Запуск demo app
+
+Нужны Python 3.11+ и Node.js 20+. Первый запуск требует интернета: Silero
+загружается через `torch.hub`, а модель выравнивания GigaAM — с Hugging Face.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-demo.txt
+npm ci --prefix avatar
+cp .env.example .env
+```
+
+В `.env` обязательно заполнить `DEEPSEEK_API_KEY`. `ELEVENLABS_API_KEY` нужен
+только для сетевого голоса; без него demo полностью работает на офлайновом
+`Silero (ru_roman)`. Ключи не коммитятся: `.env` уже находится в `.gitignore`.
+
+Запуск сервера:
+
+```bash
+.venv/bin/python app/server.py
+```
+
+После строки `готово` открыть два экрана:
+
+- методист: <http://localhost:8010/app/web/methodist.html> — выбрать сценарий
+  и нажать «начать»;
+- сотрудник: <http://localhost:8010/app/web/trainee.html> — вести диалог.
+
+На экране сотрудника голос переключается без перезапуска между
+`Silero (ru_roman)` и `ElevenLabs`. Первая загрузка ElevenLabs может занять
+несколько секунд: проверяется ключ и заранее переозвучиваются заполнители.
+Если ключа нет или API недоступен, выбор останется на Silero, а рядом с
+селектором появится причина. Во время диалога первый сбой ElevenLabs включает
+Silero до перезапуска, чтобы голос не менялся туда-обратно между фразами.
+
+Для другого порта: `.venv/bin/python app/server.py --port 8011`. Браузеру для
+звука нужен хотя бы один клик по странице. Настройки провайдеров, модели и
+voice ID находятся в [`app/config.json`](app/config.json).
+
 ## Читать в этом порядке
 
 | файл | что там |

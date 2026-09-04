@@ -2,7 +2,7 @@
 """Сервер вертикального среза: два экрана и весь путь между ними.
 
     bench/r1-stt/.venv/bin/python app/server.py
-    http://localhost:8town/app/web/methodist.html
+    http://localhost:8010/app/web/methodist.html
 
 Каркас взят из спайков S2 и S3: тот же кадровый протокол
 `[u32 jsonLen][u32 pcmLen][json][pcm]`, тот же принцип «клиент безусловно
@@ -513,8 +513,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                              for c in s.criteria]}
                                for s in APP.scenarios])
         if u.path == "/api/tts":
+            tts = APP.models["tts"]
             return self._json({"providers": list(PROVIDERS),
-                               "tts": APP.models["tts"].describe()})
+                               "provider_options": tts.provider_options(),
+                               "tts": tts.describe()})
         if u.path == "/api/health":
             # Чем синтезируем прямо сейчас. На показе это единственный способ
             # заметить, что сетевой голос отвалился и говорит запасной.

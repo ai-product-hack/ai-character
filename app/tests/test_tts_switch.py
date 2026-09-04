@@ -6,11 +6,13 @@
 import pathlib
 import sys
 import unittest
+from unittest.mock import patch
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from app.media import FallbackTTS, build_tts                # noqa: E402
+from app.media import (FallbackTTS, SwitchableTTS, build_tts,  # noqa: E402
+                       provider_config)
 
 
 class FakeTTS:
@@ -72,6 +74,67 @@ class Selection(unittest.TestCase):
         with self.assertRaises(SystemExit) as cm:
             build_tts({"provider": "выдуманный"})
         self.assertIn("выдуманный", str(cm.exception))
+
+    def test_provider_specific_voices_do_not_leak(self):
+        cfg = {
+            "provider": "silero", "sample_rate": 24000,
+            "silero": {"version": "v5_cis_base", "voice": "ru_roman"},
+            "elevenlabs": {"model": "eleven_flash_v2_5", "voice": "voice-id"},
+        }
+        self.assertEqual(provider_config(cfg, "silero")["voice"], "ru_roman")
+        eleven = provider_config(cfg, "elevenlabs")
+        self.assertEqual(eleven["voice"], "voice-id")
+        self.assertEqual(eleven["voice_offline"], "ru_roman")
+
+    def test_top_level_voice_is_an_explicit_override(self):
+        cfg = {"provider": "silero", "voice": "ru_override",
+               "silero": {"voice": "ru_roman"}}
+        self.assertEqual(provider_config(cfg)["voice"], "ru_override")
+
+    @patch("app.media.SileroTTS")
+    def test_build_tts_understands_nested_app_config(self, silero):
+        silero.return_value = FakeTTS("silero")
+        build_tts({"provider": "silero",
+                   "silero": {"version": "v5_cis_base", "voice": "ru_roman"}})
+        silero.assert_called_once_with(voice="ru_roman", version="v5_cis_base",
+                                       sample_rate=24000)
+
+    @patch("app.media.build_tts")
+    def test_switch_uses_each_providers_own_voice_and_caches(self, build):
+        build.side_effect = lambda cfg: FakeTTS(cfg["provider"])
+        tts = SwitchableTTS({
+            "provider": "silero",
+            "silero": {"voice": "ru_roman"},
+            "elevenlabs": {"voice": "voice-id"},
+        })
+        self.assertEqual(build.call_args.args[0]["voice"], "ru_roman")
+        self.assertTrue(tts.switch("elevenlabs"))
+        self.assertEqual(build.call_args.args[0]["voice"], "voice-id")
+        self.assertTrue(tts.switch("silero"))
+        self.assertEqual(build.call_count, 2)  # Silero взят из кеша
+
+    @patch("app.media.build_tts")
+    def test_failed_switch_keeps_working_provider(self, build):
+        def factory(cfg):
+            if cfg["provider"] == "elevenlabs":
+                raise SystemExit("нет ELEVENLABS_API_KEY")
+            return FakeTTS("silero")
+        build.side_effect = factory
+        tts = SwitchableTTS({"provider": "silero"})
+        with self.assertRaises(SystemExit):
+            tts.switch("elevenlabs")
+        self.assertEqual(tts.provider, "silero")
+        self.assertEqual(tts.engine.name, "silero")
+
+    @patch("app.media.build_tts")
+    def test_provider_labels_make_silero_voice_explicit(self, build):
+        build.return_value = FakeTTS("silero")
+        tts = SwitchableTTS({"provider": "silero",
+                             "silero": {"voice": "ru_roman"}})
+        self.assertEqual(tts.provider_options(), [
+            {"provider": "silero", "label": "Silero (ru_roman)"},
+            {"provider": "elevenlabs", "label": "ElevenLabs"},
+        ])
 
 
 if __name__ == "__main__":

@@ -221,6 +221,31 @@ class FallbackTTS:
 PROVIDERS = ("silero", "elevenlabs")
 
 
+def provider_config(cfg: dict | None, provider: str | None = None) -> dict:
+    """Собрать плоский конфиг одного провайдера.
+
+    ``app/config.json`` хранит голоса раздельно: ``tts.silero.voice`` — имя
+    speaker в модели, а ``tts.elevenlabs.voice`` — voice_id. Сервер и
+    консольные скрипты должны читать этот формат одинаково. Верхнеуровневые
+    скалярные значения считаются явными переопределениями — так ``--voice``
+    в скриптах остаётся рабочим поверх настроек из файла.
+    """
+    source = dict(cfg or {})
+    selected = provider or source.get("provider", "silero")
+    own = {k: v for k, v in (source.get(selected) or {}).items()
+           if not k.startswith("_") and v is not None}
+    shared = {k: v for k, v in source.items()
+              if not k.startswith("_") and not isinstance(v, dict)
+              and k != "provider" and v is not None}
+    result = {**own, **shared, "provider": selected}
+    if selected == "elevenlabs":
+        result.setdefault(
+            "voice_offline",
+            (source.get("silero") or {}).get("voice", "ru_roman"),
+        )
+    return result
+
+
 class SwitchableTTS:
     """Синтезатор, который можно менять на ходу.
 
@@ -253,15 +278,17 @@ class SwitchableTTS:
         voice_id. Первая версия держала одно поле `voice` на двоих, и «ru_roman»,
         отправленный в ElevenLabs, возвращал 404.
         """
-        shared = {k: v for k, v in self.cfg.items()
-                  if not isinstance(v, dict) and k != "provider"}
-        own = {k: v for k, v in (self.cfg.get(provider) or {}).items()
-               if not k.startswith("_") and v is not None}
-        cfg = {**shared, **own, "provider": provider}
-        # Запасной Silero берёт свой голос из своего же раздела.
-        cfg.setdefault("voice_offline",
-                       (self.cfg.get("silero") or {}).get("voice", "ru_roman"))
-        return cfg
+        return provider_config(self.cfg, provider)
+
+    def provider_options(self) -> list[dict]:
+        """Варианты для UI с понятными человеку подписями."""
+        out = []
+        for provider in PROVIDERS:
+            cfg = self.config_for(provider)
+            label = (f"Silero ({cfg.get('voice', 'ru_roman')})"
+                     if provider == "silero" else "ElevenLabs")
+            out.append({"provider": provider, "label": label})
+        return out
 
     @property
     def sr(self):
@@ -314,7 +341,10 @@ def build_tts(cfg: dict | None = None):
     Silero остаётся офлайновым запасным независимо от выбора: сеть на площадке
     может лечь, и голос должен выжить.
     """
-    cfg = dict(cfg or {})
+    # Принимаем и готовый плоский конфиг, и весь раздел ``tts`` из файла.
+    # Раньше второй вариант тихо терял provider-specific voice/model, поэтому
+    # server.py и run_pipeline.py выбирали разные голоса из одного config.json.
+    cfg = provider_config(cfg)
     provider = cfg.pop("provider", "silero")
     sr = cfg.get("sample_rate", SR_TTS)
 

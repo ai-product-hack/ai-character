@@ -354,8 +354,13 @@ $('msg').addEventListener('input', () => {
 async function loadVoices() {
   try {
     const d = await (await fetch('/api/tts')).json();
-    $('voice').innerHTML = d.providers
-      .map(p => `<option value="${p}">${p}</option>`).join('');
+    const options = d.provider_options || d.providers.map(p => ({provider:p, label:p}));
+    $('voice').replaceChildren(...options.map(item => {
+      const option = document.createElement('option');
+      option.value = item.provider;
+      option.textContent = item.label;
+      return option;
+    }));
     $('voice').value = d.tts.provider;
     showVoice(d.tts);
   } catch (e) { fail(e); }
@@ -382,7 +387,10 @@ $('voice').onchange = async () => {
     if (d.error) {
       $('voiceNote').classList.add('bad');
       $('voiceNote').textContent = d.error;
-      await loadVoices();                  // вернуть селектор к тому, что живо
+      // Вернуть только значение. loadVoices() заодно вызвал бы showVoice() и
+      // мгновенно затёр полезную причину ошибки (например, отсутствующий key).
+      const current = await (await fetch('/api/tts')).json();
+      $('voice').value = current.tts.provider;
     } else {
       showVoice(d.tts);
       if (d.changed) onCancel(currentGen);  // реплика была погашена сервером
