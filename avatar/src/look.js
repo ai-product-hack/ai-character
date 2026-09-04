@@ -266,6 +266,12 @@ export class Look {
     const active = this.composer.passes.filter((p) => p.enabled);
     for (const p of this.composer.passes) p.renderToScreen = false;
     if (active.length) active[active.length - 1].renderToScreen = true;
+    // Без поста сохраняем более резкий DPR 1.5. При полноэкранных эффектах
+    // используем отдельный измеренный предел: лишние пиксели там почти не
+    // видны под bloom/зерном, зато непосредственно определяют GPU-бюджет.
+    if (this.canvas.clientWidth && this.canvas.clientHeight) {
+      this.setSize(this.canvas.clientWidth, this.canvas.clientHeight);
+    }
   }
 
   /**
@@ -298,7 +304,10 @@ export class Look {
   }
 
   setSize(w, h) {
-    const dpr = Math.min(window.devicePixelRatio || 1, this.cfg.renderer.maxPixelRatio);
+    const cap = this.postEnabled
+      ? (this.cfg.post.maxPixelRatio ?? this.cfg.renderer.maxPixelRatio)
+      : this.cfg.renderer.maxPixelRatio;
+    const dpr = Math.min(window.devicePixelRatio || 1, cap);
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(w, h, false);
     this.composer.setPixelRatio(dpr);

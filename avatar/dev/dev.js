@@ -10,6 +10,7 @@ import { CHANNELS } from '../src/behavior.js';
 import { SOURCE } from '../src/viseme.js';
 import { timedToTrack } from '../src/g2p.js';
 import { LAYERS, ZONE_MORPHS } from '../src/zones.js';
+import { RenderProbe } from '../src/render-probe.js';
 
 const $ = (id) => document.getElementById(id);
 const fail = (e) => {
@@ -36,6 +37,7 @@ let trackSource = 'record';    // record | synth
 let heldViseme = null;
 let matrix = null;            // правится слайдерами, экспортируется целиком
 let pristineMatrix = null;
+let perfRun = null;
 
 async function boot() {
   avatar = await createAvatar($('c'), URLS);
@@ -51,6 +53,7 @@ async function boot() {
   buildEmotions();
   buildChannels();
   buildAnimationLayers();
+  buildPerfPanel();
   buildSources();
   buildVisemePanel();
   buildTrackSource();
@@ -97,6 +100,16 @@ let hudNext = 0;
 function loop(now) {
   requestAnimationFrame(loop);
   avatar.frame(now);
+  if (perfRun) {
+    perfRun.probe.sample(now, {
+      cpuMs: avatar.stats.cpuMs,
+      drawCalls: avatar.look.renderer.info.render.calls,
+      focused: document.hasFocus(),
+      visible: document.visibilityState === 'visible',
+      postEnabled: avatar.look.postEnabled,
+    });
+    if (now >= perfRun.until) finishPerfRun();
+  }
   // Оверлей обновляется 15 раз в секунду, а не 60. Он каждый раз собирает
   // строку и переписывает innerHTML — на 60 Гц это заметная аллокационная
   // нагрузка ради чисел, которые глаз всё равно не читает чаще. Замер кадра
@@ -219,6 +232,49 @@ function buildAnimationLayers() {
     avatar.bodyIdle.setMotionEnabled(on);
   };
   $('animationLayers').appendChild(body);
+}
+
+function buildPerfPanel() {
+  $('perf15').onclick = () => startPerfRun(15);
+  $('perf180').onclick = () => startPerfRun(180);
+}
+
+function startPerfRun(seconds) {
+  if (perfRun) return;
+  // Приёмочный прогон обязан включать дорогой путь, иначе результат оптимистичен.
+  avatar.look.setPostEnabled(true);
+  $('post').classList.add('on');
+  const probe = new RenderProbe();
+  perfRun = { probe, until: performance.now() + seconds * 1000, seconds };
+  $('perf15').disabled = true; $('perf180').disabled = true;
+  $('perfOut').textContent = `идёт ${seconds} с… не переключайте окно`;
+}
+
+function finishPerfRun() {
+  const result = perfRun.probe.result();
+  const gl = avatar.look.renderer.getContext();
+  const rendererInfo = gl.getExtension('WEBGL_debug_renderer_info');
+  result.viewport = `${innerWidth}x${innerHeight}@${devicePixelRatio}`;
+  result.renderPixelRatio = avatar.look.renderer.getPixelRatio();
+  result.gpu = rendererInfo ? gl.getParameter(rendererInfo.UNMASKED_RENDERER_WEBGL) : 'скрыто';
+  perfRun = null;
+  $('perf15').disabled = false; $('perf180').disabled = false;
+  const valid = result.focusedPercent >= 99 && result.visiblePercent >= 99 &&
+    result.postEnabledPercent === 100;
+  const passed = valid && result.fps >= 58 && result.spanP99 === 1;
+  $('perfOut').innerHTML =
+    `${passed ? '<b>60 FPS: пройдено</b>' : '<span class="warn">60 FPS: НЕ ПРОЙДЕНО</span>'}` +
+      `${valid ? '' : ' — окно не подходит для замера'}<br>` +
+    `отрисовок ${result.renders}, FPS ${result.fps.toFixed(2)}<br>` +
+    `VSYNC ${result.vsyncMs.toFixed(2)} мс, пропущено ${result.missedVsyncs} ` +
+      `(${result.missedPercent.toFixed(2)}%), span p99/max ${result.spanP99}/${result.spanMax}, ` +
+      `пауз ${result.stalledRenders}<br>` +
+    `CPU p50/p99 ${result.cpuP50Ms.toFixed(2)}/${result.cpuP99Ms.toFixed(2)} мс, ` +
+      `draw calls p99 ${result.drawCallsP99}<br>` +
+    `фокус ${result.focusedPercent.toFixed(1)}%, видимость ${result.visiblePercent.toFixed(1)}%, ` +
+      `пост ${result.postEnabledPercent.toFixed(1)}%<br>` +
+    `${result.viewport}, render DPR ${result.renderPixelRatio}, GPU ${result.gpu}`;
+  window.__dev.lastPerf = result;
 }
 
 function buildSources() {

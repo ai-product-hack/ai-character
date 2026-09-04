@@ -13,6 +13,7 @@
         white-space:pre; min-width:290px; }
  #hud b { color:var(--accent); font-weight:600; }
  #hud .warn { color:#ffb454; }
+ #perfOut .warn { color:#ffb454; }
  #panel { top:10px; right:10px; width:310px; max-height:calc(100vh - 20px); overflow:auto; }
  h3 { margin:10px 0 5px; font-size:11px; text-transform:uppercase; letter-spacing:.06em;
       color:#8b96a8; font-weight:600; border-top:1px solid var(--line); padding-top:8px; }
@@ -85,6 +86,12 @@
 
   <h3>анимационные слои</h3>
   <div id="animationLayers"></div>
+
+  <h3>длительная проверка</h3>
+  <div class="hint">Считает реальные отрисовки на интервалы VSYNC, p99 логики
+    и потерю фокуса. Для зачётного результата окно должно оставаться активным.</div>
+  <div><button id="perf15">15 секунд</button><button id="perf180">3 минуты</button></div>
+  <div id="perfOut" class="hint"></div>
 
   <h3>матрица висем</h3>
   <div class="row"><label>висема</label><select id="visemeSel"></select></div>
