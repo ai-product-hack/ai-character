@@ -1,0 +1,139 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Методист</title>
+<style>
+ body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:24px;max-width:820px;
+      background:#111418;color:#dde3ec}
+ h1{font-size:18px;margin:0 0 4px} h2{font-size:14px;margin:22px 0 6px;color:#8b96a8}
+ .hint{color:#7c8697;font-size:13px;margin:0 0 14px}
+ select,textarea,button{font:inherit;background:#1a1f28;color:#dde3ec;
+      border:1px solid #2c3547;border-radius:5px;padding:6px 9px}
+ textarea{width:100%;height:110px;box-sizing:border-box;font:13px ui-monospace,monospace}
+ button{cursor:pointer} button:hover{background:#232a35}
+ button.primary{border-color:#7fd1ff;color:#7fd1ff}
+ table{border-collapse:collapse;width:100%;margin-top:8px;font-size:13px}
+ th,td{border:1px solid #2c3547;padding:6px 9px;text-align:left;vertical-align:top}
+ th{background:#1a1f28;color:#8b96a8;font-weight:500}
+ .score{font:600 15px ui-monospace,monospace;color:#7fd1ff}
+ pre{background:#0c0f14;border:1px solid #232a38;border-radius:5px;padding:10px;
+     overflow:auto;font:12px/1.5 ui-monospace,monospace;max-height:320px}
+ #report{display:none}
+ .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+</style>
+
+<h1>Экран методиста</h1>
+<p class="hint">Выбрать сценарий, задать критерии, начать. Отчёт появится по
+завершении диалога — он собирается по ходу, а не в конце.</p>
+
+<h2>Сценарий</h2>
+<div class="row">
+  <select id="scenario"></select>
+  <button id="start" class="primary">начать</button>
+  <span id="status" class="hint" style="margin:0"></span>
+</div>
+
+<h2>Критерии оценки</h2>
+<p class="hint">По строке на критерий: <code>ключ: название</code>.
+Пусто — берутся критерии из сценария.</p>
+<textarea id="criteria" spellcheck="false"></textarea>
+
+<div id="report">
+  <h2>Отчёт</h2>
+  <div class="row" id="summary"></div>
+  <table id="criteriaTable"><thead><tr>
+    <th style="width:22%">критерий</th><th style="width:9%">оценка</th>
+    <th>обоснование</th></tr></thead><tbody></tbody></table>
+  <h2>Ход разговора</h2>
+  <pre id="transcript"></pre>
+  <h2>Замеры</h2>
+  <pre id="marks"></pre>
+  <div class="row" style="margin-top:10px">
+    <button id="download">скачать JSON</button>
+    <button id="refresh">обновить</button>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let lastReport = null;
+
+async function loadScenarios() {
+  const list = await (await fetch('/api/scenarios')).json();
+  for (const s of list) {
+    const o = document.createElement('option');
+    o.value = s.id;
+    o.textContent = `${s.title} (${s.stages} этапов)`;
+    $('scenario').appendChild(o);
+  }
+  fillCriteria(list);
+  $('scenario').onchange = () => fillCriteria(list);
+}
+
+function fillCriteria(list) {
+  const s = list.find(x => x.id === $('scenario').value) || list[0];
+  $('criteria').value = s.criteria.map(c => `${c.key}: ${c.title}`).join('\n');
+}
+
+$('start').onclick = async () => {
+  $('status').textContent = 'запускаю…';
+  await fetch('/api/start', {method:'POST', body: JSON.stringify({
+    scenario: $('scenario').value, criteria: $('criteria').value })});
+  $('status').textContent = 'идёт диалог — откройте экран сотрудника';
+  $('report').style.display = 'none';
+  poll();
+};
+
+// Отчёт готов заранее, поэтому опрос дешёвый: просто ждём, когда диалог
+// закончится, и показываем то, что уже собрано.
+async function poll() {
+  for (;;) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const rep = await (await fetch('/api/report')).json();
+      if (rep.error) continue;
+      render(rep);
+      if (rep.completed) { $('status').textContent = 'диалог завершён'; return; }
+    } catch (e) { /* сервер занят — не страшно */ }
+  }
+}
+
+function render(rep) {
+  lastReport = rep;
+  $('report').style.display = 'block';
+  const fa = (rep.marks || []).map(m => m.t_first_audio_ms).filter(Boolean);
+  const med = a => a.length ? [...a].sort((x,y)=>x-y)[a.length>>1] : '—';
+  $('summary').innerHTML =
+    `<span>этапов ${rep.stages_reached}/${rep.stages_total}</span>` +
+    `<span>реплик пользователя ${rep.user_turns}</span>` +
+    `<span>итог <span class="score">${rep.overall ?? '—'}</span></span>` +
+    `<span>покрытие критериев ${Math.round((rep.coverage||0)*100)}%</span>` +
+    `<span>первый звук, медиана ${med(fa)} мс</span>` +
+    `<span>${rep.completed ? 'завершён' : 'идёт'}</span>`;
+  const tb = $('criteriaTable').querySelector('tbody');
+  tb.innerHTML = '';
+  for (const c of rep.criteria) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${c.title}<br><span class="hint">${c.key}</span></td>` +
+      `<td class="score">${c.score ?? '—'}</td>` +
+      `<td>${c.rationale || (c.observations||[]).join('; ') || '—'}</td>`;
+    tb.appendChild(tr);
+  }
+  $('transcript').textContent = (rep.transcript||[])
+    .map(t => `${t.role === 'agent' ? 'Агент' : 'Сотрудник'} [${t.stage}]: ${t.text}`)
+    .join('\n');
+  $('marks').textContent = JSON.stringify(
+    {marks: rep.marks, evaluator: rep.evaluator}, null, 1);
+}
+
+$('download').onclick = () => {
+  const blob = new Blob([JSON.stringify(lastReport, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `report_${lastReport.scenario_id}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+$('refresh').onclick = async () => render(await (await fetch('/api/report')).json());
+
+loadScenarios();
+</script>

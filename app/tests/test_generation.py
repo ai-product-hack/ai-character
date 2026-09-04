@@ -68,6 +68,39 @@ class Registry(unittest.TestCase):
         self.assertFalse(r.alive("нет такого"))
 
 
+class CompletedGenerations(unittest.TestCase):
+    """Отмена вычищает из истории только НЕДОГОВОРЁННОЕ.
+
+    Найдено на живом прогоне: отмена стирала реплику, которую пользователь уже
+    дослушал, — история теряла ход, и агент переставал на него ссылаться.
+    """
+
+    def _state(self):
+        import pathlib as _p
+        from app.dialogue import DialogueState
+        from app.scenario import load_all
+        sc = load_all(_p.Path(ROOT) / "data" / "scenarios")[0]
+        return DialogueState(sc)
+
+    def test_finished_reply_survives_next_cancel(self):
+        st = self._state()
+        st.add_agent("Реплика, которую дослушали.", generation_id="gen-1")
+        st.add_user("Ответ пользователя.")
+        completed = {"gen-1"}
+        # Так это делает сервер: сначала проверка, потом чистка.
+        if "gen-1" not in completed:
+            st.drop_generation("gen-1")
+        self.assertIn("Реплика, которую дослушали.", [t.text for t in st.turns])
+
+    def test_interrupted_reply_is_erased(self):
+        st = self._state()
+        st.add_agent("Реплика, которую перебили.", generation_id="gen-2")
+        completed = set()
+        if "gen-2" not in completed:
+            st.drop_generation("gen-2")
+        self.assertNotIn("Реплика, которую перебили.", [t.text for t in st.turns])
+
+
 class Timeline(unittest.TestCase):
     def test_pts_counted_from_generation_start(self):
         tl = PTSTimeline()

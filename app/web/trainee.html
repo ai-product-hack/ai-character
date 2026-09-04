@@ -1,0 +1,261 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Тренажёр</title>
+<style>
+ :root{color-scheme:dark}
+ html,body{margin:0;height:100%;background:#05060a;color:#dde3ec;overflow:hidden;
+   font:14px/1.5 -apple-system,system-ui,sans-serif}
+ #stage{position:fixed;inset:0}
+ canvas{display:block;width:100%;height:100%}
+ #subs{position:fixed;left:0;right:34%;bottom:96px;text-align:center;
+   font:500 22px/1.45 -apple-system,system-ui,sans-serif;color:#fff;
+   text-shadow:0 2px 14px #000,0 0 30px #000;padding:0 40px;pointer-events:none}
+ #side{position:fixed;top:0;right:0;bottom:0;width:33%;min-width:320px;
+   background:#0b0e14e6;border-left:1px solid #232a38;display:flex;
+   flex-direction:column;backdrop-filter:blur(6px)}
+ #history{flex:1;overflow:auto;padding:12px 14px}
+ .turn{margin-bottom:10px} .who{font-size:11px;color:#7c8697;letter-spacing:.04em}
+ .agent .txt{color:#dde3ec} .user .txt{color:#7fd1ff}
+ #inputRow{border-top:1px solid #232a38;padding:10px 12px;display:flex;gap:8px}
+ #msg{flex:1;font:inherit;background:#151a23;color:#dde3ec;border:1px solid #2c3547;
+   border-radius:5px;padding:8px 10px}
+ button{font:inherit;background:#1a1f28;color:#dde3ec;border:1px solid #2c3547;
+   border-radius:5px;padding:8px 12px;cursor:pointer}
+ #hud{position:fixed;top:10px;left:10px;font:12px/1.5 ui-monospace,monospace;
+   color:#cfd6e4;background:#0b0e14cc;border:1px solid #232a38;border-radius:6px;
+   padding:8px 10px;white-space:pre;display:none}
+ #hudBtn{position:fixed;top:10px;left:10px;z-index:4}
+ #err{position:fixed;left:10px;bottom:10px;right:36%;font:12px ui-monospace,monospace;
+   color:#ff9a9a;background:#1a0d0dcc;border:1px solid #4a2222;border-radius:6px;
+   padding:8px;white-space:pre-wrap;display:none;max-height:26vh;overflow:auto}
+</style>
+
+<div id="stage"><canvas id="c"></canvas></div>
+<div id="subs"></div>
+<button id="hudBtn">цифры</button>
+<div id="hud"></div>
+
+<div id="side">
+  <div id="history"></div>
+  <div id="inputRow">
+    <input id="msg" placeholder="Ответьте агенту и нажмите Enter" autocomplete="off">
+    <button id="send">Enter</button>
+  </div>
+</div>
+<div id="err"></div>
+
+<script type="importmap">
+{"imports":{"three":"/avatar/node_modules/three/build/three.module.js",
+            "three/addons/":"/avatar/node_modules/three/examples/jsm/"}}
+</script>
+<script type="module">
+import { createAvatar } from '/avatar/src/avatar.js';
+import { AudioClock } from '/avatar/src/clock.js';
+
+const $ = id => document.getElementById(id);
+const fail = e => { $('err').style.display='block';
+  $('err').textContent += (e && e.stack ? e.stack : e) + '\n'; };
+window.addEventListener('error', e => fail(e.error || e.message));
+window.addEventListener('unhandledrejection', e => fail(e.reason));
+
+let avatar, ctx, clock, analyser, currentGen = null, anchored = false;
+let cues = [], subsUntil = 0;
+const stats = {firstAudioMs: null, clauses: 0, drops: 0, seq: 0};
+
+async function boot() {
+  avatar = await createAvatar($('c'), {
+    look: '/avatar/look.config.json',
+    behavior: '/avatar/behavior.config.json',
+    visemes: '/avatar/visemes.json',
+    expression: '/avatar/expression.config.json',
+  });
+  avatar.setSize(innerWidth, innerHeight);
+  await avatar.load();
+  avatar.setSize(innerWidth, innerHeight);
+  avatar.setState('listening');
+  requestAnimationFrame(loop);
+  // Ошибка в цикле чтения раньше терялась молча, и выглядело это как «агент
+  // замолчал»: кадры на сервере есть, клиент их не берёт. Теперь падение
+  // видно, и поток переподключается.
+  connect().catch(e => { fail(e); setTimeout(() => connect().catch(fail), 500); });
+}
+
+function ensureAudio() {
+  if (!ctx) {
+    ctx = new AudioContext();
+    clock = new AudioClock(ctx);
+    avatar.attachClock(clock);
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    analyser.connect(ctx.destination);
+    avatar.visemes.attachAnalyser(analyser);
+  }
+  // Без жеста пользователя браузер держит граф в suspended, и первая реплика
+  // агента уходит в тишину: она приходит раньше, чем человек успевает что-то
+  // нажать. Возобновляем при каждом обращении — дешевле, чем ловить момент.
+  if (ctx.state === 'suspended') ctx.resume();
+}
+
+// -------------------------------------------------------------------- поток
+
+async function connect() {
+  const resp = await fetch('/api/stream?from=0');
+  const reader = resp.body.getReader();
+  let acc = new Uint8Array(0);
+  for (;;) {
+    const {done, value} = await reader.read();
+    if (done) break;
+    const n = new Uint8Array(acc.length + value.length);
+    n.set(acc); n.set(value, acc.length); acc = n;
+    while (acc.length >= 8) {
+      const dv = new DataView(acc.buffer, acc.byteOffset, acc.byteLength);
+      const jl = dv.getUint32(0, true), pl = dv.getUint32(4, true);
+      if (acc.length < 8 + jl + pl) break;
+      const hdr = JSON.parse(new TextDecoder().decode(acc.subarray(8, 8+jl)));
+      const payload = acc.subarray(8+jl, 8+jl+pl);
+      acc = acc.subarray(8+jl+pl);
+      // Разбор одного кадра не имеет права уронить чтение остальных.
+      try { handle(hdr, payload); } catch (e) { fail(e); }
+    }
+  }
+}
+
+function handle(h, payload) {
+  if (h.seq !== undefined) stats.seq = h.seq;
+  // Клиент безусловно дропает всё с чужим generation_id — та же защита,
+  // что в S3: сервер мог отправить кадр до того, как узнал об отмене.
+  if (h.generation_id && currentGen && h.generation_id !== currentGen) {
+    stats.drops++;
+    return;
+  }
+  if (h.kind === 'user') { addTurn('user', h.text); return; }
+  if (h.kind === 'agent') { addTurn('agent', h.text); return; }
+  if (h.kind === 'cancel') { onCancel(h.generation_id); return; }
+  if (h.kind === 'finished') { addTurn('agent', '— диалог завершён —'); return; }
+  if (h.kind === 'state') {
+    if (h.t_first_audio_ms) stats.firstAudioMs = h.t_first_audio_ms;
+    avatar.setState(h.finished ? 'listening' : 'speaking');
+    return;
+  }
+  if (h.kind === 'audio') return playAudio(h, payload);
+  if (h.kind === 'visemes') {
+    if (h.clause === 0) avatar.playGeneration(h.generation_id, h.track);
+    else avatar.visemes.appendVisemes(h.generation_id, h.track);
+    return;
+  }
+  if (h.kind === 'subtitles') {
+    cues = cues.concat(h.cues);
+    return;
+  }
+}
+
+function playAudio(h, payload) {
+  ensureAudio();
+  if (currentGen !== h.generation_id) {
+    // Новая генерация: один якорь на всю реплику, как в S2.
+    currentGen = h.generation_id;
+    anchored = false;
+    cues = [];
+    stats.clauses = 0;
+    avatar.setState('speaking');
+  }
+  const i16 = new Int16Array(payload.slice().buffer);
+  const buf = ctx.createBuffer(1, i16.length, h.sample_rate);
+  const ch = buf.getChannelData(0);
+  for (let i = 0; i < i16.length; i++) ch[i] = i16[i] / 32768;
+  if (!anchored) { clock.anchor(ctx.currentTime + 0.12); anchored = true; }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  src.connect(analyser);
+  const at = clock.t0 + h.start_ms / 1000;
+  src.start(Math.max(at, ctx.currentTime));
+  stats.clauses++;
+  live.push(src);
+}
+
+let live = [];
+
+function onCancel(gid) {
+  // Перебивание гасит звук, лицо и субтитры одним движением.
+  for (const s of live) { try { s.stop(); } catch (_) {} }
+  live = [];
+  avatar.cancel(gid);
+  cues = [];
+  $('subs').textContent = '';
+  currentGen = null;
+  anchored = false;
+}
+
+// ---------------------------------------------------------------- субтитры
+
+function loop(now) {
+  requestAnimationFrame(loop);
+  avatar.frame(now);
+  drawSubs();
+  if ($('hud').style.display !== 'none') drawHud();
+}
+
+function drawSubs() {
+  if (!clock || clock.t0 === null || !cues.length) return;
+  const ms = clock.nowMs();
+  if (ms === null) return;
+  // Субтитры едут по тому же PTS, что и висемы: отдельного таймера нет.
+  const shown = cues.filter(c => c.pts_ms <= ms + 60);
+  $('subs').textContent = shown.slice(-14).map(c => c.text).join(' ');
+}
+
+function drawHud() {
+  const d = avatar.debug();
+  const v = d.viseme || {};
+  $('hud').textContent =
+    `FPS            ${d.fps.toFixed(0)}\n` +
+    `состояние      ${d.state}\n` +
+    `generation_id  ${v.genId ?? '—'}\n` +
+    `первый звук    ${stats.firstAudioMs ?? '—'} мс\n` +
+    `outputLatency  ${d.outputLatencyMs?.toFixed(1) ?? '—'} мс\n` +
+    `дрейф          ${(v.drift_ms ?? 0).toFixed(1)} мс\n` +
+    `висема         ${v.viseme ?? '—'} ${v.trackIndex ?? 0}/${v.trackLength ?? 0}\n` +
+    `подвисаний     ${v.underruns ?? 0}\n` +
+    `клауз          ${stats.clauses}\n` +
+    `дропнуто чужих ${stats.drops}\n` +
+    `кадров         ${stats.seq}`;
+}
+
+// ------------------------------------------------------------------- ввод
+
+function addTurn(role, text) {
+  const d = document.createElement('div');
+  d.className = 'turn ' + role;
+  d.innerHTML = `<div class="who">${role === 'agent' ? 'Агент' : 'Вы'}</div>` +
+                `<div class="txt"></div>`;
+  d.querySelector('.txt').textContent = text;
+  $('history').appendChild(d);
+  $('history').scrollTop = 1e9;
+}
+
+async function send() {
+  const text = $('msg').value.trim();
+  if (!text) return;
+  $('msg').value = '';
+  ensureAudio();
+  // Enter во время речи агента = перебивание: гасим локально сразу, не дожидаясь
+  // сервера, иначе между нажатием и ответом сети звучит уже отменённое.
+  if (currentGen) { onCancel(currentGen); avatar.setState('interrupted'); }
+  await fetch('/api/message', {method:'POST', body: JSON.stringify({text})});
+}
+
+$('send').onclick = send;
+$('msg').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+$('hudBtn').onclick = () => {
+  const h = $('hud');
+  h.style.display = h.style.display === 'none' ? 'block' : 'none';
+  $('hudBtn').style.display = h.style.display === 'block' ? 'none' : 'block';
+};
+$('hud').onclick = () => { $('hud').style.display='none'; $('hudBtn').style.display='block'; };
+addEventListener('resize', () => avatar && avatar.setSize(innerWidth, innerHeight));
+
+// Любой первый клик по странице разблокирует аудиограф.
+addEventListener('pointerdown', ensureAudio, {once: false});
+
+boot().catch(fail);
+</script>

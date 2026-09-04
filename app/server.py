@@ -49,9 +49,15 @@ class Session:
         self.state = DialogueState(scenario)
         self.registry = GenerationRegistry()
         self.models = models
-        self.stream = stream_deepseek(models["llm"])
-        self.pipe = ReplyPipeline(self.stream, models["tts"], models["aligner"],
+        # Поток создаётся НА КАЖДУЮ реплику. CancellableStream одноразовый:
+        # после отмены он закрыт навсегда, и переиспользование давало вторую
+        # реплику с нулём клауз и нулевым TTFT — модель просто не звалась.
+        self.stream = None
+        self.pipe = ReplyPipeline(None, models["tts"], models["aligner"],
                                   models["bridge"], self.registry)
+        # Генерации, которые доиграли до конца. Их реплики пользователь
+        # услышал, и стирать их из истории при следующей отмене нельзя.
+        self.completed: set[str] = set()
         self.evaluator = BackgroundEvaluator(models["llm"])
         self.frames: list[tuple[dict, bytes]] = []
         self.frame_cv = threading.Condition()
@@ -68,6 +74,8 @@ class Session:
                 self._emit({"kind": "user", "text": user_text})
             gen = self.registry.start()
             prompt = build_prompt(self.state, user_text)
+            self.stream = stream_deepseek(self.models["llm"])
+            self.pipe.llm_stream = self.stream
 
         t0 = time.perf_counter()
         marks = {"t_request": t0, "t_first_audio": None}
@@ -97,6 +105,11 @@ class Session:
         reply = parse_reply(self.pipe.last_raw)
         with self.lock:
             happened = apply_action(self.state, reply, gen.id)
+            self.completed.add(gen.id)
+        # Реплика агента целиком — для истории на экране. Субтитры едут по
+        # клаузам и по PTS, а истории нужен готовый текст.
+        self._emit({"kind": "agent", "generation_id": gen.id,
+                    "text": reply.speakable, "stage": self.state.stage_id})
         # Оценка уходит в фон и диалог не задерживает.
         self.evaluator.submit(self.state)
 
@@ -123,10 +136,15 @@ class Session:
     def cancel(self) -> str | None:
         """Перебивание: гасим ВСЮ цепочку одним движением."""
         gid = self.registry.cancel()
-        self.stream.cancel()
+        if self.stream is not None:
+            self.stream.cancel()
         if gid:
             with self.lock:
-                self.state.drop_generation(gid)
+                # Из истории вычищаем только НЕДОГОВОРЁННОЕ. Реплику, которую
+                # пользователь дослушал, стирать нельзя: она прозвучала, и
+                # агент вправе на неё ссылаться.
+                if gid not in self.completed:
+                    self.state.drop_generation(gid)
             self._emit({"kind": "cancel", "generation_id": gid})
         return gid
 
@@ -206,6 +224,14 @@ APP: App | None = None
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    # HTTP/1.1 с явным chunked. На 1.0 браузер копил ответ и отдавал его
+    # порциями по своему усмотрению: первые кадры доезжали (их было много
+    # килобайт разом), а всё, что приходило после паузы, застревало в буфере.
+    # Сырой сокет при этом получал кадры мгновенно — то есть сервер работал, и
+    # искать поломку в нём было бы напрасно. Спайкам S2 и S3 хватало 1.0,
+    # потому что там поток шёл непрерывно и буфер не успевал застояться.
+    protocol_version = "HTTP/1.1"
+
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=str(ROOT), **kw)
 
@@ -240,6 +266,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._json({"error": "сессия не начата"}, 400)
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Transfer-Encoding", "chunked")
+        self.send_header("X-Accel-Buffering", "no")
         self.end_headers()
         idx = start
         try:
@@ -247,17 +275,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 batch = APP.session.frames_from(idx)
                 if not batch:
                     # Держим соединение: браузер переподключаться не должен.
-                    self.wfile.write(struct.pack("<II", 2, 0) + b"{}")
-                    self.wfile.flush()
+                    self._chunk(struct.pack("<II", 2, 0) + b"{}")
                     continue
+                blob = b""
                 for header, payload in batch:
                     hdr = json.dumps({**header, "seq": idx}, ensure_ascii=False).encode()
-                    self.wfile.write(struct.pack("<II", len(hdr), len(payload))
-                                     + hdr + payload)
+                    blob += struct.pack("<II", len(hdr), len(payload)) + hdr + payload
                     idx += 1
-                self.wfile.flush()
+                self._chunk(blob)
         except (BrokenPipeError, ConnectionResetError):
             pass
+
+    def _chunk(self, data: bytes) -> None:
+        """Один кусок chunked-потока. Браузер отдаёт его читателю сразу."""
+        self.wfile.write(f"{len(data):X}\r\n".encode() + data + b"\r\n")
+        self.wfile.flush()
 
     # ----------------------------------------------------------------- POST
 

@@ -279,6 +279,52 @@ class Subtitles(unittest.TestCase):
             self.assertEqual(len(cues), 1, "без таймкодов клауза показывается целиком")
 
 
+class StreamReuse(unittest.TestCase):
+    """Поток модели одноразовый — на каждую реплику нужен новый.
+
+    Найдено на живом прогоне: сессия держала один CancellableStream, после
+    первой отмены он оставался закрытым навсегда, и следующая реплика приходила
+    с нулём клауз и нулевым TTFT. Модель просто не звалась, а выглядело это как
+    «агент замолчал».
+    """
+
+    class OneShot:
+        """Ведёт себя как настоящий поток: после cancel() больше не отдаёт."""
+
+        def __init__(self, text):
+            self.text = text
+            self._closed = False
+
+        def cancel(self):
+            self._closed = True
+
+        def __call__(self, system, prompt):
+            if self._closed:
+                return
+            for i in range(0, len(self.text), 4):
+                yield self.text[i:i + 4]
+
+    def test_reused_stream_goes_silent_after_cancel(self):
+        reg = GenerationRegistry()
+        stream = self.OneShot(REPLY)
+        p = ReplyPipeline(stream, fake_tts(), fake_align(), fake_visemes, reg)
+
+        first = p.run("sys", "prompt", reg.start())
+        self.assertGreater(len(first), 0)
+
+        stream.cancel()
+        second = p.run("sys", "prompt", reg.start())
+        self.assertEqual(second, [], "закрытый поток обязан молчать — это и есть баг")
+
+    def test_fresh_stream_per_generation_works(self):
+        reg = GenerationRegistry()
+        p = ReplyPipeline(None, fake_tts(), fake_align(), fake_visemes, reg)
+        for _ in range(3):
+            p.llm_stream = self.OneShot(REPLY)      # так делает сервер
+            res = p.run("sys", "prompt", reg.start())
+            self.assertGreater(len(res), 0, "с новым потоком каждая реплика звучит")
+
+
 class Timings(unittest.TestCase):
     def test_first_audio_before_stream_end(self):
         """Смысл нарезки: первый звук готов, пока модель ещё договаривает."""
