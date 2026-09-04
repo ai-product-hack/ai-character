@@ -29,6 +29,13 @@ class Turn:
     # Как этот ответ печатали: время до первого нажатия, паузы, правки.
     # Только у реплик пользователя и только в вебе — в скриптовых прогонах None.
     typing: dict | None = None
+    # Ход состоялся не полностью: агента перебили, и он не задал свой вопрос
+    # до конца. Такой ход не списывает бюджет этапа — иначе каждое перебивание
+    # приближало бы сценарий к принудительному завершению, а перебивание это
+    # нормальная часть разговора, а не потраченный ход.
+    counted: bool = True
+    # Реплика прозвучала лишь частично — пользователь перебил на середине.
+    interrupted: bool = False
 
 
 @dataclass
@@ -54,6 +61,17 @@ class DialogueState:
     # DeepSeek выбрала его в 60 ходах из 66 и не перешла ни разу. Модель всегда
     # найдёт, что ещё уточнить; ограничение принадлежит движку, а не промпту.
     max_turns_per_stage: int = 3
+    # Последний этап — тот, где прощаются, и ему нужно больше места: обрубать
+    # прощание тем же лимитом, что и промежуточный вопрос, значит заканчивать
+    # на полуслове. None — на ход больше общего бюджета; так лимит остаётся
+    # осмысленным и когда общий задан снаружи.
+    last_stage_max_turns: int | None = None
+    # Предохранитель на весь диалог. Перебитые ходы не списывают бюджет ЭТАПА
+    # — иначе живой разговор наказывался бы, — но списывают этот. Без него
+    # собеседник, перебивающий каждую реплику, не дал бы сценарию закончиться
+    # никогда, а «диалог обязан заканчиваться» важнее справедливости к ходу.
+    # None — считается от размера сценария при первом обращении.
+    max_user_turns: int | None = None
     forced_advances: int = 0
     _stage_started_at: int = 0
 
@@ -74,12 +92,49 @@ class DialogueState:
 
     @property
     def turns_on_stage(self) -> int:
-        """Сколько раз пользователь ответил на текущем этапе."""
-        return sum(1 for t in self.turns[self._stage_started_at:] if t.role == "user")
+        """Полноценных обменов на текущем этапе.
+
+        Перебитые не в счёт: агент не успел договорить свой вопрос, так что
+        обмен не состоялся. Считать их значило бы наказывать пользователя за
+        живость разговора.
+        """
+        return sum(1 for t in self.turns[self._stage_started_at:]
+                   if t.role == "user" and t.counted)
+
+    @property
+    def stage_max_turns(self) -> int:
+        """Бюджет текущего этапа.
+
+        У последнего он больше: это этап, на котором разговор сворачивают, и
+        обрубать его тем же лимитом, что и промежуточный, значит заканчивать
+        на полуслове.
+        """
+        if not self.is_last_stage:
+            return self.max_turns_per_stage
+        return (self.last_stage_max_turns if self.last_stage_max_turns is not None
+                else self.max_turns_per_stage + 1)
 
     @property
     def stage_budget_spent(self) -> bool:
-        return self.turns_on_stage >= self.max_turns_per_stage
+        return self.turns_on_stage >= self.stage_max_turns
+
+    @property
+    def dialogue_max_turns(self) -> int:
+        """Потолок ходов на весь сценарий, включая перебитые.
+
+        По умолчанию — сколько нужно, чтобы пройти все этапы по полному
+        бюджету, плюс запас на перебивания. Считается от сценария, а не
+        константой: этапов у сценариев от шести до семи.
+        """
+        if self.max_user_turns is not None:
+            return self.max_user_turns
+        stages = len(self.scenario.stages)
+        return (stages - 1) * self.max_turns_per_stage + \
+            (self.max_turns_per_stage + 1) + 6
+
+    @property
+    def dialogue_budget_spent(self) -> bool:
+        return self.user_turns >= self.dialogue_max_turns
 
     def advance(self, forced: bool = False) -> bool:
         """Следующий этап. Возвращает False, если этапы кончились."""
@@ -99,6 +154,18 @@ class DialogueState:
 
     def add_user(self, text: str, typing: dict | None = None) -> Turn:
         t = Turn("user", text, self.stage_id, typing=typing)
+        self.turns.append(t)
+        return t
+
+    def add_interrupted_agent(self, text: str, generation_id: str | None = None) -> Turn:
+        """Записать то, что агент успел произнести до перебивания.
+
+        Пользователь это СЛЫШАЛ. Выбрасывать прозвучавшее — значит заставлять
+        агента отвечать так, будто он молчал: он повторит вопрос, на который
+        уже получил ответ. В историю идёт ровно озвученная часть, помеченная
+        как оборванная, чтобы модель понимала, почему фраза без конца.
+        """
+        t = Turn("agent", text, self.stage_id, generation_id, interrupted=True)
         self.turns.append(t)
         return t
 

@@ -225,13 +225,22 @@ class StageBudget(unittest.TestCase):
         self.assertEqual(state.stage_index, 1, "одного ответа мало для нового перехода")
 
     def test_budget_on_last_stage_finishes(self):
+        """С последнего этапа переходить некуда — бюджет обязан завершать."""
         sc = SCENARIOS[0]
         state = DialogueState(sc, max_turns_per_stage=2)
         state.stage_index = len(sc.stages) - 1
         agent = self._stuck_agent()
-        for _ in range(2):
+        for _ in range(state.stage_max_turns):
             agent.step(state, "Ответ.")
         self.assertTrue(state.finished, "на последнем этапе бюджет завершает диалог")
+        self.assertIn("бюджет", state.finish_reason)
+
+    def test_last_stage_gets_more_room(self):
+        """Прощание не должно обрубаться тем же лимитом, что промежуточный вопрос."""
+        state = DialogueState(SCENARIOS[0], max_turns_per_stage=3)
+        self.assertEqual(state.stage_max_turns, 3)
+        state.stage_index = len(SCENARIOS[0].stages) - 1
+        self.assertGreater(state.stage_max_turns, 3)
 
     def test_stuck_dialogue_always_terminates(self):
         """Модель, которая не переходит никогда, всё равно доходит до конца."""

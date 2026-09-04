@@ -1,0 +1,5160 @@
+{
+  "summary": {
+    "scenarios": 5,
+    "finished": 5,
+    "turns": 92,
+    "first_audio_ms": {
+      "median": 127,
+      "max": 199
+    },
+    "first_speech_ms": {
+      "median": 1998,
+      "max": 2901
+    },
+    "filler_share": 1.0,
+    "speculation": {
+      "tries": 78,
+      "hits": 78,
+      "hit_rate": 1.0
+    },
+    "emotions": 4,
+    "interrupts": {
+      "count": 10,
+      "per_scenario": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "leaked_frames": 0,
+      "last_stray_ms_max": 0
+    },
+    "control_line": {
+      "missing": 6,
+      "repaired": 6,
+      "missing_share": 0.072,
+      "repair_ms_median": 2245
+    },
+    "typing": {
+      "answers": 87,
+      "confidence": {
+        "уверенно": 82,
+        "с заминками": 5,
+        "неуверенно": 0
+      }
+    }
+  },
+  "tts": {
+    "name": "switchable",
+    "provider": "silero",
+    "loaded": [
+      "silero"
+    ],
+    "engine": {
+      "name": "silero",
+      "version": "v5_cis_base",
+      "voice": "ru_roman",
+      "sample_rate": 24000,
+      "load_s": 2.0,
+      "offline": true
+    }
+  },
+  "args": {
+    "scenario": null,
+    "turns": 30,
+    "port": 8043,
+    "interrupt_rate": 0.0,
+    "min_interrupts": 2,
+    "interrupt_after": [
+      0.4,
+      2.0
+    ],
+    "timeout": 90,
+    "settle": 0.6,
+    "seed": 7,
+    "out": "bench/results/rehearsal_cut.json"
+  },
+  "runs": [
+    {
+      "scenario_id": "s1_interview_backend",
+      "title": "Собеседование: backend-разработчик, техническая секция",
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "znakomstvo",
+          "typed_ms": 0,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 2319,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [
+            "neutral"
+          ],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 1,
+          "stage": null,
+          "typed_ms": 1680,
+          "t_first_audio_ms": 129,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 863,
+            "generation_id": "gen-2",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 2,
+          "stage": "znakomstvo",
+          "typed_ms": 2164,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 1703,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 3,
+          "stage": "glubina_roli",
+          "typed_ms": 1477,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2216,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 4,
+          "stage": "glubina_roli",
+          "typed_ms": 1586,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": 130,
+          "reported_first_speech_ms": 2325,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 5,
+          "stage": null,
+          "typed_ms": 1242,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 419,
+            "generation_id": "gen-6",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 6,
+          "stage": "glubina_roli",
+          "typed_ms": 1809,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2242,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 7,
+          "stage": "arhitektura",
+          "typed_ms": 1692,
+          "t_first_audio_ms": 122,
+          "reported_first_audio_ms": 120,
+          "reported_first_speech_ms": 2011,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 8,
+          "stage": "arhitektura",
+          "typed_ms": 1404,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 2395,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 9,
+          "stage": "arhitektura",
+          "typed_ms": 1305,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2046,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 10,
+          "stage": "cifry",
+          "typed_ms": 1550,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 1845,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 11,
+          "stage": "cifry",
+          "typed_ms": 959,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 2328,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 12,
+          "stage": "cifry",
+          "typed_ms": 1070,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 122,
+          "reported_first_speech_ms": 2324,
+          "clauses": 6,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 13,
+          "stage": "incident",
+          "typed_ms": 1590,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2648,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 14,
+          "stage": "incident",
+          "typed_ms": 1401,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1922,
+          "clauses": 5,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 15,
+          "stage": "incident",
+          "typed_ms": 1374,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 2396,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 16,
+          "stage": "provokaciya",
+          "typed_ms": 1246,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1998,
+          "clauses": 5,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 17,
+          "stage": "provokaciya",
+          "typed_ms": 1695,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 2447,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 18,
+          "stage": "provokaciya",
+          "typed_ms": 1516,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 122,
+          "reported_first_speech_ms": 1930,
+          "clauses": 5,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 19,
+          "stage": "voprosy_kandidata",
+          "typed_ms": 1505,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2144,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 20,
+          "stage": "voprosy_kandidata",
+          "typed_ms": 1235,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2858,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 21,
+          "stage": "voprosy_kandidata",
+          "typed_ms": 1241,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": 128,
+          "reported_first_speech_ms": 1909,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 22,
+          "stage": "voprosy_kandidata",
+          "typed_ms": 1530,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2456,
+          "clauses": 5,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 23,
+          "stage": "voprosy_kandidata",
+          "typed_ms": 1537,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 124,
+          "reported_first_speech_ms": 1736,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        }
+      ],
+      "interrupts": [
+        {
+          "after_ms": 863,
+          "generation_id": "gen-2",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 419,
+          "generation_id": "gen-6",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        }
+      ],
+      "report": {
+        "scenario_id": "s1_interview_backend",
+        "scenario_title": "Собеседование: backend-разработчик, техническая секция",
+        "completed": true,
+        "finish_reason": "бюджет последнего этапа исчерпан",
+        "stages_reached": 7,
+        "stages_total": 7,
+        "user_turns": 23,
+        "criteria": [
+          {
+            "key": "structure",
+            "title": "Структурность ответов",
+            "scale": "1-5",
+            "score": 1.73,
+            "rationale": "Ответ содержит только два коротких фрагмента без завершения мысли и без описания ситуации-действия-результата, что соответствует низкому уровню структурности.",
+            "observations": [
+              "Ответ структурирован (роль, задачи), но неполон: нет контекста проекта и результата.",
+              "Ответ оборван на полуслове, нет ни начала, ни развития, ни завершения мысли.",
+              "Ответ обрывочный, не завершён, нет чёткой структуры 'ситуация-задача-действие-результат'.",
+              "Ответ фрагментарен: собеседник начинает мысль, но не завершает её, перескакивая на архитектуру без описания ситуации, задачи и результата.",
+              "Ответ фрагментарен, начинается с описания нагрузки без завершения мысли о сервисах, что отражает недостаточную структурированность.",
+              "Ответ представляет собой обрывок без начала и конца, не следует структуре ситуация-задача-действие-результат, что подтверждается замечанием агента об обрыве.",
+              "Ответ представляет собой обрывочную фразу без контекста, начала и завершения мысли.",
+              "Ответ обрывается на полуслове («с син...»), не завершена мысль о том, что именно переписано, и нет полной структуры ситуация-задача-действие-результат.",
+              "Ответы обрывочны и неполны, отсутствует связная структура ситуация-задача-действие-результат.",
+              "Ответы обрывочны и не имеют завершённой структуры: собеседник называет фрагменты (сервисы, метрики), но не доводит мысль до конца.",
+              "Ответ содержит только два коротких фрагмента без завершения мысли и без описания ситуации-действия-результата, что соответствует низкому уровню структурности."
+            ]
+          },
+          {
+            "key": "specifics",
+            "title": "Конкретика и числа",
+            "scale": "1-5",
+            "score": 2.71,
+            "rationale": "Присутствуют конкретные числа (пик около двух тысяч RPS, задержка сто миллисекунд на p95), но детали о падении кеша и предохранителе не раскрыты.",
+            "observations": [
+              "Упомянуты конкретные задачи (кеширование, батчевая выборка) и срок «два года», но нет метрик или объёмов.",
+              "Названы три сервиса и их назначение, но нет конкретных метрик, объёмов нагрузки или сроков.",
+              "Приведены конкретные метрики: пик 2000 RPS и задержка 100 мс на p95.",
+              "Упомянуты только общие термины (кеш, очередь, предохранитель, прогрев) без конкретных метрик, сроков или технических деталей стека.",
+              "Нет ни одной конкретной детали, только общее название сервиса без стека, сроков или метрик.",
+              "Упомянуты конкретные действия (держал слой кеширования, переписал выборку на батчевую), но нет чисел, метрик или сроков.",
+              "Упомянуты три сервиса и причина разделения, но нет конкретных метрик, объёмов или сроков.",
+              "Приведены конкретные числа: пик 2000 RPS и задержка 100 мс на p95, но нет других метрик и сроков.",
+              "Упомянуты только 'предохранитель' и 'прогрев' без каких-либо цифр, объёмов или сроков, в отличие от предыдущего ответа с конкретными метриками.",
+              "Нет конкретных цифр, метрик или сроков, только общее утверждение о разных требованиях.",
+              "Упомянуто «переписал выборку с синхронной на батчевую», но нет конкретных метрик, объёмов или сроков.",
+              "Есть конкретика (три сервиса, батчевая выборка, слой кеширования), но нет метрик, объёмов или сроков.",
+              "Приведены конкретные числа (две тысячи RPS, сто миллисекунд p95), но нет контекста и полных данных.",
+              "Присутствуют конкретные числа (пик около двух тысяч RPS, задержка сто миллисекунд на p95), но детали о падении кеша и предохранителе не раскрыты."
+            ]
+          },
+          {
+            "key": "ownership",
+            "title": "Личный вклад",
+            "scale": "1-5",
+            "score": 3.08,
+            "rationale": "Использовано 'Добавили' без уточнения личного вклада, что не позволяет отделить собственные действия от командных.",
+            "observations": [
+              "Чётко отделяет личный вклад («лично я держал», «переписал») от командного контекста.",
+              "Собеседник чётко обозначил личный вклад в кеш и батчевую выборку, но не уточнил, в каком именно сервисе.",
+              "Ответы используют безличные конструкции ('упал кеш', 'добавили', 'не вышло бы'), не раскрывая личный вклад собеседника.",
+              "Использовано общее 'делал', не видно личного вклада или разделения с командой.",
+              "Чётко указан личный вклад через 'я держал' и 'я переписал', отделяя себя от командной работы.",
+              "Чётко указан личный вклад («Лично я держал слой кеширования»), но не детализировано, что именно делал.",
+              "Использует 'разделили' и 'был ваш кеш', что неясно отделяет личный вклад от командного.",
+              "Использовано 'добавили' — неясно, лично ли собеседник это делал или это командное действие, хотя и не сказано 'мы'.",
+              "Используется безличная конструкция, не видно личного вклада или действий.",
+              "Собеседник явно говорит «Лично я держал слой кеширования и переписал выборку», чётко отделяя свой вклад от командного.",
+              "Чётко указан личный вклад: 'Лично я держал слой кеширования и переписал выборку'.",
+              "Не видно личного вклада, ответы обезличены, нет разделения на своё и командное.",
+              "Использовано 'Добавили' без уточнения личного вклада, что не позволяет отделить собственные действия от командных."
+            ]
+          },
+          {
+            "key": "pushback",
+            "title": "Реакция на давление",
+            "scale": "1-5",
+            "score": 2.0,
+            "rationale": "Собеседник не отвечает на вопрос, а уходит в сторону, задавая встречный вопрос, что выглядит как уклонение от давления, а не аргументированная реакция.",
+            "observations": [
+              "Собеседник спокойно аргументирует различие требований к очередям, но не отвечает на прямой вопрос о личном вкладе и стеке, что можно считать частичным уклонением.",
+              "Собеседник не отвечает на вопрос, а уходит в сторону, задавая встречный вопрос, что выглядит как уклонение от давления, а не аргументированная реакция."
+            ]
+          }
+        ],
+        "transcript": [
+          {
+            "role": "agent",
+            "text": "Здравствуйте! Расскажите коротко о себе и о последнем проекте — чем занимались, какая у вас была роль и на каком стеке работали.",
+            "stage": "znakomstvo"
+          },
+          {
+            "role": "user",
+            "text": "Я backend-разработчик, последние два года делал сервис выдачи рекомендаций.",
+            "stage": "znakomstvo",
+            "typing": {
+              "first_key_ms": 2,
+              "total_ms": 1581,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 47.45,
+              "rewrite_ratio": 0.08,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "user",
+            "text": "Лично я держал слой кеширования и переписал выборку с синхронной на батчевую.",
+            "stage": "znakomstvo",
+            "typing": {
+              "first_key_ms": 3158,
+              "total_ms": 1984,
+              "final_length": 77,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 38.81,
+              "rewrite_ratio": 0.0,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понял, сервис рекомендаций — звучит интересно. А на каком стеке вы работали и что за переписывание выборки, если не секрет? Хочется понять масштаб задачи.",
+            "stage": "znakomstvo"
+          },
+          {
+            "role": "user",
+            "text": "Три сервиса: приём событий, счётчик и выдача. Разделили из-за разной нагрузки.",
+            "stage": "znakomstvo",
+            "typing": {
+              "first_key_ms": 18,
+              "total_ms": 1263,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 61.74,
+              "rewrite_ratio": 0.192,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понял, три сервиса — уже ощущается архитектура. А в каком из них была ваша зона ответственности с кешем и батчевой выборкой, и на чём это всё написано — Go, Java, что-то ещё?",
+            "stage": "znakomstvo"
+          },
+          {
+            "role": "user",
+            "text": "Пик около двух тысяч запросов в секунду, задержка сто миллисекунд на p95.",
+            "stage": "glubina_roli",
+            "typing": {
+              "first_key_ms": 13,
+              "total_ms": 1421,
+              "final_length": 73,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 51.36,
+              "rewrite_ratio": 0.151,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Интересно, две тысячи RPS — это уже серьёзная нагрузка. А на чём это всё написано и где именно сидел ваш кеш — в сервисе выдачи или в счётчике?",
+            "stage": "glubina_roli"
+          },
+          {
+            "role": "user",
+            "text": "Упал кеш, вся нагрузка ушла в базу. Добавили предохранитель и прогрев.",
+            "stage": "glubina_roli",
+            "typing": {
+              "first_key_ms": 5,
+              "total_ms": 1117,
+              "final_length": 70,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 62.65,
+              "rewrite_ratio": 0.157,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "user",
+            "text": "Одной очередью не вышло бы: у выдачи и счётчика разные требования по задержке.",
+            "stage": "glubina_roli",
+            "typing": {
+              "first_key_ms": 2282,
+              "total_ms": 1593,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 48.98,
+              "rewrite_ratio": 0.103,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, понял, что вы имели в виду про разные очереди. А вернёмся к вашему личному вкладу: когда упал кеш и вы добавили предохранитель и прогрев — это вы сами придумали и реализовали, или это было командное решение? И на чём сервис выдачи писали — стек всё-таки назовёте?",
+            "stage": "glubina_roli"
+          },
+          {
+            "role": "user",
+            "text": "Да, как у вас устроено ревью и кто принимает архитектурные решения?",
+            "stage": "glubina_roli",
+            "typing": {
+              "first_key_ms": 10,
+              "total_ms": 1502,
+              "final_length": 67,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 44.6,
+              "rewrite_ratio": 0.134,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хм, вы меня спрашиваете про ревью, а я стараюсь понять ваш личный вклад в проект. Давайте всё же вернёмся к кешу и предохранителю — это вы сами спроектировали и внедрили, или это была общая командная работа? И стек всё-таки назовёте?",
+            "stage": "glubina_roli"
+          },
+          {
+            "role": "user",
+            "text": "Я backend-разработчик, последние два года делал сервис выдачи рекомендаций.",
+            "stage": "arhitektura",
+            "typing": {
+              "first_key_ms": 17,
+              "total_ms": 1283,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 58.44,
+              "rewrite_ratio": 0.173,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хм, вы начали фразу и оборвали её на полуслове — «делал сервис в...» и всё. Давайте договорим: я задаю вопросы по одному, вы отвечаете полностью, и тогда мы быстро пройдёмся по всему. Итак, всё-таки два момента: на каком стеке написан сервис выдачи, и где именно вы сидели с кешем — в нём или в счётчике?",
+            "stage": "arhitektura"
+          },
+          {
+            "role": "user",
+            "text": "Лично я держал слой кеширования и переписал выборку с синхронной на батчевую.",
+            "stage": "arhitektura",
+            "typing": {
+              "first_key_ms": 9,
+              "total_ms": 1223,
+              "final_length": 77,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 62.98,
+              "rewrite_ratio": 0.182,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, вы начали говорить «переписал выб...» и снова оборвали. Давайте я помогу: вы переписали выборку из базы в сервисе выдачи? И всё-таки, какой там стек — Go, Java, Python? Один вопрос за раз, договорились?",
+            "stage": "arhitektura"
+          },
+          {
+            "role": "user",
+            "text": "Три сервиса: приём событий, счётчик и выдача. Разделили из-за разной нагрузки.",
+            "stage": "arhitektura",
+            "typing": {
+              "first_key_ms": 21,
+              "total_ms": 1477,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 52.82,
+              "rewrite_ratio": 0.141,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понял, вы начали описывать архитектуру — «приём событий, счётчик и выдача». Давайте закончим мысль: что делает сервис выдачи, и на каком стеке он написан? И в каком из этих трёх сервисов был ваш кеш с батчевой выборкой?",
+            "stage": "arhitektura"
+          },
+          {
+            "role": "user",
+            "text": "Пик около двух тысяч запросов в секунду, задержка сто миллисекунд на p95.",
+            "stage": "cifry",
+            "typing": {
+              "first_key_ms": 20,
+              "total_ms": 842,
+              "final_length": 73,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 86.65,
+              "rewrite_ratio": 0.068,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, стоп, вы начали говорить про задержку и оборвали. Давайте зафиксируем цифры: пик в две тысячи RPS — это уже хорошо. А какая задержка была в пике и в среднем? И всё-таки вернёмся к моему вопросу: в каком из трёх сервисов вы держали кеш и на каком стеке он написан?",
+            "stage": "cifry"
+          },
+          {
+            "role": "user",
+            "text": "Упал кеш, вся нагрузка ушла в базу. Добавили предохранитель и прогрев.",
+            "stage": "cifry",
+            "typing": {
+              "first_key_ms": 5,
+              "total_ms": 970,
+              "final_length": 70,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 72.13,
+              "rewrite_ratio": 0.143,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, «добавили п...» — опять оборвали на полуслове. Давайте договоримся: отвечаете одним полным предложением, без обрывов. Вы сказали, что кеш упал и вся нагрузка ушла в базу — это понятно. А цифры по задержке в пике и в среднем всё-таки какие? И в каком из трёх сервисов этот кеш жил?",
+            "stage": "cifry"
+          },
+          {
+            "role": "user",
+            "text": "Одной очередью не вышло бы: у выдачи и счётчика разные требования по задержке.",
+            "stage": "cifry",
+            "typing": {
+              "first_key_ms": 5,
+              "total_ms": 1521,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 51.28,
+              "rewrite_ratio": 0.064,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, вы опять оборвали фразу — «разные требо...». Давайте всё же зафиксируем главное: вы назвали пик в две тысячи RPS и сто миллисекунд на p95. А какая задержка была в среднем и в пике, когда кеш лежал? И всё-таки в каком сервисе жил ваш кеш?",
+            "stage": "cifry"
+          },
+          {
+            "role": "user",
+            "text": "Да, как у вас устроено ревью и кто принимает архитектурные решения?",
+            "stage": "incident",
+            "typing": {
+              "first_key_ms": 2,
+              "total_ms": 1202,
+              "final_length": 67,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 55.76,
+              "rewrite_ratio": 0.134,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, мы сейчас не про ревью и не про архитектуру — мы про инцидент. Вы начали отвечать на мой вопрос и ушли в сторону. Давайте вернёмся: кеш упал, нагрузка ушла в базу. Что вы сделали, чтобы поднять сервис, и какие выводы из этого вынесли? И заодно: в каком из трёх сервисов этот кеш жил?",
+            "stage": "incident"
+          },
+          {
+            "role": "user",
+            "text": "Я backend-разработчик, последние два года делал сервис выдачи рекомендаций.",
+            "stage": "incident",
+            "typing": {
+              "first_key_ms": 22,
+              "total_ms": 1274,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 58.86,
+              "rewrite_ratio": 0.2,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, «сервис выда…» — снова обрыв. Давайте всё-таки доведём до конца: вы делали сервис выдачи, и именно в нём был кеш, который упал. Правильно понял? И теперь по инциденту: что вы сделали, чтобы поднять сервис, и какие выводы вынесли?",
+            "stage": "incident"
+          },
+          {
+            "role": "user",
+            "text": "Лично я держал слой кеширования и переписал выборку с синхронной на батчевую.",
+            "stage": "incident",
+            "typing": {
+              "first_key_ms": 16,
+              "total_ms": 1096,
+              "final_length": 77,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 70.27,
+              "rewrite_ratio": 0.169,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, «с син…» — вы опять оборвали фразу. Но я уже вижу главное: кеш был в сервисе выдачи, и вы лично отвечали за слой кеширования и переписывали выборку. Давайте всё-таки закончим предложение: что именно вы переписали — синхронную выборку на асинхронную, или что-то другое? И потом сразу скажите, как поднимали сервис после падения.",
+            "stage": "incident"
+          },
+          {
+            "role": "user",
+            "text": "Три сервиса: приём событий, счётчик и выдача. Разделили из-за разной нагрузки.",
+            "stage": "provokaciya",
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 1562,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 49.94,
+              "rewrite_ratio": 0.09,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, вы опять оборвали на полуслове — «Р» и всё. Давайте договоримся: вы отвечаете полным предложением и доводите мысль до конца. Вы назвали три сервиса: приём событий, счётчик и выдача. В каком из них лежал кеш, который упал, и что вы сделали, чтобы поднять сервис?",
+            "stage": "provokaciya"
+          },
+          {
+            "role": "user",
+            "text": "Пик около двух тысяч запросов в секунду, задержка сто миллисекунд на p95.",
+            "stage": "provokaciya",
+            "typing": {
+              "first_key_ms": 5,
+              "total_ms": 1409,
+              "final_length": 73,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 51.81,
+              "rewrite_ratio": 0.082,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, «задер…» — вы снова оборвали на полуслове. Я вижу, что вы называете цифры: пик около двух тысяч RPS. Давайте договоримся: вы отвечаете одним полным предложением, доводите мысль до конца. Что было с задержкой, когда кеш лежал, и в каком из трёх сервисов он находился?",
+            "stage": "provokaciya"
+          },
+          {
+            "role": "user",
+            "text": "Упал кеш, вся нагрузка ушла в базу. Добавили предохранитель и прогрев.",
+            "stage": "provokaciya",
+            "typing": {
+              "first_key_ms": 18,
+              "total_ms": 1317,
+              "final_length": 70,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 53.14,
+              "rewrite_ratio": 0.186,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, «пред…» — снова обрыв. Вы уже близко: «Упал кеш, вся нагрузка ушла в базу. Добавили пред…» — добавьте до конца, и тогда сразу скажите, в каком из трёх сервисов этот кеш лежал.",
+            "stage": "provokaciya"
+          },
+          {
+            "role": "user",
+            "text": "Одной очередью не вышло бы: у выдачи и счётчика разные требования по задержке.",
+            "stage": "voprosy_kandidata",
+            "typing": {
+              "first_key_ms": 12,
+              "total_ms": 1009,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 77.33,
+              "rewrite_ratio": 0.103,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, «у выдачи и счётчика разные требо…» — вы снова оборвали на полуслове. Давайте договоримся: вы отвечаете одним полным предложением. Вы сказали про очередь — чем она не подошла, и главное, в каком из трёх сервисов лежал упавший кеш?",
+            "stage": "voprosy_kandidata"
+          },
+          {
+            "role": "user",
+            "text": "Да, как у вас устроено ревью и кто принимает архитектурные решения?",
+            "stage": "voprosy_kandidata",
+            "typing": {
+              "first_key_ms": 4,
+              "total_ms": 1093,
+              "final_length": 67,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 61.32,
+              "rewrite_ratio": 0.134,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хм, вы спрашиваете про ревью и архитектурные решения — это хороший вопрос, но я хочу убедиться, что мы закрыли тему инцидента. Так всё-таки, в каком из трёх сервисов лежал тот кеш, и что вы сделали, чтобы поднять его после падения?",
+            "stage": "voprosy_kandidata"
+          },
+          {
+            "role": "user",
+            "text": "Я backend-разработчик, последние два года делал сервис выдачи рекомендаций.",
+            "stage": "voprosy_kandidata",
+            "typing": {
+              "first_key_ms": 9,
+              "total_ms": 1387,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.07,
+              "rewrite_ratio": 0.12,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, «делал се…» — вы снова обрываете на полуслове. Я вижу, что вы пытаетесь рассказать про свой опыт, но давайте договоримся: отвечаете полным предложением до конца. Вы начали про последние два года — что именно вы делали? И всё-таки, вернёмся к инциденту: в каком из трёх сервисов лежал упавший кеш?",
+            "stage": "voprosy_kandidata"
+          },
+          {
+            "role": "user",
+            "text": "Лично я держал слой кеширования и переписал выборку с синхронной на батчевую.",
+            "stage": "voprosy_kandidata",
+            "typing": {
+              "first_key_ms": 3,
+              "total_ms": 1454,
+              "final_length": 77,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 52.95,
+              "rewrite_ratio": 0.182,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, «переписал выборку с…» — вы снова оборвали на полуслове. Но вы уже сказали главное: кеш держали лично вы, и вы переписали выборку. Каким был следующий шаг после этого, и как вы подняли сервис после падения — завершите мысль одним полным предложением.",
+            "stage": "voprosy_kandidata"
+          }
+        ],
+        "typing": {
+          "answers": 23,
+          "median_first_key_ms": 12,
+          "median_longest_pause_ms": 0,
+          "median_rewrite_ratio": 0.134,
+          "confidence": {
+            "уверенно": 23
+          },
+          "hesitant_answers": 0
+        },
+        "created_at": 1788532232.508218,
+        "overall": 2.38,
+        "coverage": 1.0,
+        "marks": [
+          {
+            "generation_id": "gen-1",
+            "spec_hit": false,
+            "spec_cover": null,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2065,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 2319,
+            "backchannel": "Так, ясно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-3",
+            "spec_hit": true,
+            "spec_cover": 0.688,
+            "spec_head_ms": 817,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1361,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 1703,
+            "backchannel": "Так…",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-4",
+            "spec_hit": true,
+            "spec_cover": 0.654,
+            "spec_head_ms": 793,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1715,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2216,
+            "backchannel": "Так, ясно.",
+            "clauses": 2,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": true,
+            "repaired": true,
+            "t_repair_ms": 2363
+          },
+          {
+            "generation_id": "gen-5",
+            "spec_hit": true,
+            "spec_cover": 0.671,
+            "spec_head_ms": 686,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1989,
+            "t_first_audio_ms": 130,
+            "t_first_speech_ms": 2325,
+            "backchannel": "Ага.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-7",
+            "spec_hit": true,
+            "spec_cover": 0.692,
+            "spec_head_ms": 820,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1819,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2242,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-8",
+            "spec_hit": true,
+            "spec_cover": 0.746,
+            "spec_head_ms": 469,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1612,
+            "t_first_audio_ms": 120,
+            "t_first_speech_ms": 2011,
+            "backchannel": "Так…",
+            "clauses": 4,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-9",
+            "spec_hit": true,
+            "spec_cover": 0.747,
+            "spec_head_ms": 512,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1991,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 2395,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-10",
+            "spec_hit": true,
+            "spec_cover": 0.61,
+            "spec_head_ms": 526,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1646,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2046,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-11",
+            "spec_hit": true,
+            "spec_cover": 0.641,
+            "spec_head_ms": 632,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1491,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 1845,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-12",
+            "spec_hit": true,
+            "spec_cover": 0.712,
+            "spec_head_ms": 404,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1974,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 2328,
+            "backchannel": "Так…",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-13",
+            "spec_hit": true,
+            "spec_cover": 0.657,
+            "spec_head_ms": 373,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2033,
+            "t_first_audio_ms": 122,
+            "t_first_speech_ms": 2324,
+            "backchannel": "Угу.",
+            "clauses": 6,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-14",
+            "spec_hit": true,
+            "spec_cover": 0.769,
+            "spec_head_ms": 346,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2215,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2648,
+            "backchannel": "Так, ясно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-15",
+            "spec_hit": true,
+            "spec_cover": 0.746,
+            "spec_head_ms": 596,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1422,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1922,
+            "backchannel": "Угу.",
+            "clauses": 5,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-16",
+            "spec_hit": true,
+            "spec_cover": 0.787,
+            "spec_head_ms": 304,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2172,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 2396,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-17",
+            "spec_hit": true,
+            "spec_cover": 0.74,
+            "spec_head_ms": 404,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1739,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1998,
+            "backchannel": "Так…",
+            "clauses": 5,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-18",
+            "spec_hit": true,
+            "spec_cover": 0.603,
+            "spec_head_ms": 865,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2087,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 2447,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-19",
+            "spec_hit": true,
+            "spec_cover": 0.63,
+            "spec_head_ms": 706,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1597,
+            "t_first_audio_ms": 122,
+            "t_first_speech_ms": 1930,
+            "backchannel": "Угу.",
+            "clauses": 5,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-20",
+            "spec_hit": true,
+            "spec_cover": 0.7,
+            "spec_head_ms": 499,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1894,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2144,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-21",
+            "spec_hit": true,
+            "spec_cover": 0.769,
+            "spec_head_ms": 544,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2500,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2858,
+            "backchannel": "Понятно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-22",
+            "spec_hit": true,
+            "spec_cover": 0.731,
+            "spec_head_ms": 611,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1514,
+            "t_first_audio_ms": 128,
+            "t_first_speech_ms": 1909,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-23",
+            "spec_hit": true,
+            "spec_cover": 0.667,
+            "spec_head_ms": 824,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2157,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2456,
+            "backchannel": "Так…",
+            "clauses": 5,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-24",
+            "spec_hit": true,
+            "spec_cover": 0.688,
+            "spec_head_ms": 902,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1454,
+            "t_first_audio_ms": 124,
+            "t_first_speech_ms": 1736,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          }
+        ],
+        "speculation": {
+          "launches": 114,
+          "relaunches": 45,
+          "hits": 23,
+          "misses": 0,
+          "hit_rate": 1.0,
+          "ttft_hit_ms": 1819,
+          "ttft_miss_ms": null
+        },
+        "evaluator": {
+          "calls": 21,
+          "errors": [],
+          "total_ms": 61424
+        }
+      },
+      "audio_bytes": 16158600
+    },
+    {
+      "scenario_id": "s2_interview_stress",
+      "title": "Собеседование: обсуждение оффера и зарплатных ожиданий",
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "otkrytie",
+          "typed_ms": 0,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2315,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [
+            "neutral"
+          ],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 1,
+          "stage": "otkrytie",
+          "typed_ms": 1318,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 1516,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 2,
+          "stage": "otkrytie",
+          "typed_ms": 1619,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 1768,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 3,
+          "stage": "davlenie",
+          "typed_ms": 1881,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1713,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 4,
+          "stage": null,
+          "typed_ms": 1270,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 919,
+            "generation_id": "gen-5",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 5,
+          "stage": null,
+          "typed_ms": 1704,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 704,
+            "generation_id": "gen-6",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 6,
+          "stage": "davlenie",
+          "typed_ms": 1361,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 1933,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 7,
+          "stage": "davlenie",
+          "typed_ms": 1121,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 124,
+          "reported_first_speech_ms": 2348,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 8,
+          "stage": "obosnovanie",
+          "typed_ms": 1152,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 2064,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 9,
+          "stage": "obosnovanie",
+          "typed_ms": 1437,
+          "t_first_audio_ms": 129,
+          "reported_first_audio_ms": 128,
+          "reported_first_speech_ms": 1766,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 10,
+          "stage": "podmena",
+          "typed_ms": 1707,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1918,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 11,
+          "stage": "podmena",
+          "typed_ms": 1227,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 122,
+          "reported_first_speech_ms": 2357,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 12,
+          "stage": "molchanie",
+          "typed_ms": 1235,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 2594,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 13,
+          "stage": "molchanie",
+          "typed_ms": 1258,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 2901,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 14,
+          "stage": "molchanie",
+          "typed_ms": 1383,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1998,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 15,
+          "stage": "dedlayn",
+          "typed_ms": 1193,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2092,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 16,
+          "stage": "dedlayn",
+          "typed_ms": 1205,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2134,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        }
+      ],
+      "interrupts": [
+        {
+          "after_ms": 919,
+          "generation_id": "gen-5",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 704,
+          "generation_id": "gen-6",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        }
+      ],
+      "report": {
+        "scenario_id": "s2_interview_stress",
+        "scenario_title": "Собеседование: обсуждение оффера и зарплатных ожиданий",
+        "completed": true,
+        "finish_reason": "модель попросила следующий этап на последнем",
+        "stages_reached": 6,
+        "stages_total": 6,
+        "user_turns": 16,
+        "criteria": [
+          {
+            "key": "anchor",
+            "title": "Удержание позиции",
+            "scale": "1-5",
+            "score": 4.18,
+            "rationale": "Собеседник чётко обозначил нижнюю границу в 250 и обосновал её двумя офферами и широтой своих задач, не снижая требования под давлением.",
+            "observations": [
+              "Собеседник назвал четкую вилку от 260 до 290 и не снизил ее под давлением агента, который предложил 260–280.",
+              "Собеседник снизил свою вилку с 260–290 до 250 под давлением агента, но удержал нижнюю границу и не согласился на меньшую сумму.",
+              "Собеседник не снизил свою вилку и четко обозначил, что ждет предложения, сохраняя свою позицию.",
+              "Собеседник снизил свою позицию, назвав вилку вместо конкретной суммы, и не удержал её при уточняющем вопросе агента.",
+              "Собеседник снизил вилку с 260-290 до 250, но удержал нижнюю границу и не пошёл на дальнейшие уступки под давлением агента.",
+              "Собеседник удерживает свою позицию на 250, не снижая её под давлением агента, и обосновывает её наличием офферов и широтой ответственности.",
+              "Собеседник не снизил свою позицию, а прямо заявил, что ему важен оклад, и не согласился на 250, указав на разницу в деньгах, тем самым удержал якорь.",
+              "Собеседник не снизил свою позицию, а чётко обозначил условие (письменный оффер до завтра) и сохранил готовность рассмотреть другие варианты, не уступая давлению.",
+              "Собеседник удержал свою вилку (260–290) и не снизил её под давлением агента, запросившего согласие на 250.",
+              "Собеседник удержал свою позицию, снизив вилку лишь на 10 тыс. (с 260 до 250) и при этом четко обозначил нижнюю границу, не отступив под давлением.",
+              "Собеседник чётко обозначил нижнюю границу в 250 и обосновал её двумя офферами и широтой своих задач, не снижая требования под давлением."
+            ]
+          },
+          {
+            "key": "package",
+            "title": "Работа с пакетом целиком",
+            "scale": "1-5",
+            "score": 1.5,
+            "rationale": "Собеседник обсуждает только оклад на руки, не упоминая другие компоненты пакета.",
+            "observations": [
+              "Собеседник обсуждает только зарплату на руки, не упоминая другие компоненты пакета.",
+              "Собеседник оперирует только суммой 'на руки', не обсуждая другие компоненты пакета, что указывает на частичный учёт совокупного дохода.",
+              "Собеседник явно отверг обучение как компенсацию и сосредоточился только на окладе, не рассматривая совокупный доход.",
+              "Собеседник обсуждает только оклад на руки, не упоминая другие компоненты пакета."
+            ]
+          },
+          {
+            "key": "silence",
+            "title": "Поведение в паузе",
+            "scale": "1-5",
+            "score": 4.1,
+            "rationale": "В паузе собеседник не суетится и не уступает, спокойно ожидая реакции агента.",
+            "observations": [
+              "Собеседник не суетится, но отвечает на вопрос агента, не используя паузу для удержания позиции.",
+              "Собеседник явно держит паузу, не суетится и не уступает, ожидая действий агента.",
+              "Собеседник не суетится и не уступает сразу, но и не использует паузу активно, лишь повторяет готовность обсуждать.",
+              "Собеседник не суетится и не уступает, но не использует паузу активно для усиления своей позиции.",
+              "Собеседник уверенно ответил на давление агента, не суетясь и не уступая, хотя и не использовал паузу для усиления позиции.",
+              "Собеседник не суетится, выдерживает паузу и переносит ответственность за конкретное предложение на агента, не уступая.",
+              "Собеседник держит паузу и не суетится, заявляя, что ему нечего добавить, и тем самым сохраняет контроль над переговорами.",
+              "Собеседник не суетится, но и не использует паузу активно, просто повторяет вилку.",
+              "Собеседник не суетился, дал агенту высказаться и спокойно скорректировал свою позицию, сохраняя контроль над переговорами.",
+              "В паузе собеседник не суетится и не уступает, спокойно ожидая реакции агента."
+            ]
+          }
+        ],
+        "transcript": [
+          {
+            "role": "agent",
+            "text": "Рада, что мы дошли до этого этапа. Мы готовы двигаться дальше. Какие у вас зарплатные ожидания?",
+            "stage": "otkrytie"
+          },
+          {
+            "role": "user",
+            "text": "Я рассчитываю на вилку от двухсот шестидесяти до двухсот девяноста на руки.",
+            "stage": "otkrytie",
+            "typing": {
+              "first_key_ms": 24,
+              "total_ms": 1192,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 12,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 62.9,
+              "rewrite_ratio": 0.16,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Отлично, вилка в 260–280 тысяч звучит разумно для вашего уровня. А если мы говорим о финальной цифре, на какую сумму вы ориентируетесь как на точку комфорта?",
+            "stage": "otkrytie"
+          },
+          {
+            "role": "user",
+            "text": "Понимаю, что выше вашей вилки. Готов обсуждать, но не ниже двухсот пятидесяти.",
+            "stage": "otkrytie",
+            "typing": {
+              "first_key_ms": 17,
+              "total_ms": 1421,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.89,
+              "rewrite_ratio": 0.064,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понимаю, вы хотите обсудить. Давайте чуть подробнее — какая сумма для вас является той самой точкой, ниже которой вы уже не готовы рассматривать?",
+            "stage": "otkrytie"
+          },
+          {
+            "role": "user",
+            "text": "Цифра из двух офферов на руках и из того, что я закрываю и бэкенд, и инфраструктуру.",
+            "stage": "otkrytie",
+            "typing": {
+              "first_key_ms": 18,
+              "total_ms": 1783,
+              "final_length": 84,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 47.12,
+              "rewrite_ratio": 0.155,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понял вас. Но если у вас уже есть офферы на руках, тогда почему вы готовы обсуждать снижение до 250? Что для вас важнее — цифра или совокупный пакет?",
+            "stage": "otkrytie"
+          },
+          {
+            "role": "user",
+            "text": "Обучение полезно, но оно не закрывает разницу в деньгах. Мне важен оклад.",
+            "stage": "davlenie",
+            "typing": {
+              "first_key_ms": 3,
+              "total_ms": 1204,
+              "final_length": 73,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 60.62,
+              "rewrite_ratio": 0.096,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "user",
+            "text": "Я подожду, пока вы сформулируете. Мне нечего добавить к сказанному.",
+            "stage": "davlenie",
+            "typing": {
+              "first_key_ms": 2802,
+              "total_ms": 1561,
+              "final_length": 67,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 42.93,
+              "rewrite_ratio": 0.224,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "user",
+            "text": "До завтра решение принять готов, если получу письменный оффер сегодня.",
+            "stage": "davlenie",
+            "typing": {
+              "first_key_ms": 5823,
+              "total_ms": 1230,
+              "final_length": 70,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 56.92,
+              "rewrite_ratio": 0.157,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понимаю, что вам нужно время и письменное подтверждение. Но мы сейчас говорим о цифре — если вы готовы принять решение до завтра, то на какой сумме мы фиксируемся, чтобы я могла подготовить документы?",
+            "stage": "davlenie"
+          },
+          {
+            "role": "user",
+            "text": "Я рассчитываю на вилку от двухсот шестидесяти до двухсот девяноста на руки.",
+            "stage": "davlenie",
+            "typing": {
+              "first_key_ms": 18,
+              "total_ms": 1005,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 74.61,
+              "rewrite_ratio": 0.133,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понимаю, вы озвучили вилку. Но мы говорим о финальной сумме — на какой конкретной цифре мы можем остановиться, чтобы я могла подготовить документы? Мне важно понять, где точка вашего комфорта.",
+            "stage": "davlenie"
+          },
+          {
+            "role": "user",
+            "text": "Понимаю, что выше вашей вилки. Готов обсуждать, но не ниже двухсот пятидесяти.",
+            "stage": "davlenie",
+            "typing": {
+              "first_key_ms": 8,
+              "total_ms": 1075,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 72.59,
+              "rewrite_ratio": 0.179,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Вижу, вы готовы обсуждать, но пока не назвали конкретную цифру. Давайте зафиксируем: на какой сумме мы можем остановиться, чтобы я могла двигаться дальше с документами?",
+            "stage": "davlenie"
+          },
+          {
+            "role": "user",
+            "text": "Цифра из двух офферов на руках и из того, что я закрываю и бэкенд, и инфраструктуру.",
+            "stage": "obosnovanie",
+            "typing": {
+              "first_key_ms": 5,
+              "total_ms": 1251,
+              "final_length": 84,
+              "deletions": 1,
+              "deleted_chars": 12,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 67.15,
+              "rewrite_ratio": 0.143,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Вижу, что у вас есть офферы и широкая зона ответственности — это понятно. Но мы пока не зафиксировали конкретную цифру для подготовки документов. Если 250 — ваш нижний порог, готовы ли вы принять решение именно на этой сумме, или есть ещё пространство для обсуждения?",
+            "stage": "obosnovanie"
+          },
+          {
+            "role": "user",
+            "text": "Обучение полезно, но оно не закрывает разницу в деньгах. Мне важен оклад.",
+            "stage": "obosnovanie",
+            "typing": {
+              "first_key_ms": 10,
+              "total_ms": 1584,
+              "final_length": 73,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 46.08,
+              "rewrite_ratio": 0.178,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понятно, что для вас важны деньги, а не бонусы вроде обучения. Тогда давайте честно: если мы остановимся на 250, вы готовы подписать сегодня или всё равно будете ждать других офферов?",
+            "stage": "obosnovanie"
+          },
+          {
+            "role": "user",
+            "text": "Я подожду, пока вы сформулируете. Мне нечего добавить к сказанному.",
+            "stage": "podmena",
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 1035,
+              "final_length": 67,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 64.73,
+              "rewrite_ratio": 0.149,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понимаю, вы ждёте от меня чёткого предложения. Тогда давайте так: если я сейчас зафиксирую 250 тысяч на руки, вы готовы будете принять оффер на этих условиях сегодня, или нам всё же нужно время на согласование других вариантов?",
+            "stage": "podmena"
+          },
+          {
+            "role": "user",
+            "text": "До завтра решение принять готов, если получу письменный оффер сегодня.",
+            "stage": "podmena",
+            "typing": {
+              "first_key_ms": 21,
+              "total_ms": 1125,
+              "final_length": 70,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 62.22,
+              "rewrite_ratio": 0.129,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Вижу, вы готовы принять решение до завтра при наличии письменного оффера. Это разумно. Но чтобы я могла подготовить документы сегодня, мне нужно понять: если мы направим вам оффер на 250 тысяч на руки, вы подпишете его, не дожидаясь других вариантов?",
+            "stage": "podmena"
+          },
+          {
+            "role": "user",
+            "text": "Я рассчитываю на вилку от двухсот шестидесяти до двухсот девяноста на руки.",
+            "stage": "molchanie",
+            "typing": {
+              "first_key_ms": 6,
+              "total_ms": 1079,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 69.52,
+              "rewrite_ratio": 0.187,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понимаю, вы назвали вилку, но мы уже несколько минут обсуждаем конкретную цифру, и она пока не прозвучала. Я не хочу давить, но без финальной суммы я не могу запустить процесс.",
+            "stage": "molchanie"
+          },
+          {
+            "role": "user",
+            "text": "Понимаю, что выше вашей вилки. Готов обсуждать, но не ниже двухсот пятидесяти.",
+            "stage": "molchanie",
+            "typing": {
+              "first_key_ms": 8,
+              "total_ms": 1286,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 60.67,
+              "rewrite_ratio": 0.192,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понимаю. Тогда давайте я зафиксирую то, что услышала: вы готовы обсуждать, но нижняя граница для вас — 250. И вы ждёте от меня конкретного шага. Я это услышала.",
+            "stage": "molchanie"
+          },
+          {
+            "role": "user",
+            "text": "Цифра из двух офферов на руках и из того, что я закрываю и бэкенд, и инфраструктуру.",
+            "stage": "molchanie",
+            "typing": {
+              "first_key_ms": 1,
+              "total_ms": 1115,
+              "final_length": 84,
+              "deletions": 1,
+              "deleted_chars": 12,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 75.31,
+              "rewrite_ratio": 0.143,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "… (выдерживаю паузу, спокойно смотрю на собеседника, не торопясь отвечать)",
+            "stage": "molchanie"
+          },
+          {
+            "role": "user",
+            "text": "Обучение полезно, но оно не закрывает разницу в деньгах. Мне важен оклад.",
+            "stage": "dedlayn",
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 1074,
+              "final_length": 73,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 67.96,
+              "rewrite_ratio": 0.137,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хорошо, я услышала вас. Разница в деньгах — это главный критерий, и это справедливо. Но чтобы двигаться дальше, мне нужно понять: вы готовы принять решение по офферу до завтра, если мы направим его сегодня, или вам нужно больше времени на раздумья?",
+            "stage": "dedlayn"
+          }
+        ],
+        "typing": {
+          "answers": 16,
+          "median_first_key_ms": 18,
+          "median_longest_pause_ms": 0,
+          "median_rewrite_ratio": 0.152,
+          "confidence": {
+            "уверенно": 15,
+            "с заминками": 1
+          },
+          "hesitant_answers": 1
+        },
+        "created_at": 1788532300.6411588,
+        "overall": 3.26,
+        "coverage": 1.0,
+        "marks": [
+          {
+            "generation_id": "gen-1",
+            "spec_hit": false,
+            "spec_cover": null,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 1893,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2315,
+            "backchannel": "Ага.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-2",
+            "spec_hit": true,
+            "spec_cover": 0.68,
+            "spec_head_ms": 801,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1030,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 1516,
+            "backchannel": "Угу.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-3",
+            "spec_hit": true,
+            "spec_cover": 0.718,
+            "spec_head_ms": 815,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1481,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 1768,
+            "backchannel": "Так, ясно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": true,
+            "repaired": true,
+            "t_repair_ms": 2199
+          },
+          {
+            "generation_id": "gen-4",
+            "spec_hit": true,
+            "spec_cover": 0.69,
+            "spec_head_ms": 665,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1443,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1713,
+            "backchannel": "Ага.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-7",
+            "spec_hit": true,
+            "spec_cover": 0.786,
+            "spec_head_ms": 428,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1529,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 1933,
+            "backchannel": "Понятно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-8",
+            "spec_hit": true,
+            "spec_cover": 0.707,
+            "spec_head_ms": 400,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2055,
+            "t_first_audio_ms": 124,
+            "t_first_speech_ms": 2348,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-9",
+            "spec_hit": true,
+            "spec_cover": 0.641,
+            "spec_head_ms": 504,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1747,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 2064,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": true,
+            "repaired": true,
+            "t_repair_ms": 2058
+          },
+          {
+            "generation_id": "gen-10",
+            "spec_hit": true,
+            "spec_cover": 0.714,
+            "spec_head_ms": 633,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1475,
+            "t_first_audio_ms": 128,
+            "t_first_speech_ms": 1766,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-11",
+            "spec_hit": true,
+            "spec_cover": 0.603,
+            "spec_head_ms": 790,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1571,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1918,
+            "backchannel": "Понятно.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-12",
+            "spec_hit": true,
+            "spec_cover": 0.776,
+            "spec_head_ms": 483,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2007,
+            "t_first_audio_ms": 122,
+            "t_first_speech_ms": 2357,
+            "backchannel": "Так, ясно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-13",
+            "spec_hit": true,
+            "spec_cover": 0.629,
+            "spec_head_ms": 717,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2250,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 2594,
+            "backchannel": "Угу.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-14",
+            "spec_hit": true,
+            "spec_cover": 0.733,
+            "spec_head_ms": 475,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2479,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 2901,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-15",
+            "spec_hit": true,
+            "spec_cover": 0.769,
+            "spec_head_ms": 562,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1787,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1998,
+            "backchannel": "Понятно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-16",
+            "spec_hit": true,
+            "spec_cover": 0.643,
+            "spec_head_ms": 358,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1725,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2092,
+            "backchannel": "Так…",
+            "clauses": 2,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-17",
+            "spec_hit": true,
+            "spec_cover": 0.712,
+            "spec_head_ms": 412,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1780,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2134,
+            "backchannel": "Ага.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          }
+        ],
+        "speculation": {
+          "launches": 82,
+          "relaunches": 34,
+          "hits": 16,
+          "misses": 0,
+          "hit_rate": 1.0,
+          "ttft_hit_ms": 1747,
+          "ttft_miss_ms": null
+        },
+        "evaluator": {
+          "calls": 14,
+          "errors": [],
+          "total_ms": 41701
+        }
+      },
+      "audio_bytes": 8620200
+    },
+    {
+      "scenario_id": "s3_sales_cold",
+      "title": "Продажи: холодный звонок, выход на ЛПР",
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "pervye_10_sekund",
+          "typed_ms": 0,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 2347,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 1,
+          "stage": "pervye_10_sekund",
+          "typed_ms": 1734,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 1554,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 2,
+          "stage": "pervye_10_sekund",
+          "typed_ms": 1377,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1631,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 3,
+          "stage": null,
+          "typed_ms": 1966,
+          "t_first_audio_ms": 199,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1957,
+            "generation_id": "gen-4",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 4,
+          "stage": "otsev",
+          "typed_ms": 1568,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 1584,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 5,
+          "stage": null,
+          "typed_ms": 1430,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1069,
+            "generation_id": "gen-6",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 6,
+          "stage": "kvalifikaciya",
+          "typed_ms": 1487,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2372,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 7,
+          "stage": "kvalifikaciya",
+          "typed_ms": 1249,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1666,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 8,
+          "stage": "kvalifikaciya",
+          "typed_ms": 1741,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1231,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 9,
+          "stage": "cena",
+          "typed_ms": 1706,
+          "t_first_audio_ms": 131,
+          "reported_first_audio_ms": 129,
+          "reported_first_speech_ms": 2058,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 10,
+          "stage": "cena",
+          "typed_ms": 1678,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1519,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 11,
+          "stage": "cena",
+          "typed_ms": 1495,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 2597,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 12,
+          "stage": "otgovorka",
+          "typed_ms": 1534,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 124,
+          "reported_first_speech_ms": 2796,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 13,
+          "stage": "otgovorka",
+          "typed_ms": 1412,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2772,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 14,
+          "stage": "zakrytie",
+          "typed_ms": 1559,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": 129,
+          "reported_first_speech_ms": 1825,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 15,
+          "stage": "zakrytie",
+          "typed_ms": 1718,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 124,
+          "reported_first_speech_ms": 2169,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "finish",
+          "interrupted": null
+        }
+      ],
+      "interrupts": [
+        {
+          "after_ms": 1957,
+          "generation_id": "gen-4",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1069,
+          "generation_id": "gen-6",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        }
+      ],
+      "report": {
+        "scenario_id": "s3_sales_cold",
+        "scenario_title": "Продажи: холодный звонок, выход на ЛПР",
+        "completed": true,
+        "finish_reason": "модель завершила диалог",
+        "stages_reached": 6,
+        "stages_total": 6,
+        "user_turns": 15,
+        "criteria": [
+          {
+            "key": "opening",
+            "title": "Открытие разговора",
+            "scale": "1-5",
+            "score": 3.5,
+            "rationale": "Собеседник за 15 секунд обозначил ценность (сокращение сроков вдвое) и компанию, но не назвал имя ЛПР.",
+            "observations": [
+              "Собеседник за 15 секунд назвал компанию и представил конкретную ценность (сокращение сроков вдвое), что быстро привлекло внимание.",
+              "Собеседник не адаптирует открытие под ситуацию, повторяя общую информацию, что не вовлекает агента.",
+              "Собеседник за 15 секунд дал ценность: компания и конкретный результат — сокращение сроков согласования вдвое.",
+              "Собеседник за 15 секунд обозначил ценность (сокращение сроков вдвое) и компанию, но не назвал имя ЛПР."
+            ]
+          },
+          {
+            "key": "objection",
+            "title": "Работа с отказом",
+            "scale": "1-5",
+            "score": 2.67,
+            "rationale": "Собеседник не работает с отказом и давлением агента, а лишь повторяет вопрос, не переводя диалог в конструктивное русло.",
+            "observations": [
+              "Собеседник не принял отказ как «нет», а ответил на ограничение по времени конкретикой и вопросом о длительности, сохраняя диалог без давления.",
+              "Собеседник не принимает отказ сразу, а задаёт уточняющий вопрос, чтобы перевести разговор в диалог, но делает это без значительного смягчения давления.",
+              "Собеседник не принимает отказ сразу, а пытается уточнить масштаб и перевести разговор на ценность продукта, но делает это недостаточно настойчиво.",
+              "Собеседник не обрабатывает отказ/возражение агента, а просто повторяет критерии и цену, не переводя диалог в конструктивное русло.",
+              "Собеседник не принял отказ, а переформулировал ценность и удержал внимание агента без давления.",
+              "На отказ агента («быстро, совещание») собеседник не давит, а задаёт уточняющий вопрос, вовлекая в диалог.",
+              "Собеседник частично отвечает на агрессивный вопрос агента, но не пытается перевести разговор в продуктивное русло или выявить потребности, а лишь констатирует несоответствие.",
+              "Собеседник не обрабатывает отказ агента о размере компании и не переводит в диалог, а просто повторяет цену, не снимая возражение.",
+              "Собеседник не уходит от диалога, но отвечает на отказ вопросом, пытаясь выяснить приоритет, что частично переводит разговор в конструктивное русло, хотя и без явного снятия возражения.",
+              "Собеседник не принимает отказ агента и предлагает конкретную альтернативу — встречу в четверг, сохраняя диалог без давления.",
+              "Собеседник не проработал возражение агента, а лишь кратко повторил ценность, не дав конкретики, что спровоцировало агента на ультиматум.",
+              "Собеседник не работает с отказом и давлением агента, а лишь повторяет вопрос, не переводя диалог в конструктивное русло."
+            ]
+          },
+          {
+            "key": "next_step",
+            "title": "Фиксация следующего шага",
+            "scale": "1-5",
+            "score": 2.33,
+            "rationale": "Собеседник не фиксирует конкретный следующий шаг с датой и временем, а ограничивается уточняющим вопросом.",
+            "observations": [
+              "Собеседник не предлагает конкретного следующего шага с датой и временем, а лишь пытается продолжить расспрос.",
+              "Собеседник предлагает конкретные дату и время (двадцать минут в четверг), что соответствует максимальному баллу за фиксацию следующего шага.",
+              "Предложенная дата и время (четверг) не подтверждены, а агент лишь согласился слушать, но не зафиксировал конкретный следующий шаг.",
+              "Собеседник не предложил конкретный следующий шаг с датой и временем, только продолжил квалификацию.",
+              "Собеседник предлагает конкретную дату и время (четверг, 20 минут), что соответствует высокому уровню фиксации следующего шага.",
+              "Собеседник не фиксирует конкретный следующий шаг с датой и временем, а ограничивается уточняющим вопросом."
+            ]
+          }
+        ],
+        "transcript": [
+          {
+            "role": "agent",
+            "text": "Да, слушаю. Только быстро, у меня совещание через пять минут.",
+            "stage": "pervye_10_sekund"
+          },
+          {
+            "role": "user",
+            "text": "Пётр, компания «Тензор». Мы сокращаем сроки согласования закупок примерно вдвое.",
+            "stage": "pervye_10_sekund",
+            "typing": {
+              "first_key_ms": 2,
+              "total_ms": 1512,
+              "final_length": 80,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 52.91,
+              "rewrite_ratio": 0.075,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Ну, сокращение сроков — это интересно, но у меня реально пять минут. Что конкретно предлагаете и сколько это займёт?",
+            "stage": "pervye_10_sekund"
+          },
+          {
+            "role": "user",
+            "text": "Понимаю. Уточню один момент: сколько у вас в среднем занимает согласование заявки?",
+            "stage": "pervye_10_sekund",
+            "typing": {
+              "first_key_ms": 15,
+              "total_ms": 1249,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 65.68,
+              "rewrite_ratio": 0.171,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Слушайте, я же сказал — у меня совещание. Давайте короче: что за продукт и что мне с ним делать?",
+            "stage": "pervye_10_sekund"
+          },
+          {
+            "role": "user",
+            "text": "Мы работаем с производственными компаниями от пятисот человек, у нас сорок внедрений.",
+            "stage": "pervye_10_sekund",
+            "typing": {
+              "first_key_ms": 22,
+              "total_ms": 1747,
+              "final_length": 85,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 48.67,
+              "rewrite_ratio": 0.071,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понятно, пятьсот человек — это не мой масштаб. У нас поменьше. Так что конкретно ваш продукт делает?",
+            "stage": "pervye_10_sekund"
+          },
+          {
+            "role": "user",
+            "text": "От трёхсот тысяч в год за отдел. Точная цифра зависит от числа согласующих.",
+            "stage": "otsev",
+            "typing": {
+              "first_key_ms": 714,
+              "total_ms": 1401,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 53.53,
+              "rewrite_ratio": 0.133,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, стоп. Совещание через три минуты. Вы мне так и не сказали, что за продукт, а уже называете цену. Что это вообще такое?",
+            "stage": "otsev"
+          },
+          {
+            "role": "user",
+            "text": "Пришлю. Чтобы письмо было по делу, скажите, что для вас важнее: сроки или контроль?",
+            "stage": "otsev",
+            "typing": {
+              "first_key_ms": 11,
+              "total_ms": 1285,
+              "final_length": 83,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 64.59,
+              "rewrite_ratio": 0.072,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "user",
+            "text": "Предлагаю двадцать минут в четверг: покажу, как это выглядит на ваших заявках.",
+            "stage": "otsev",
+            "typing": {
+              "first_key_ms": 3121,
+              "total_ms": 1388,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 56.19,
+              "rewrite_ratio": 0.064,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Слушайте, я вам уже два раза сказал — у меня нет времени на демо. Если вы не можете в двух словах объяснить, что это за система, то я не вижу смысла тратить на это четверг.",
+            "stage": "otsev"
+          },
+          {
+            "role": "user",
+            "text": "Пётр, компания «Тензор». Мы сокращаем сроки согласования закупок примерно вдвое.",
+            "stage": "kvalifikaciya",
+            "typing": {
+              "first_key_ms": 6,
+              "total_ms": 1102,
+              "final_length": 80,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 72.57,
+              "rewrite_ratio": 0.113,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да, слушаю. Только быстро, у меня совещание через пять минут.",
+            "stage": "kvalifikaciya"
+          },
+          {
+            "role": "user",
+            "text": "Понимаю. Уточню один момент: сколько у вас в среднем занимает согласование заявки?",
+            "stage": "kvalifikaciya",
+            "typing": {
+              "first_key_ms": 22,
+              "total_ms": 1535,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 53.43,
+              "rewrite_ratio": 0.159,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Ну допустим. А вы вообще кто по рынку? Только коротко, без этих ваших «сорок внедрений».",
+            "stage": "kvalifikaciya"
+          },
+          {
+            "role": "user",
+            "text": "Мы работаем с производственными компаниями от пятисот человек, у нас сорок внедрений.",
+            "stage": "kvalifikaciya",
+            "typing": {
+              "first_key_ms": 21,
+              "total_ms": 1553,
+              "final_length": 85,
+              "deletions": 1,
+              "deleted_chars": 12,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.73,
+              "rewrite_ratio": 0.141,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да, но пятьсот человек — это не мой случай, у нас сильно меньше. Так что конкретно продукт делает? Только без общих слов.",
+            "stage": "kvalifikaciya"
+          },
+          {
+            "role": "user",
+            "text": "От трёхсот тысяч в год за отдел. Точная цифра зависит от числа согласующих.",
+            "stage": "cena",
+            "typing": {
+              "first_key_ms": 18,
+              "total_ms": 1599,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 46.9,
+              "rewrite_ratio": 0.173,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, стоп. Совещание через три минуты. Вы мне так и не сказали, что за продукт, а уже называете цену. Что это вообще такое?",
+            "stage": "cena"
+          },
+          {
+            "role": "user",
+            "text": "Пришлю. Чтобы письмо было по делу, скажите, что для вас важнее: сроки или контроль?",
+            "stage": "cena",
+            "typing": {
+              "first_key_ms": 20,
+              "total_ms": 1350,
+              "final_length": 83,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 61.47,
+              "rewrite_ratio": 0.12,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Слушайте, я уже сказал: у меня нет времени на анкеты. Либо вы сейчас коротко говорите, что это и сколько стоит, либо мы заканчиваем.",
+            "stage": "cena"
+          },
+          {
+            "role": "user",
+            "text": "Предлагаю двадцать минут в четверг: покажу, как это выглядит на ваших заявках.",
+            "stage": "cena",
+            "typing": {
+              "first_key_ms": 23,
+              "total_ms": 1410,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 55.33,
+              "rewrite_ratio": 0.128,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да, я помню, что вы предлагали. Но пока я так и не понял, что это за система и за что я должен платить от трёхсот тысяч. Если вы не можете объяснить это сейчас, в двух предложениях, то четверг отпадает.",
+            "stage": "cena"
+          },
+          {
+            "role": "user",
+            "text": "Пётр, компания «Тензор». Мы сокращаем сроки согласования закупок примерно вдвое.",
+            "stage": "otgovorka",
+            "typing": {
+              "first_key_ms": 12,
+              "total_ms": 1341,
+              "final_length": 80,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 59.65,
+              "rewrite_ratio": 0.175,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Слушайте, я уже десять минут пытаюсь вытащить из вас конкретику, а вы всё крутите. Либо вы сейчас говорите «это система для автоматизации согласования, стоит от трёхсот», либо я вешаю трубку и вы мне больше не звоните.",
+            "stage": "otgovorka"
+          },
+          {
+            "role": "user",
+            "text": "Понимаю. Уточню один момент: сколько у вас в среднем занимает согласование заявки?",
+            "stage": "otgovorka",
+            "typing": {
+              "first_key_ms": 12,
+              "total_ms": 1492,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.96,
+              "rewrite_ratio": 0.098,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да что вы заладили со средним? Я уже сказал — совещание через три минуты. Последний раз спрашиваю: это система для автоматизации согласования заявок, да или нет?",
+            "stage": "otgovorka"
+          },
+          {
+            "role": "user",
+            "text": "Мы работаем с производственными компаниями от пятисот человек, у нас сорок внедрений.",
+            "stage": "zakrytie",
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 1547,
+              "final_length": 85,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.93,
+              "rewrite_ratio": 0.059,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Слушайте, я уже всё сказал. Если вы не можете ответить «да» или «нет» на простой вопрос, то разговор окончен. Не звоните мне больше.",
+            "stage": "zakrytie"
+          }
+        ],
+        "typing": {
+          "answers": 15,
+          "median_first_key_ms": 19,
+          "median_longest_pause_ms": 0,
+          "median_rewrite_ratio": 0.12,
+          "confidence": {
+            "уверенно": 15
+          },
+          "hesitant_answers": 0
+        },
+        "created_at": 1788532363.527683,
+        "overall": 2.83,
+        "coverage": 1.0,
+        "marks": [
+          {
+            "generation_id": "gen-1",
+            "spec_hit": false,
+            "spec_cover": null,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2065,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 2347,
+            "backchannel": "Понятно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-2",
+            "spec_hit": true,
+            "spec_cover": 0.688,
+            "spec_head_ms": 841,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1193,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 1554,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-3",
+            "spec_hit": true,
+            "spec_cover": 0.622,
+            "spec_head_ms": 607,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1224,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1631,
+            "backchannel": "Так, ясно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-4",
+            "spec_hit": true,
+            "spec_cover": 0.729,
+            "spec_head_ms": 669,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1217,
+            "t_first_audio_ms": 198,
+            "t_first_speech_ms": 1701,
+            "backchannel": "Так…",
+            "clauses": 2,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-5",
+            "spec_hit": true,
+            "spec_cover": 0.747,
+            "spec_head_ms": 583,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1321,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 1584,
+            "backchannel": "Так, ясно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": true,
+            "repaired": true,
+            "t_repair_ms": 1975
+          },
+          {
+            "generation_id": "gen-7",
+            "spec_hit": true,
+            "spec_cover": 0.679,
+            "spec_head_ms": 588,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1906,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2372,
+            "backchannel": "Понятно.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-8",
+            "spec_hit": true,
+            "spec_cover": 0.8,
+            "spec_head_ms": 558,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1406,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1666,
+            "backchannel": "Хорошо.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-9",
+            "spec_hit": true,
+            "spec_cover": 0.61,
+            "spec_head_ms": 1102,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 982,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1231,
+            "backchannel": "Так…",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-10",
+            "spec_hit": true,
+            "spec_cover": 0.647,
+            "spec_head_ms": 691,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1677,
+            "t_first_audio_ms": 129,
+            "t_first_speech_ms": 2058,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-11",
+            "spec_hit": true,
+            "spec_cover": 0.627,
+            "spec_head_ms": 792,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1303,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1519,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-12",
+            "spec_hit": true,
+            "spec_cover": 0.747,
+            "spec_head_ms": 442,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2194,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 2597,
+            "backchannel": "Так, ясно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-13",
+            "spec_hit": true,
+            "spec_cover": 0.705,
+            "spec_head_ms": 585,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2459,
+            "t_first_audio_ms": 124,
+            "t_first_speech_ms": 2796,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-14",
+            "spec_hit": true,
+            "spec_cover": 0.625,
+            "spec_head_ms": 626,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2319,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2772,
+            "backchannel": "Так…",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-15",
+            "spec_hit": true,
+            "spec_cover": 0.634,
+            "spec_head_ms": 535,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1461,
+            "t_first_audio_ms": 129,
+            "t_first_speech_ms": 1825,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-16",
+            "spec_hit": true,
+            "spec_cover": 0.788,
+            "spec_head_ms": 651,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1888,
+            "t_first_audio_ms": 124,
+            "t_first_speech_ms": 2169,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "finish",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          }
+        ],
+        "speculation": {
+          "launches": 80,
+          "relaunches": 35,
+          "hits": 15,
+          "misses": 0,
+          "hit_rate": 1.0,
+          "ttft_hit_ms": 1461,
+          "ttft_miss_ms": null
+        },
+        "evaluator": {
+          "calls": 14,
+          "errors": [],
+          "total_ms": 39661
+        }
+      },
+      "audio_bytes": 6379200
+    },
+    {
+      "scenario_id": "s4_sales_objections",
+      "title": "Продажи: работа с возражениями на этапе принятия решения",
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "vhod",
+          "typed_ms": 0,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2231,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [
+            "skeptical"
+          ],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 1,
+          "stage": "vhod",
+          "typed_ms": 1385,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 1597,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 2,
+          "stage": "vhod",
+          "typed_ms": 1688,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1632,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 3,
+          "stage": "istinnost",
+          "typed_ms": 1417,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 124,
+          "reported_first_speech_ms": 2337,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 4,
+          "stage": null,
+          "typed_ms": 1218,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1545,
+            "generation_id": "gen-5",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 5,
+          "stage": "istinnost",
+          "typed_ms": 1584,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 1892,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 6,
+          "stage": null,
+          "typed_ms": 1510,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 552,
+            "generation_id": "gen-7",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 7,
+          "stage": "istinnost",
+          "typed_ms": 1700,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1346,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 8,
+          "stage": "risk_vnedreniya",
+          "typed_ms": 1403,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2199,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 9,
+          "stage": "risk_vnedreniya",
+          "typed_ms": 1722,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1534,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 10,
+          "stage": "avtoritet",
+          "typed_ms": 1564,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2096,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 11,
+          "stage": "srochnost",
+          "typed_ms": 1490,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1947,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 12,
+          "stage": "pilot",
+          "typed_ms": 1634,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2656,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 13,
+          "stage": "pilot",
+          "typed_ms": 1344,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 2421,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 14,
+          "stage": "pilot",
+          "typed_ms": 1985,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 122,
+          "reported_first_speech_ms": 1770,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 15,
+          "stage": "zakrytie",
+          "typed_ms": 1884,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 1585,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 16,
+          "stage": "zakrytie",
+          "typed_ms": 1168,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 2097,
+          "clauses": 6,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        }
+      ],
+      "interrupts": [
+        {
+          "after_ms": 1545,
+          "generation_id": "gen-5",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 552,
+          "generation_id": "gen-7",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        }
+      ],
+      "report": {
+        "scenario_id": "s4_sales_objections",
+        "scenario_title": "Продажи: работа с возражениями на этапе принятия решения",
+        "completed": true,
+        "finish_reason": "модель попросила следующий этап на последнем",
+        "stages_reached": 7,
+        "stages_total": 7,
+        "user_turns": 16,
+        "criteria": [
+          {
+            "key": "true_objection",
+            "title": "Выявление истинного возражения",
+            "scale": "1-5",
+            "score": 2.75,
+            "rationale": "Собеседник сначала уточняет детали предложения агента (глубина интеграции), но не пытается выявить скрытое возражение, а просто соглашается на предложенные метрики.",
+            "observations": [
+              "Собеседник не принял озвученную цену за чистую монету, а задал уточняющий вопрос о составе расчёта конкурента, что помогло вскрыть скрытую часть возражения — неполноту сравнения.",
+              "Собеседник уточняет детали расчёта конкурента и предлагает сравнение по функциональности, стремясь докопаться до сути различий в цене, хотя не формулирует явное истинное возражение.",
+              "Собеседник уточняет детали сравнения и внедрения, но не выявляет глубинную причину сомнений в цене.",
+              "Собеседник не выявляет истинное возражение, а сразу предлагает скидку/фиксацию цены, не углубляясь в причины.",
+              "Собеседник не отвечает на вопрос агента о причине возражения (бюджет или предсказуемость), а сразу предлагает пилот, не выявляя истинную проблему.",
+              "Собеседник уточняет детали расчета, но не выявляет глубинную причину сомнений агента.",
+              "Собеседник активно уточняет детали сравнения, но агент сам подталкивает к выявлению скрытого опасения, а собеседник не углубляется в истинную причину, а продолжает сравнивать функции.",
+              "Собеседник раскрывает суть опасения агента (что команда не потянет систему), но не копает глубже в корневую причину, а лишь предлагает решение по ресурсам.",
+              "Собеседник выявляет скрытое опасение агента о нагрузке на команду и затем запрашивает конкретные данные для финансового директора, продвигаясь к реальной причине сомнений.",
+              "Собеседник не выявляет истинное возражение, а лишь предлагает отложить сделку, не углубляясь в реальную причину.",
+              "Собеседник раскрывает конкретное условие (пилот на отдел, месяц, без обязательств), но не называет глубинную причину сомнений, а лишь предлагает пробный период.",
+              "Собеседник сначала уточняет детали предложения агента (глубина интеграции), но не пытается выявить скрытое возражение, а просто соглашается на предложенные метрики."
+            ]
+          },
+          {
+            "key": "no_discount",
+            "title": "Защита цены",
+            "scale": "1-5",
+            "score": 3.5,
+            "rationale": "Собеседник не требует скидку, а предлагает пилот с ограниченными обязательствами, что сохраняет цену, но снижает риск для себя.",
+            "observations": [
+              "Собеседник не предложил скидку, а направил разговор на сравнение ценности, указав на отсутствие в цене конкурента внедрения, обучения и поддержки, что защищает цену.",
+              "Собеседник не предлагает скидку, а смещает фокус на условия внедрения, сохраняя цену.",
+              "Собеседник немедленно предлагает зафиксировать текущую цену, что является уступкой без защиты ценности.",
+              "Собеседник не предлагает скидку, а настаивает на условиях пилота.",
+              "Собеседник не предлагает скидку, а защищает ценность через снижение нагрузки на команду клиента (один человек на два часа), что удерживает цену.",
+              "Собеседник не предлагает скидку, а вместо этого фокусируется на ценности через обсуждение метрик и примеров внедрения.",
+              "Собеседник сразу предлагает изменить цену в следующем квартале, что является уступкой без защиты ценности.",
+              "Собеседник не требует скидку, а предлагает пилот с ограниченными обязательствами, что сохраняет цену, но снижает риск для себя."
+            ]
+          },
+          {
+            "key": "pilot",
+            "title": "Конструкция пилота",
+            "scale": "1-5",
+            "score": 1.92,
+            "rationale": "Собеседник предлагает конкретные критерии успеха (сокращение времени на 20%, снижение просрочек на 15%) и срок (месяц), но не уточняет, как будет измеряться успех и что будет после пилота.",
+            "observations": [
+              "Собеседник не предлагает конструкцию пилота с критериями успеха и сроками, а лишь инициирует сравнение, что не соответствует критерию.",
+              "Собеседник не предлагает пилотный проект с критериями успеха, а обсуждает только процесс внедрения.",
+              "Предложение зафиксировать цену не является конструкцией пилота с критериями успеха и сроками.",
+              "Пилот описан с условиями (один отдел, месяц, без обязательств), но нет четких критериев успеха и сроков оценки, что снижает конструктивность.",
+              "Собеседник предлагает пилот без четких критериев успеха, только 'посмотреть, как работает'.",
+              "Собеседник не предлагает конкретных критериев успеха и сроков, а лишь просит агента дать цифры для начальства, что не является конструктивным пилотом.",
+              "Собеседник упоминает реалистичность ресурсов, но не предлагает конкретную конструкцию пилота с критериями успеха и сроками.",
+              "Собеседник не предлагает конструкцию пилота с критериями успеха и сроками, а лишь запрашивает выжимку данных.",
+              "Собеседник не предлагает конструктивного пилота, а лишь откладывает решение без критериев успеха или сроков.",
+              "Пилот определён по объёму (один отдел) и сроку (месяц), но критерии успеха не заданы, что требует уточнения.",
+              "Собеседник предлагает пилот с указанием срока и отдела, но не определяет критерии успеха, на что агент прямо указывает.",
+              "Собеседник предлагает конкретные критерии успеха (сокращение времени на 20%, снижение просрочек на 15%) и срок (месяц), но не уточняет, как будет измеряться успех и что будет после пилота."
+            ]
+          }
+        ],
+        "transcript": [
+          {
+            "role": "agent",
+            "text": "Мы посмотрели демо. Честно, у конкурента дешевле на треть. И функционал вроде похожий, так что я пока не понимаю, за что нам переплачивать.",
+            "stage": "vhod"
+          },
+          {
+            "role": "user",
+            "text": "Понял. А что именно вошло в их расчёт — там та же глубина интеграции?",
+            "stage": "vhod",
+            "typing": {
+              "first_key_ms": 6,
+              "total_ms": 1178,
+              "final_length": 69,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 58.58,
+              "rewrite_ratio": 0.217,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Ну, они просто умножили базовый тариф на количество пользователей. Но я не вижу там ни внедрения, ни обучения, ни поддержки — это всё отдельно плюсуется.",
+            "stage": "vhod"
+          },
+          {
+            "role": "user",
+            "text": "Тогда давайте сравним по пунктам: у них есть маршрутизация и аудит изменений?",
+            "stage": "vhod",
+            "typing": {
+              "first_key_ms": 3,
+              "total_ms": 1548,
+              "final_length": 77,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 49.73,
+              "rewrite_ratio": 0.0,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да, давайте сравним. Только мне важно понять, где именно у нас разница в деньгах — если у них внедрение и поддержка отдельно, то итоговая цифра может быть совсем другой.",
+            "stage": "vhod"
+          },
+          {
+            "role": "user",
+            "text": "Внедрение ведём мы, от вашей команды нужен один человек на два часа в неделю.",
+            "stage": "vhod",
+            "typing": {
+              "first_key_ms": 12,
+              "total_ms": 1337,
+              "final_length": 77,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 57.58,
+              "rewrite_ratio": 0.091,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "То есть по факту вы берёте на себя всю тяжёлую часть, а от нас только один человек на связи. Это уже меняет картину — тогда разница в цене не такая пугающая.",
+            "stage": "vhod"
+          },
+          {
+            "role": "user",
+            "text": "Хорошо, что нужно финансовому директору, чтобы он сказал да? Цифры окупаемости?",
+            "stage": "istinnost",
+            "typing": {
+              "first_key_ms": 4,
+              "total_ms": 1144,
+              "final_length": 79,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 69.04,
+              "rewrite_ratio": 0.076,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "user",
+            "text": "В следующем квартале цена будет другая. Но давайте зафиксирую текущую до конца месяца.",
+            "stage": "istinnost",
+            "typing": {
+              "first_key_ms": 3492,
+              "total_ms": 1392,
+              "final_length": 86,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 61.78,
+              "rewrite_ratio": 0.058,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хм, зафиксировать текущую цену — это приятно, но мне нужно понять, что именно для вас критично: сам бюджет или предсказуемость расходов на год? Если дело в планировании, мы можем обсудить фиксацию условий в договоре.",
+            "stage": "istinnost"
+          },
+          {
+            "role": "user",
+            "text": "Да, есть пилот на один отдел, месяц, без обязательств по продлению.",
+            "stage": "istinnost",
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 1353,
+              "final_length": 67,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 49.5,
+              "rewrite_ratio": 0.119,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "user",
+            "text": "От вас — контакт ответственного и доступ к тестовому контуру. Мы делаем остальное.",
+            "stage": "istinnost",
+            "typing": {
+              "first_key_ms": 2687,
+              "total_ms": 1553,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 52.82,
+              "rewrite_ratio": 0.159,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хм, то есть вы предлагаете нам просто дать доступ и человека, а дальше вы сами покажете результат на нашем отделе? И что будет считаться успехом после этого месяца — чтобы мы поняли, на что смотрим?",
+            "stage": "istinnost"
+          },
+          {
+            "role": "user",
+            "text": "Понял. А что именно вошло в их расчёт — там та же глубина интеграции?",
+            "stage": "istinnost",
+            "typing": {
+              "first_key_ms": 11,
+              "total_ms": 1288,
+              "final_length": 69,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 53.57,
+              "rewrite_ratio": 0.116,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Ну, если честно, я пока не понял, что будет считаться успехом. Мы просто посмотрим, как оно работает, или вы дадите нам какие-то цифры, чтобы я мог показать начальству, что это не зря?",
+            "stage": "istinnost"
+          },
+          {
+            "role": "user",
+            "text": "Тогда давайте сравним по пунктам: у них есть маршрутизация и аудит изменений?",
+            "stage": "risk_vnedreniya",
+            "typing": {
+              "first_key_ms": 14,
+              "total_ms": 1659,
+              "final_length": 77,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 46.42,
+              "rewrite_ratio": 0.143,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да, у них маршрутизация и аудит есть. Но я смотрю глубже: у них это из коробки, а у нас — подстраивается под ваши процессы. Хотя, погодите, мы сейчас уходим в сравнение функций, а я так и не услышал, что вы боитесь в плане внедрения. Может, дело не в кнопках, а в том, что команда не потянет ещё одну систему?",
+            "stage": "risk_vnedreniya"
+          },
+          {
+            "role": "user",
+            "text": "Внедрение ведём мы, от вашей команды нужен один человек на два часа в неделю.",
+            "stage": "risk_vnedreniya",
+            "typing": {
+              "first_key_ms": 3,
+              "total_ms": 1368,
+              "final_length": 77,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 56.3,
+              "rewrite_ratio": 0.143,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да, вы правы, я переживаю, что команда не потянет ещё одну систему — у нас все и так с головой в текучке, и любая новая штука ложится мёртвым грузом. Но раз вы говорите, что от нас нужен один человек на пару часов в неделю, это звучит реально. Мне важно понять, сколько времени займёт сам запуск и кто будет отвечать, если что-то пойдёт не так в первый месяц.",
+            "stage": "risk_vnedreniya"
+          },
+          {
+            "role": "user",
+            "text": "Хорошо, что нужно финансовому директору, чтобы он сказал да? Цифры окупаемости?",
+            "stage": "avtoritet",
+            "typing": {
+              "first_key_ms": 16,
+              "total_ms": 1294,
+              "final_length": 79,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 61.05,
+              "rewrite_ratio": 0.101,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хм, финансовому директору обычно нужны не просто цифры, а понятный срок окупаемости и то, как это влияет на операционные расходы. Но чтобы я мог ему это аргументированно подать, мне нужна ваша помощь — вы можете подготовить для меня короткую выжимку с ключевыми метриками и примерами из похожих внедрений?",
+            "stage": "avtoritet"
+          },
+          {
+            "role": "user",
+            "text": "В следующем квартале цена будет другая. Но давайте зафиксирую текущую до конца месяца.",
+            "stage": "srochnost",
+            "typing": {
+              "first_key_ms": 2,
+              "total_ms": 1468,
+              "final_length": 86,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 58.57,
+              "rewrite_ratio": 0.128,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хм, то есть вы предлагаете отложить до следующего квартала? А что изменится через три месяца — вы перестанете терять на ручной работе или просто привыкнете к текущим потерям? Если дело в том, чтобы выгадать момент с бюджетом, я могу зафиксировать цену сейчас, а запуск сдвинуть на удобный вам срок.",
+            "stage": "srochnost"
+          },
+          {
+            "role": "user",
+            "text": "Да, есть пилот на один отдел, месяц, без обязательств по продлению.",
+            "stage": "pilot",
+            "typing": {
+              "first_key_ms": 18,
+              "total_ms": 1215,
+              "final_length": 67,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 55.12,
+              "rewrite_ratio": 0.0,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хм, то есть месяц на одном отделе без обязательств — это уже конкретнее. Но чтобы я мог после этого спокойно прийти к руководству, мне нужно заранее понимать, на какие цифры мы будем смотреть: сокращение времени на обработку, рост соблюдения сроков, что-то ещё?",
+            "stage": "pilot"
+          },
+          {
+            "role": "user",
+            "text": "От вас — контакт ответственного и доступ к тестовому контуру. Мы делаем остальное.",
+            "stage": "pilot",
+            "typing": {
+              "first_key_ms": 2,
+              "total_ms": 1858,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 44.14,
+              "rewrite_ratio": 0.171,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, стоп. То есть вы мне предлагаете месяц пилота, но не говорите, по каким цифрам мы поймём, что он прошёл успешно? Мне нужно заранее знать критерии, иначе я не смогу защитить это перед руководством — они спросят «и что, помогло?», а я не смогу ответить.",
+            "stage": "pilot"
+          },
+          {
+            "role": "user",
+            "text": "Понял. А что именно вошло в их расчёт — там та же глубина интеграции?",
+            "stage": "pilot",
+            "typing": {
+              "first_key_ms": 8,
+              "total_ms": 1763,
+              "final_length": 69,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 39.14,
+              "rewrite_ratio": 0.116,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, давайте вернёмся к пилоту. Я предлагаю так: берём один отдел, где больше всего рутины, месяц. Критерии успеха — сокращение времени на обработку заявок минимум на 20% и снижение просрочек на 15%. Согласны на такие метрики?",
+            "stage": "pilot"
+          },
+          {
+            "role": "user",
+            "text": "Тогда давайте сравним по пунктам: у них есть маршрутизация и аудит изменений?",
+            "stage": "zakrytie",
+            "typing": {
+              "first_key_ms": 18,
+              "total_ms": 1010,
+              "final_length": 77,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 76.2,
+              "rewrite_ratio": 0.091,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Так, погодите, мы с вами уже почти договорились о пилоте, а теперь вы опять уходите в сравнение с конкурентом. Давайте так: я не спорю, что у них есть маршрутизация, у вас она тоже есть. Вопрос не в том, у кого что в коробке, а в том, что мы с вами сейчас фиксируем конкретный план на месяц. Мне нужно от вас одно: подтверждение по метрикам — 20% на время обработки и 15% на просрочки. Если да, я завтра же даю контакт ответственного и доступ к контуру.",
+            "stage": "zakrytie"
+          }
+        ],
+        "typing": {
+          "answers": 16,
+          "median_first_key_ms": 12,
+          "median_longest_pause_ms": 0,
+          "median_rewrite_ratio": 0.116,
+          "confidence": {
+            "уверенно": 16
+          },
+          "hesitant_answers": 0
+        },
+        "created_at": 1788532433.447501,
+        "overall": 2.72,
+        "coverage": 1.0,
+        "marks": [
+          {
+            "generation_id": "gen-1",
+            "spec_hit": false,
+            "spec_cover": null,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 1905,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2231,
+            "backchannel": "Угу.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-2",
+            "spec_hit": true,
+            "spec_cover": 0.696,
+            "spec_head_ms": 646,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1279,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 1597,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-3",
+            "spec_hit": true,
+            "spec_cover": 0.649,
+            "spec_head_ms": 872,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1324,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1632,
+            "backchannel": "Ага.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": true,
+            "repaired": true,
+            "t_repair_ms": 2377
+          },
+          {
+            "generation_id": "gen-4",
+            "spec_hit": true,
+            "spec_cover": 0.662,
+            "spec_head_ms": 486,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1894,
+            "t_first_audio_ms": 124,
+            "t_first_speech_ms": 2337,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-6",
+            "spec_hit": true,
+            "spec_cover": 0.674,
+            "spec_head_ms": 689,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1507,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 1892,
+            "backchannel": "Понятно.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-8",
+            "spec_hit": true,
+            "spec_cover": 0.61,
+            "spec_head_ms": 1068,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 982,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1346,
+            "backchannel": "Понятно.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-9",
+            "spec_hit": true,
+            "spec_cover": 0.696,
+            "spec_head_ms": 637,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1787,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2199,
+            "backchannel": "Так…",
+            "clauses": 3,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-10",
+            "spec_hit": true,
+            "spec_cover": 0.636,
+            "spec_head_ms": 940,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1161,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1534,
+            "backchannel": "Понятно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-11",
+            "spec_hit": true,
+            "spec_cover": 0.649,
+            "spec_head_ms": 883,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1728,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2096,
+            "backchannel": "Так, ясно.",
+            "clauses": 4,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-12",
+            "spec_hit": true,
+            "spec_cover": 0.709,
+            "spec_head_ms": 662,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1576,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1947,
+            "backchannel": "Угу.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-13",
+            "spec_hit": true,
+            "spec_cover": 0.779,
+            "spec_head_ms": 602,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2300,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2656,
+            "backchannel": "Ага.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-14",
+            "spec_hit": true,
+            "spec_cover": 0.731,
+            "spec_head_ms": 649,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2094,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 2421,
+            "backchannel": "Угу.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-15",
+            "spec_hit": true,
+            "spec_cover": 0.829,
+            "spec_head_ms": 492,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1498,
+            "t_first_audio_ms": 122,
+            "t_first_speech_ms": 1770,
+            "backchannel": "Так, ясно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-16",
+            "spec_hit": true,
+            "spec_cover": 0.667,
+            "spec_head_ms": 842,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1269,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 1585,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-17",
+            "spec_hit": true,
+            "spec_cover": 0.753,
+            "spec_head_ms": 484,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1691,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 2097,
+            "backchannel": "Так…",
+            "clauses": 6,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          }
+        ],
+        "speculation": {
+          "launches": 81,
+          "relaunches": 33,
+          "hits": 16,
+          "misses": 0,
+          "hit_rate": 1.0,
+          "ttft_hit_ms": 1576,
+          "ttft_miss_ms": null
+        },
+        "evaluator": {
+          "calls": 14,
+          "errors": [],
+          "total_ms": 43885
+        }
+      },
+      "audio_bytes": 11190600
+    },
+    {
+      "scenario_id": "s5_knowledge_check",
+      "title": "Проверка знаний: регламент работы с персональными данными",
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "baza",
+          "typed_ms": 0,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 122,
+          "reported_first_speech_ms": 2301,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [
+            "neutral"
+          ],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 1,
+          "stage": "baza",
+          "typed_ms": 1448,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 1859,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 2,
+          "stage": "baza",
+          "typed_ms": 945,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 2052,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 3,
+          "stage": "utochnenie",
+          "typed_ms": 1541,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1993,
+          "clauses": 5,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 4,
+          "stage": null,
+          "typed_ms": 1159,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1075,
+            "generation_id": "gen-5",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 5,
+          "stage": null,
+          "typed_ms": 1357,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "emotions": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1488,
+            "generation_id": "gen-6",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 6,
+          "stage": "procedura",
+          "typed_ms": 1626,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1839,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 7,
+          "stage": "procedura",
+          "typed_ms": 1662,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 122,
+          "reported_first_speech_ms": 2391,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 8,
+          "stage": "procedura",
+          "typed_ms": 1144,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": 121,
+          "reported_first_speech_ms": 1613,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 9,
+          "stage": "srok",
+          "typed_ms": 1492,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1588,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 10,
+          "stage": "srok",
+          "typed_ms": 1451,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1866,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 11,
+          "stage": "keys",
+          "typed_ms": 844,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 1975,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 12,
+          "stage": "keys",
+          "typed_ms": 1300,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1936,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 13,
+          "stage": "granica",
+          "typed_ms": 1258,
+          "t_first_audio_ms": 131,
+          "reported_first_audio_ms": 129,
+          "reported_first_speech_ms": 1951,
+          "clauses": 2,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 14,
+          "stage": "incident",
+          "typed_ms": 1553,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 1667,
+          "clauses": 4,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 15,
+          "stage": "incident",
+          "typed_ms": 966,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1781,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 16,
+          "stage": "incident",
+          "typed_ms": 1345,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 124,
+          "reported_first_speech_ms": 1956,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 17,
+          "stage": "incident",
+          "typed_ms": 1523,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": 125,
+          "reported_first_speech_ms": 1764,
+          "clauses": 3,
+          "filler": true,
+          "emotions": [],
+          "action": "next_stage",
+          "interrupted": null
+        }
+      ],
+      "interrupts": [
+        {
+          "after_ms": 1075,
+          "generation_id": "gen-5",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1488,
+          "generation_id": "gen-6",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        }
+      ],
+      "report": {
+        "scenario_id": "s5_knowledge_check",
+        "scenario_title": "Проверка знаний: регламент работы с персональными данными",
+        "completed": true,
+        "finish_reason": "модель попросила следующий этап на последнем",
+        "stages_reached": 7,
+        "stages_total": 7,
+        "user_turns": 17,
+        "criteria": [
+          {
+            "key": "completeness",
+            "title": "Полнота знания регламента",
+            "scale": "1-5",
+            "score": 2.58,
+            "rationale": "Собеседник демонстрирует знание перечня персональных данных (базовые и специальные категории), но не отвечает на прямой вопрос о действиях при инциденте, что указывает на неполное понимание регламента.",
+            "observations": [
+              "Собеседник перечислил основные категории, но не упомянул дополнительные категории (зарплата, здоровье) без подсказки агента, что указывает на неполноту знаний.",
+              "Собеседник перечислил ключевые чувствительные категории (биометрия, здоровье, доходы), но не упомянул другие возможные сведения о сотруднике, например, семейное положение или данные о членах семьи.",
+              "Собеседник назвал несколько категорий (биометрия, здоровье, доходы), но перечень неполный и не включает другие обязательные сведения, например, семейное положение или образование, что показывает частичное знание.",
+              "Собеседник не упомянул дополнительные категории данных (семейное положение, образование), но в его ответах нет ошибок по базовым определениям.",
+              "Собеседник не отвечает на прямой вопрос о составе сведений, повторяя процедурные действия, что указывает на неполное знание перечня категорий.",
+              "Собеседник называет только базовый перечень (ФИО, паспорт, адрес, телефон, email), но не упоминает дополнительные категории (семейное положение, образование), которые агент дважды просит добавить.",
+              "Собеседник называет категории, но не может полно и точно перечислить состав сведений, повторяя уже названные и упуская новые элементы из регламента.",
+              "Собеседник называет только отдельные категории и не может самостоятельно дополнить перечень, уходя от прямого вопроса о составе сведений.",
+              "Собеседник не отвечает на вопрос о составе сведений, а называет срок обработки, что указывает на путаницу в базовых определениях регламента.",
+              "Демонстрирует знание запрета на нерегламентированную передачу и альтернативного канала (служебная почта), но не раскрывает полный перечень обязательных элементов обоснования.",
+              "Собеседник перечисляет базовый перечень ПДн, но не демонстрирует полноты знания регламента, так как уходит от прямого ответа на вопрос о действиях при инциденте.",
+              "Собеседник демонстрирует знание перечня персональных данных (базовые и специальные категории), но не отвечает на прямой вопрос о действиях при инциденте, что указывает на неполное понимание регламента."
+            ]
+          },
+          {
+            "key": "procedure",
+            "title": "Знание процедуры",
+            "scale": "1-5",
+            "score": 3.0,
+            "rationale": "Вместо описания первого шага при утечке данных собеседник продолжает перечислять состав сведений, что свидетельствует о незнании процедуры реагирования на инцидент.",
+            "observations": [
+              "В ответе нет упоминания процедурных шагов или сроков, что не соответствует проверке процедуры, но и не требуется в данном контексте.",
+              "Собеседник упомянул лишь общие шаги приёма заявления без деталей и сроков, что свидетельствует о недостаточном знании процедуры.",
+              "Собеседник без подсказки назвал точный срок (30 дней) и корректный порядок действий при обращении.",
+              "Собеседник называет шаги при инциденте (сообщение ответственному, фиксация), но не демонстрирует знание полной процедуры или сроков.",
+              "Собеседник называет шаги процедуры (письменное заявление, проверка личности, передача ответственному), но делает это без связи с текущим вопросом и без деталей сроков.",
+              "Собеседник упоминает срок в 30 дней, но не демонстрирует полного знания процедуры, включая случаи продления срока.",
+              "Собеседник точно назвал срок — 30 дней с момента получения обращения, без подсказки.",
+              "Уверенно называет два шага (отказ и фиксация обращения у ответственного за ПДн), но не упоминает дальнейшие шаги и сроки.",
+              "Вместо описания первого шага при утечке данных собеседник продолжает перечислять состав сведений, что свидетельствует о незнании процедуры реагирования на инцидент."
+            ]
+          },
+          {
+            "key": "integrity",
+            "title": "Устойчивость к давлению",
+            "scale": "1-5",
+            "score": 4.14,
+            "rationale": "Собеседник не подтверждает устойчивость позиции в ситуации, когда ответственным может быть сам руководитель, и не показывает готовности эскалировать.",
+            "observations": [
+              "Собеседник дважды отказался от неправомерной передачи данных, предложил легальный канал и зафиксировал обращение, демонстрируя полную устойчивость к давлению.",
+              "Собеседник последовательно отказывается поддаваться давлению агента и сохраняет позицию, хотя не эскалирует формально.",
+              "Собеседник не показывает явной уступчивости давлению, но и не демонстрирует активной позиции, так как уходит от темы и не эскалирует.",
+              "Собеседник твёрдо отказал в неправомерной передаче данных, указав правильный канал и требование обоснования, не поддаваясь давлению.",
+              "Последовательно отказывает при давлении и ссылке на руководителя, предлагая фиксацию обращения — демонстрирует устойчивость и готовность к эскалации.",
+              "Собеседник последовательно отказывается нарушать регламент и сообщает о давлении ответственному за ПДн, демонстрируя устойчивость к давлению.",
+              "Собеседник не подтверждает устойчивость позиции в ситуации, когда ответственным может быть сам руководитель, и не показывает готовности эскалировать."
+            ]
+          }
+        ],
+        "transcript": [
+          {
+            "role": "agent",
+            "text": "Добрый день. Начнём с базы. Что, согласно нашему регламенту, относится к персональным данным? Перечислите, пожалуйста, категории.",
+            "stage": "baza"
+          },
+          {
+            "role": "user",
+            "text": "ФИО, паспортные данные, адрес, телефон, электронная почта.",
+            "stage": "baza",
+            "typing": {
+              "first_key_ms": 17,
+              "total_ms": 1243,
+              "final_length": 58,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 46.65,
+              "rewrite_ratio": 0.19,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да, это верная база. А если мы говорим о сотрудниках — ещё что-то добавляется к этому списку, например, данные о зарплате или о состоянии здоровья?",
+            "stage": "baza"
+          },
+          {
+            "role": "user",
+            "text": "Ещё биометрия, данные о здоровье и сведения о доходах.",
+            "stage": "baza",
+            "typing": {
+              "first_key_ms": 11,
+              "total_ms": 756,
+              "final_length": 54,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 71.47,
+              "rewrite_ratio": 0.093,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хорошо, биометрия и здоровье — это уже чувствительные категории. А если говорить о повседневной работе с документами, какие ещё сведения о сотруднике мы обязаны защищать, помимо перечисленного?",
+            "stage": "baza"
+          },
+          {
+            "role": "user",
+            "text": "Принимаю заявление письменно, проверяю личность, передаю ответственному за ПДн.",
+            "stage": "baza",
+            "typing": {
+              "first_key_ms": 23,
+              "total_ms": 1451,
+              "final_length": 79,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.44,
+              "rewrite_ratio": 0.19,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Вы упомянули процедуру приёма заявления — это уже про порядок действий. А я спрашивала про состав сведений. Давайте зафиксируем: мы уже назвали ФИО, паспорт, адрес, телефон, почту, биометрию, здоровье, доходы. Что-то ещё из регламента должно попасть в этот перечень?",
+            "stage": "baza"
+          },
+          {
+            "role": "user",
+            "text": "Тридцать дней с момента получения обращения.",
+            "stage": "utochnenie",
+            "typing": {
+              "first_key_ms": 27,
+              "total_ms": 1083,
+              "final_length": 44,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 40.61,
+              "rewrite_ratio": 0.341,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "role": "user",
+            "text": "Отказываю. Выгрузка передаётся только по служебной почте и с обоснованием.",
+            "stage": "utochnenie",
+            "typing": {
+              "first_key_ms": 2871,
+              "total_ms": 1287,
+              "final_length": 74,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 57.49,
+              "rewrite_ratio": 0.068,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "user",
+            "text": "Точно так же отказываю и фиксирую обращение у ответственного за ПДн.",
+            "stage": "utochnenie",
+            "typing": {
+              "first_key_ms": 6385,
+              "total_ms": 1446,
+              "final_length": 68,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 47.04,
+              "rewrite_ratio": 0.103,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понимаю, вы держите позицию по отказу — это важно. Но давайте вернёмся к составу сведений: мы перечислили несколько категорий, а регламент обычно включает ещё и такие, как семейное положение или образование. Что-то из этого вы бы добавили?",
+            "stage": "utochnenie"
+          },
+          {
+            "role": "user",
+            "text": "Сообщаю ответственному за ПДн и фиксирую инцидент, дальше по регламенту.",
+            "stage": "procedura",
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 1449,
+              "final_length": 72,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 49.7,
+              "rewrite_ratio": 0.069,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понял вас, вы сейчас описываете действия при инциденте. Но я всё ещё жду ответа на вопрос о составе сведений: добавили бы вы к перечню, например, семейное положение или образование?",
+            "stage": "procedura"
+          },
+          {
+            "role": "user",
+            "text": "ФИО, паспортные данные, адрес, телефон, электронная почта.",
+            "stage": "procedura",
+            "typing": {
+              "first_key_ms": 24,
+              "total_ms": 922,
+              "final_length": 58,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 62.89,
+              "rewrite_ratio": 0.086,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Да, ФИО и паспорт — это основа, вы её назвали верно. Я всё ещё жду ответа на вопрос про состав сведений: добавили бы вы к перечню семейное положение или образование, или, может, что-то ещё из регламента?",
+            "stage": "procedura"
+          },
+          {
+            "role": "user",
+            "text": "Ещё биометрия, данные о здоровье и сведения о доходах.",
+            "stage": "procedura",
+            "typing": {
+              "first_key_ms": 22,
+              "total_ms": 1281,
+              "final_length": 54,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 42.16,
+              "rewrite_ratio": 0.167,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понял, вы возвращаетесь к чувствительным категориям — биометрия и здоровье уже были в списке. Но я всё ещё жду ответа на вопрос о составе сведений: добавили бы вы семейное положение или образование к нашему перечню?",
+            "stage": "procedura"
+          },
+          {
+            "role": "user",
+            "text": "Принимаю заявление письменно, проверяю личность, передаю ответственному за ПДн.",
+            "stage": "srok",
+            "typing": {
+              "first_key_ms": 23,
+              "total_ms": 1371,
+              "final_length": 79,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 57.63,
+              "rewrite_ratio": 0.127,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Вы снова про процедуру приёма заявления, а я спрашивала про состав сведений. Давайте всё же вернёмся к перечню: мы уже назвали ФИО, паспорт, адрес, телефон, почту, биометрию, здоровье, доходы. Что-то ещё из регламента должно попасть в этот список?",
+            "stage": "srok"
+          },
+          {
+            "role": "user",
+            "text": "Тридцать дней с момента получения обращения.",
+            "stage": "srok",
+            "typing": {
+              "first_key_ms": 13,
+              "total_ms": 687,
+              "final_length": 44,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 64.07,
+              "rewrite_ratio": 0.295,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хорошо, вы назвали тридцать дней с момента получения — это важная цифра. Но давайте уточним: этот срок действует всегда, или есть случаи, когда он может быть продлён?",
+            "stage": "srok"
+          },
+          {
+            "role": "user",
+            "text": "Отказываю. Выгрузка передаётся только по служебной почте и с обоснованием.",
+            "stage": "keys",
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 1088,
+              "final_length": 74,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 68.04,
+              "rewrite_ratio": 0.068,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Хорошо, вы чётко обозначили отказ и путь через служебную почту — это правильная позиция. Но давайте проверим, что вы делаете, если коллега настаивает и говорит, что ему «срочно нужно для руководителя»?",
+            "stage": "keys"
+          },
+          {
+            "role": "user",
+            "text": "Точно так же отказываю и фиксирую обращение у ответственного за ПДн.",
+            "stage": "keys",
+            "typing": {
+              "first_key_ms": 3,
+              "total_ms": 1079,
+              "final_length": 68,
+              "deletions": 1,
+              "deleted_chars": 5,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 63.05,
+              "rewrite_ratio": 0.074,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Ясно, вы держите позицию и при повторном давлении. А если коллега продолжает настаивать или ссылается на руководителя, кому вы об этом сообщаете?",
+            "stage": "keys"
+          },
+          {
+            "role": "user",
+            "text": "Сообщаю ответственному за ПДн и фиксирую инцидент, дальше по регламенту.",
+            "stage": "granica",
+            "typing": {
+              "first_key_ms": 22,
+              "total_ms": 1476,
+              "final_length": 72,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 48.79,
+              "rewrite_ratio": 0.125,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понятно, вы фиксируете инцидент у ответственного — это уже часть процедуры. А если сам руководитель, который настаивает, и есть тот самый ответственный за ПДн? Позиция останется прежней?",
+            "stage": "granica"
+          },
+          {
+            "role": "user",
+            "text": "ФИО, паспортные данные, адрес, телефон, электронная почта.",
+            "stage": "incident",
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 788,
+              "final_length": 58,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 73.59,
+              "rewrite_ratio": 0.155,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Понял, вы повторяете базовый перечень. Но я всё ещё жду ответа на вопрос о том, что вы сделаете, если файл уже ушёл не тому адресату. Первое действие?",
+            "stage": "incident"
+          },
+          {
+            "role": "user",
+            "text": "Ещё биометрия, данные о здоровье и сведения о доходах.",
+            "stage": "incident",
+            "typing": {
+              "first_key_ms": 21,
+              "total_ms": 1200,
+              "final_length": 54,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 44.99,
+              "rewrite_ratio": 0.259,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Вы перечисляете состав сведений, а я спрашиваю про сам инцидент: файл уже ушёл не тому адресату. Первое ваше действие в такой ситуации?",
+            "stage": "incident"
+          },
+          {
+            "role": "user",
+            "text": "Принимаю заявление письменно, проверяю личность, передаю ответственному за ПДн.",
+            "stage": "incident",
+            "typing": {
+              "first_key_ms": 15,
+              "total_ms": 1391,
+              "final_length": 79,
+              "deletions": 1,
+              "deleted_chars": 12,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 56.79,
+              "rewrite_ratio": 0.152,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "role": "agent",
+            "text": "Вы описываете приём заявления — это про начало работы с обращением, а не про инцидент с утечкой. Если файл уже ушёл не тому адресату, что вы делаете в первую очередь — пытаетесь исправить своими силами или сразу поднимаете тревогу?",
+            "stage": "incident"
+          }
+        ],
+        "typing": {
+          "answers": 17,
+          "median_first_key_ms": 21,
+          "median_longest_pause_ms": 0,
+          "median_rewrite_ratio": 0.127,
+          "confidence": {
+            "уверенно": 13,
+            "с заминками": 4
+          },
+          "hesitant_answers": 4
+        },
+        "created_at": 1788532499.821274,
+        "overall": 3.24,
+        "coverage": 1.0,
+        "marks": [
+          {
+            "generation_id": "gen-1",
+            "spec_hit": false,
+            "spec_cover": null,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2044,
+            "t_first_audio_ms": 122,
+            "t_first_speech_ms": 2301,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-2",
+            "spec_hit": true,
+            "spec_cover": 0.828,
+            "spec_head_ms": 394,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1566,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 1859,
+            "backchannel": "Понятно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-3",
+            "spec_hit": true,
+            "spec_cover": 0.63,
+            "spec_head_ms": 517,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1669,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 2052,
+            "backchannel": "Так…",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-4",
+            "spec_hit": true,
+            "spec_cover": 0.696,
+            "spec_head_ms": 639,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1662,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1993,
+            "backchannel": "Хорошо.",
+            "clauses": 5,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-7",
+            "spec_hit": true,
+            "spec_cover": 0.765,
+            "spec_head_ms": 598,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1481,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1839,
+            "backchannel": "Ага.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-8",
+            "spec_hit": true,
+            "spec_cover": 0.792,
+            "spec_head_ms": 698,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1992,
+            "t_first_audio_ms": 122,
+            "t_first_speech_ms": 2391,
+            "backchannel": "Угу.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-9",
+            "spec_hit": true,
+            "spec_cover": 0.621,
+            "spec_head_ms": 839,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1241,
+            "t_first_audio_ms": 121,
+            "t_first_speech_ms": 1613,
+            "backchannel": "Так, ясно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-10",
+            "spec_hit": true,
+            "spec_cover": 0.796,
+            "spec_head_ms": 743,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1231,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1588,
+            "backchannel": "Так…",
+            "clauses": 3,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-11",
+            "spec_hit": true,
+            "spec_cover": 0.671,
+            "spec_head_ms": 565,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1521,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1866,
+            "backchannel": "Угу.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-12",
+            "spec_hit": true,
+            "spec_cover": 0.705,
+            "spec_head_ms": 499,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1557,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 1975,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-13",
+            "spec_hit": true,
+            "spec_cover": 0.73,
+            "spec_head_ms": 771,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1531,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1936,
+            "backchannel": "Так…",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": true,
+            "repaired": true,
+            "t_repair_ms": 2291
+          },
+          {
+            "generation_id": "gen-14",
+            "spec_hit": true,
+            "spec_cover": 0.618,
+            "spec_head_ms": 663,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1566,
+            "t_first_audio_ms": 129,
+            "t_first_speech_ms": 1951,
+            "backchannel": "Понятно.",
+            "clauses": 2,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-15",
+            "spec_hit": true,
+            "spec_cover": 0.75,
+            "spec_head_ms": 714,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1327,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 1667,
+            "backchannel": "Угу.",
+            "clauses": 4,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-16",
+            "spec_hit": true,
+            "spec_cover": 0.655,
+            "spec_head_ms": 666,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1453,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1781,
+            "backchannel": "Понятно.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-17",
+            "spec_hit": true,
+            "spec_cover": 0.722,
+            "spec_head_ms": 715,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1628,
+            "t_first_audio_ms": 124,
+            "t_first_speech_ms": 1956,
+            "backchannel": "Угу.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-18",
+            "spec_hit": true,
+            "spec_cover": 0.696,
+            "spec_head_ms": 691,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1432,
+            "t_first_audio_ms": 125,
+            "t_first_speech_ms": 1764,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          }
+        ],
+        "speculation": {
+          "launches": 76,
+          "relaunches": 25,
+          "hits": 17,
+          "misses": 0,
+          "hit_rate": 1.0,
+          "ttft_hit_ms": 1531,
+          "ttft_miss_ms": null
+        },
+        "evaluator": {
+          "calls": 15,
+          "errors": [],
+          "total_ms": 43293
+        }
+      },
+      "audio_bytes": 9507000
+    }
+  ]
+}

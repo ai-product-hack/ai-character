@@ -26,6 +26,7 @@ class SpeakingAfterBackchannel(unittest.TestCase):
     def test_first_content_clause_returns_face_from_thinking_to_speaking(self):
         session = Session.__new__(Session)
         session.bc_cfg = {}
+        session.spoken = {}          # обычно ставится в __init__
         frames = []
         session._emit = lambda header, payload=b"": frames.append((header, payload))
         em = {

@@ -65,6 +65,13 @@ class Session:
         # Генерации, которые доиграли до конца. Их реплики пользователь
         # услышал, и стирать их из истории при следующей отмене нельзя.
         self.completed: set[str] = set()
+        # Текст клауз, реально ушедших клиенту, по генерациям. При перебивании
+        # это единственный источник правды о том, что человек услышал:
+        # `apply_action` до истории уже не доберётся.
+        self.spoken: dict[str, list[str]] = {}
+        # Ход пользователя, породивший генерацию. Нужен, чтобы перебитый обмен
+        # не списывал бюджет этапа.
+        self.gen_turn: dict[str, object] = {}
         self.evaluator = BackgroundEvaluator(models["llm"])
         self.backchannel = models.get("backchannel")
         self.repair_llm = models.get("repair_llm")
@@ -93,6 +100,10 @@ class Session:
         отправкой стоит решение про заполнитель, и принять его может только
         тот, кто видит обе стороны.
         """
+        # Нуль отсчёта — вход в метод, то есть фактически нажатие Enter.
+        # Ставится ДО разбора и построения промпта: иначе замер начинался бы
+        # уже после части работы и льстил бы себе.
+        t0 = time.perf_counter()
         with self.lock:
             if user_text is not None:
                 # Нуль отсчёта — момент, когда агент договорил. Он мог
@@ -101,10 +112,14 @@ class Session:
                 sig = self.typing.summarise(final_length=len(user_text),
                                             origin_ms=self.t_agent_done_ms)
                 self.typing.reset()
-                self.state.add_user(user_text, typing=sig.to_dict())
+                user_turn = self.state.add_user(user_text, typing=sig.to_dict())
                 self._emit({"kind": "user", "text": user_text,
                             "typing": sig.to_dict()})
+            else:
+                user_turn = None
             gen = self.registry.start()
+            if user_turn is not None:
+                self.gen_turn[gen.id] = user_turn
             prompt = build_prompt(self.state, user_text)
             # Если спекулятивный запрос попал — берём его: токены уже летят,
             # а то и накопились. Промах стоит потраченных токенов, не задержки.
@@ -114,12 +129,19 @@ class Session:
                 self.stream = flight.stream
                 self.pipe.llm_stream = _ReplayStream(flight)
                 spec_hit = True
+                # Сколько запрос летел ДО нажатия Enter. Это и есть вся польза
+                # спекуляции: попадание с форой в 200 мс экономит 200 мс, а не
+                # TTFT целиком, сколько бы «попаданий из попаданий» ни было в
+                # сводке.
+                em_head = (t0 - flight.t_start) * 1000
+                em_tokens = len(flight.tokens)
             else:
                 self.stream = stream_deepseek(self.models["llm"])
                 self.pipe.llm_stream = self.stream
                 spec_hit = False
+                em_head = None
+                em_tokens = None
 
-        t0 = time.perf_counter()
         pending: queue.Queue = queue.Queue()
         DONE = object()
         em = {"offset_ms": None, "clause_base": 0, "used_bc": False,
@@ -165,6 +187,11 @@ class Session:
             "generation_id": gen.id,
             "spec_hit": spec_hit,
             "spec_cover": round(cover, 3) if user_text is not None else None,
+            # Фора: сколько запрос летел до Enter, и сколько токенов успело
+            # накопиться к этому моменту. Без этих двух чисел «попаданий 55 из
+            # 55» ничего не говорит о сэкономленном времени.
+            "spec_head_ms": round(em_head) if em_head is not None else None,
+            "spec_tokens_ready": em_tokens,
             "t_first_token_ms": ttft,
             # Первый звук — то, что слышит человек. Первая содержательная
             # реплика — другая величина, и знать надо обе.
@@ -287,6 +314,7 @@ class Session:
             lead = self.bc_cfg.get("lead_ms", 150)
             em["offset_ms"] = max(em["offset_ms"], elapsed + lead)
         em["_placed"] = True
+        self.spoken.setdefault(r.generation_id, []).append(r.text)
 
         off = em["offset_ms"]
         idx = r.index + em["clause_base"]
@@ -334,11 +362,22 @@ class Session:
         # по росту буфера и при промахе по префиксу.
         if gid:
             with self.lock:
-                # Из истории вычищаем только НЕДОГОВОРЁННОЕ. Реплику, которую
-                # пользователь дослушал, стирать нельзя: она прозвучала, и
-                # агент вправе на неё ссылаться.
                 if gid not in self.completed:
+                    # Недоговорённое из истории убираем, но НЕ целиком:
+                    # прозвучавшую часть пользователь слышал, и агент обязан
+                    # её помнить, иначе он переспросит то, на что уже получил
+                    # ответ. Возвращаем ровно озвученные клаузы.
                     self.state.drop_generation(gid)
+                    said = " ".join(self.spoken.get(gid, [])).strip()
+                    if said:
+                        self.state.add_interrupted_agent(said, gid)
+                    # Обмен не состоялся — агент не договорил свой вопрос.
+                    # Бюджет этапа за это списывать нельзя: иначе перебивание,
+                    # то есть нормальная живость разговора, приближало бы
+                    # сценарий к принудительному концу.
+                    turn = self.gen_turn.get(gid)
+                    if turn is not None:
+                        turn.counted = False
             self._emit({"kind": "cancel", "generation_id": gid})
         return gid
 

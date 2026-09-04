@@ -178,6 +178,19 @@ def run_scenario(port, sc, args, rng) -> dict:
     turns, interrupts = [], []
     print(f"\n########## {sc.id} | {sc.title}")
 
+    # Приёмка требует «минимум по два перебивания в каждом сценарии», а
+    # вероятностный бросок этого не гарантирует: на seed'е, где не выпало ни
+    # одного, прогон молча проверял бы не то. Поэтому точки назначаются заранее.
+    # Точки берутся из НАЧАЛА диалога, а не из всего диапазона `--turns`:
+    # сценарий обычно заканчивается раньше лимита, и назначенное на 27-й ход
+    # перебивание просто не наступает. Первая версия так и делала — на пять
+    # сценариев пришлось два перебивания вместо десяти.
+    forced_cuts = set()
+    if args.min_interrupts:
+        pool = list(range(1, args.min_interrupts * 3 + 1))
+        rng.shuffle(pool)
+        forced_cuts = set(pool[:args.min_interrupts])
+
     for turn in range(args.turns):
         base = frames.count()
         user = None if turn == 0 else lines[(turn - 1) % len(lines)]
@@ -194,7 +207,7 @@ def run_scenario(port, sc, args, rng) -> dict:
 
         # Перебивание: с заданной вероятностью гасим реплику посреди речи.
         cut = None
-        if turn > 0 and rng.random() < args.interrupt_rate:
+        if turn > 0 and (turn in forced_cuts or rng.random() < args.interrupt_rate):
             delay = rng.uniform(*args.interrupt_after)
             time.sleep(delay)
             t_cut = time.perf_counter()
@@ -291,6 +304,7 @@ def summarise(runs) -> dict:
                         "hit_rate": round(spec_hits / spec_tries, 2) if spec_tries else None},
         "emotions": len([e for t in turns for e in t["emotions"]]),
         "interrupts": {"count": len(cuts),
+                       "per_scenario": [len(r["interrupts"]) for r in runs],
                        "leaked_frames": sum(c["leaked_frames"] for c in cuts),
                        "last_stray_ms_max": max((c["last_stray_ms"] for c in cuts),
                                                 default=None)},
@@ -322,7 +336,8 @@ def report(runs, out: pathlib.Path, tts=None, args=None) -> dict:
           + (f" ({sp['hit_rate']:.0%})" if sp["hit_rate"] is not None else ""))
     print(f"эмоций проставлено: {s['emotions']}")
     it = s["interrupts"]
-    print(f"перебиваний {it['count']}, просочилось кадров {it['leaked_frames']}"
+    print(f"перебиваний {it['count']} {it['per_scenario']}, "
+          f"просочилось кадров {it['leaked_frames']}"
           + (f", последний через {it['last_stray_ms_max']} мс после отмены"
              if it["leaked_frames"] else ""))
     cl = s["control_line"]
@@ -355,6 +370,8 @@ def main():
     ap.add_argument("--port", type=int, default=8021)
     ap.add_argument("--interrupt-rate", type=float, default=0.35,
                     help="доля реплик, которые перебиваем")
+    ap.add_argument("--min-interrupts", type=int, default=2,
+                    help="сколько перебиваний гарантировать в каждом сценарии")
     ap.add_argument("--interrupt-after", type=float, nargs=2, default=(0.4, 2.0),
                     metavar=("МИН", "МАКС"), help="секунды до перебивания")
     ap.add_argument("--timeout", type=float, default=90)
@@ -393,6 +410,8 @@ def main():
     # Ненулевой код, если репетиция вскрыла то, ради чего её и гоняют.
     if s["interrupts"]["leaked_frames"]:
         raise SystemExit("после отмены просочились кадры погашенной реплики")
+    if s["finished"] < s["scenarios"]:
+        raise SystemExit(f"до finish дошли {s['finished']} из {s['scenarios']}")
 
 
 if __name__ == "__main__":

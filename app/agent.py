@@ -120,6 +120,15 @@ def apply(state: DialogueState, reply: AgentReply, generation_id: str | None = N
         state.finish("модель завершила диалог")
         happened["finished"] = True
 
+    # Предохранитель на весь диалог. Перебитые ходы не списывают бюджет этапа,
+    # и без этого потолка собеседник, перебивающий каждую реплику, не дал бы
+    # сценарию закончиться вовсе.
+    if not state.finished and state.dialogue_budget_spent:
+        state.finish("бюджет диалога исчерпан")
+        happened["finished"] = True
+        happened["forced"] = True
+        return happened
+
     # Бюджет этапа. Модель всегда найдёт, что ещё уточнить, поэтому право
     # двигать сценарий принадлежит движку, а не только модели.
     if not state.finished and not happened["advanced"] and state.stage_budget_spent:
