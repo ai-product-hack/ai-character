@@ -21,6 +21,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 
+from .actions import strip_control
 from .clauses import Clause, ClauseSplitter
 from .generation import Generation, GenerationRegistry, PTSTimeline
 
@@ -58,6 +59,10 @@ class ReplyPipeline:
         self.to_visemes = to_visemes
         self.registry = registry
         self.splitter_kw = splitter_kw or {}
+        # Сырой ответ последней реплики: по нему разбирается действие агента.
+        self.last_raw = ""
+        self.last_stats = {}
+        self.last_timeline = None
 
     def run(self, system: str, prompt: str, gen: Generation,
             on_result=None, on_token=None) -> list[ClauseResult]:
@@ -73,6 +78,12 @@ class ReplyPipeline:
         done = threading.Event()
         t_start = time.perf_counter()
         stats = {"t_first_token": None, "t_first_audio": None, "tokens": 0}
+        # Сырой ответ модели копится отдельно от речи. Разделение обязательное:
+        # из клауз управляющий блок вырезан (иначе он звучал бы вслух), и
+        # разбирать действие по ним значит не находить его никогда. Стоило
+        # 104 хода подряд с действием stay — сценарии доходили до конца
+        # исключительно принудительными переходами по бюджету этапа.
+        raw_parts: list[str] = []
 
         def worker():
             while True:
@@ -106,6 +117,7 @@ class ReplyPipeline:
                 if stats["t_first_token"] is None:
                     stats["t_first_token"] = (time.perf_counter() - t_start) * 1000
                 stats["tokens"] += 1
+                raw_parts.append(token)
                 if on_token:
                     on_token(token)
                 for c in splitter.push(token):
@@ -125,10 +137,23 @@ class ReplyPipeline:
         gen.audio_ms = timeline.total_ms
         self.last_stats = stats
         self.last_timeline = timeline
+        self.last_raw = "".join(raw_parts)
         return results
 
     def _process(self, clause: Clause, gen: Generation, timeline: PTSTimeline,
                  t_start: float, stats: dict) -> ClauseResult | None:
+        # Управляющий JSON не должен попасть в синтез. В нестримовом пути он
+        # срезался из целого ответа, но здесь клаузы уходят в TTS по мере
+        # готовности, и хвостовой блок приезжает приклеенным к последней —
+        # агент буквально произносил бы «фигурная скобка action next stage».
+        text = strip_control(clause.text)
+        if not text:
+            stats["control_only_clauses"] = stats.get("control_only_clauses", 0) + 1
+            return None
+        if text != clause.text:
+            stats["clauses_with_control"] = stats.get("clauses_with_control", 0) + 1
+        clause = Clause(clause.index, text, clause.first)
+
         t0 = time.perf_counter()
         pcm, sr = self.tts(clause.text)
         t_tts = (time.perf_counter() - t0) * 1000

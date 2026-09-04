@@ -1,0 +1,2974 @@
+{
+  "voice": "eugene",
+  "runs": [
+    {
+      "scenario_id": "s1_interview_backend",
+      "finished": true,
+      "stages_reached": 7,
+      "stages_total": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "znakomstvo",
+          "generation_id": "gen-1",
+          "clauses": 3,
+          "t_first_token_ms": 2403,
+          "t_first_audio_ms": 2657,
+          "wall_ms": 3119,
+          "audio_total_ms": 10012,
+          "visemes": 187,
+          "subtitle_cues": 30,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 13,
+              "audio_ms": 938,
+              "start_ms": 0,
+              "tts_ms": 26,
+              "align_ms": 43
+            },
+            {
+              "i": 1,
+              "chars": 38,
+              "audio_ms": 2238,
+              "start_ms": 938,
+              "tts_ms": 24,
+              "align_ms": 46
+            },
+            {
+              "i": 2,
+              "chars": 132,
+              "audio_ms": 6838,
+              "start_ms": 3175,
+              "tts_ms": 110,
+              "align_ms": 120
+            }
+          ]
+        },
+        {
+          "turn": 1,
+          "stage": "znakomstvo",
+          "generation_id": "gen-2",
+          "clauses": 3,
+          "t_first_token_ms": 2396,
+          "t_first_audio_ms": 2755,
+          "wall_ms": 3133,
+          "audio_total_ms": 8488,
+          "visemes": 170,
+          "subtitle_cues": 27,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 36,
+              "audio_ms": 1962,
+              "start_ms": 0,
+              "tts_ms": 39,
+              "align_ms": 54
+            },
+            {
+              "i": 1,
+              "chars": 84,
+              "audio_ms": 4400,
+              "start_ms": 1962,
+              "tts_ms": 33,
+              "align_ms": 83
+            },
+            {
+              "i": 2,
+              "chars": 42,
+              "audio_ms": 2125,
+              "start_ms": 6362,
+              "tts_ms": 16,
+              "align_ms": 47
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "stage": "glubina_roli",
+          "generation_id": "gen-3",
+          "clauses": 2,
+          "t_first_token_ms": 2098,
+          "t_first_audio_ms": 2298,
+          "wall_ms": 2609,
+          "audio_total_ms": 7388,
+          "visemes": 136,
+          "subtitle_cues": 24,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 47,
+              "audio_ms": 2325,
+              "start_ms": 0,
+              "tts_ms": 48,
+              "align_ms": 57
+            },
+            {
+              "i": 1,
+              "chars": 94,
+              "audio_ms": 5062,
+              "start_ms": 2325,
+              "tts_ms": 42,
+              "align_ms": 98
+            }
+          ]
+        },
+        {
+          "turn": 3,
+          "stage": "glubina_roli",
+          "generation_id": "gen-4",
+          "clauses": 3,
+          "t_first_token_ms": 2399,
+          "t_first_audio_ms": 2727,
+          "wall_ms": 3203,
+          "audio_total_ms": 8288,
+          "visemes": 157,
+          "subtitle_cues": 29,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 35,
+              "audio_ms": 1888,
+              "start_ms": 0,
+              "tts_ms": 36,
+              "align_ms": 55
+            },
+            {
+              "i": 1,
+              "chars": 98,
+              "audio_ms": 5312,
+              "start_ms": 1888,
+              "tts_ms": 46,
+              "align_ms": 102
+            },
+            {
+              "i": 2,
+              "chars": 20,
+              "audio_ms": 1088,
+              "start_ms": 7200,
+              "tts_ms": 14,
+              "align_ms": 30
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "stage": "arhitektura",
+          "generation_id": "gen-5",
+          "clauses": 4,
+          "t_first_token_ms": 2207,
+          "t_first_audio_ms": 2653,
+          "wall_ms": 3333,
+          "audio_total_ms": 11100,
+          "visemes": 210,
+          "subtitle_cues": 40,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 28,
+              "audio_ms": 1325,
+              "start_ms": 0,
+              "tts_ms": 29,
+              "align_ms": 46
+            },
+            {
+              "i": 1,
+              "chars": 40,
+              "audio_ms": 1850,
+              "start_ms": 1325,
+              "tts_ms": 16,
+              "align_ms": 46
+            },
+            {
+              "i": 2,
+              "chars": 124,
+              "audio_ms": 6838,
+              "start_ms": 3175,
+              "tts_ms": 68,
+              "align_ms": 120
+            },
+            {
+              "i": 3,
+              "chars": 20,
+              "audio_ms": 1088,
+              "start_ms": 10012,
+              "tts_ms": 14,
+              "align_ms": 28
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "stage": "arhitektura",
+          "generation_id": "gen-6",
+          "clauses": 3,
+          "t_first_token_ms": 2177,
+          "t_first_audio_ms": 2621,
+          "wall_ms": 3056,
+          "audio_total_ms": 9775,
+          "visemes": 201,
+          "subtitle_cues": 37,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 50,
+              "audio_ms": 2425,
+              "start_ms": 0,
+              "tts_ms": 50,
+              "align_ms": 57
+            },
+            {
+              "i": 1,
+              "chars": 86,
+              "audio_ms": 4275,
+              "start_ms": 2425,
+              "tts_ms": 31,
+              "align_ms": 79
+            },
+            {
+              "i": 2,
+              "chars": 57,
+              "audio_ms": 3075,
+              "start_ms": 6700,
+              "tts_ms": 35,
+              "align_ms": 61
+            }
+          ]
+        },
+        {
+          "turn": 6,
+          "stage": "cifry",
+          "generation_id": "gen-7",
+          "clauses": 4,
+          "t_first_token_ms": 2479,
+          "t_first_audio_ms": 2820,
+          "wall_ms": 3223,
+          "audio_total_ms": 11350,
+          "visemes": 235,
+          "subtitle_cues": 37,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 42,
+              "audio_ms": 2150,
+              "start_ms": 0,
+              "tts_ms": 29,
+              "align_ms": 57
+            },
+            {
+              "i": 1,
+              "chars": 24,
+              "audio_ms": 1312,
+              "start_ms": 2150,
+              "tts_ms": 14,
+              "align_ms": 34
+            },
+            {
+              "i": 2,
+              "chars": 90,
+              "audio_ms": 4900,
+              "start_ms": 3462,
+              "tts_ms": 37,
+              "align_ms": 94
+            },
+            {
+              "i": 3,
+              "chars": 61,
+              "audio_ms": 2988,
+              "start_ms": 8362,
+              "tts_ms": 20,
+              "align_ms": 58
+            }
+          ]
+        },
+        {
+          "turn": 7,
+          "stage": "cifry",
+          "generation_id": "gen-8",
+          "clauses": 4,
+          "t_first_token_ms": 2460,
+          "t_first_audio_ms": 2594,
+          "wall_ms": 3145,
+          "audio_total_ms": 13125,
+          "visemes": 263,
+          "subtitle_cues": 49,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 47,
+              "audio_ms": 2388,
+              "start_ms": 0,
+              "tts_ms": 36,
+              "align_ms": 60
+            },
+            {
+              "i": 1,
+              "chars": 66,
+              "audio_ms": 3150,
+              "start_ms": 2388,
+              "tts_ms": 36,
+              "align_ms": 67
+            },
+            {
+              "i": 2,
+              "chars": 103,
+              "audio_ms": 5362,
+              "start_ms": 5538,
+              "tts_ms": 39,
+              "align_ms": 95
+            },
+            {
+              "i": 3,
+              "chars": 47,
+              "audio_ms": 2225,
+              "start_ms": 10900,
+              "tts_ms": 18,
+              "align_ms": 47
+            }
+          ]
+        },
+        {
+          "turn": 8,
+          "stage": "cifry",
+          "generation_id": "gen-9",
+          "clauses": 3,
+          "t_first_token_ms": 2456,
+          "t_first_audio_ms": 2773,
+          "wall_ms": 3057,
+          "audio_total_ms": 7850,
+          "visemes": 133,
+          "subtitle_cues": 26,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 35,
+              "audio_ms": 1875,
+              "start_ms": 0,
+              "tts_ms": 37,
+              "align_ms": 56
+            },
+            {
+              "i": 1,
+              "chars": 37,
+              "audio_ms": 1900,
+              "start_ms": 1875,
+              "tts_ms": 16,
+              "align_ms": 40
+            },
+            {
+              "i": 2,
+              "chars": 63,
+              "audio_ms": 4075,
+              "start_ms": 3775,
+              "tts_ms": 31,
+              "align_ms": 79
+            }
+          ]
+        },
+        {
+          "turn": 9,
+          "stage": "incident",
+          "generation_id": "gen-10",
+          "clauses": 3,
+          "t_first_token_ms": 2488,
+          "t_first_audio_ms": 2840,
+          "wall_ms": 3126,
+          "audio_total_ms": 8400,
+          "visemes": 144,
+          "subtitle_cues": 25,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 44,
+              "audio_ms": 2700,
+              "start_ms": 0,
+              "tts_ms": 44,
+              "align_ms": 64
+            },
+            {
+              "i": 1,
+              "chars": 25,
+              "audio_ms": 1575,
+              "start_ms": 2700,
+              "tts_ms": 16,
+              "align_ms": 47
+            },
+            {
+              "i": 2,
+              "chars": 70,
+              "audio_ms": 4125,
+              "start_ms": 4275,
+              "tts_ms": 32,
+              "align_ms": 79
+            }
+          ]
+        },
+        {
+          "turn": 10,
+          "stage": "incident",
+          "generation_id": "gen-11",
+          "clauses": 3,
+          "t_first_token_ms": 2410,
+          "t_first_audio_ms": 2742,
+          "wall_ms": 3163,
+          "audio_total_ms": 9362,
+          "visemes": 190,
+          "subtitle_cues": 31,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 28,
+              "audio_ms": 1562,
+              "start_ms": 0,
+              "tts_ms": 33,
+              "align_ms": 50
+            },
+            {
+              "i": 1,
+              "chars": 75,
+              "audio_ms": 3925,
+              "start_ms": 1562,
+              "tts_ms": 27,
+              "align_ms": 70
+            },
+            {
+              "i": 2,
+              "chars": 83,
+              "audio_ms": 3875,
+              "start_ms": 5488,
+              "tts_ms": 45,
+              "align_ms": 77
+            }
+          ]
+        },
+        {
+          "turn": 11,
+          "stage": "incident",
+          "generation_id": "gen-12",
+          "clauses": 3,
+          "t_first_token_ms": 2078,
+          "t_first_audio_ms": 2437,
+          "wall_ms": 2908,
+          "audio_total_ms": 12612,
+          "visemes": 225,
+          "subtitle_cues": 37,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 44,
+              "audio_ms": 2688,
+              "start_ms": 0,
+              "tts_ms": 25,
+              "align_ms": 65
+            },
+            {
+              "i": 1,
+              "chars": 93,
+              "audio_ms": 5050,
+              "start_ms": 2688,
+              "tts_ms": 37,
+              "align_ms": 114
+            },
+            {
+              "i": 2,
+              "chars": 79,
+              "audio_ms": 4875,
+              "start_ms": 7738,
+              "tts_ms": 34,
+              "align_ms": 133
+            }
+          ]
+        },
+        {
+          "turn": 12,
+          "stage": "provokaciya",
+          "generation_id": "gen-13",
+          "clauses": 3,
+          "t_first_token_ms": 2597,
+          "t_first_audio_ms": 2963,
+          "wall_ms": 3735,
+          "audio_total_ms": 11675,
+          "visemes": 219,
+          "subtitle_cues": 40,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 38,
+              "audio_ms": 2100,
+              "start_ms": 0,
+              "tts_ms": 39,
+              "align_ms": 57
+            },
+            {
+              "i": 1,
+              "chars": 41,
+              "audio_ms": 2312,
+              "start_ms": 2100,
+              "tts_ms": 20,
+              "align_ms": 49
+            },
+            {
+              "i": 2,
+              "chars": 141,
+              "audio_ms": 7262,
+              "start_ms": 4412,
+              "tts_ms": 119,
+              "align_ms": 123
+            }
+          ]
+        },
+        {
+          "turn": 13,
+          "stage": "provokaciya",
+          "generation_id": "gen-14",
+          "clauses": 2,
+          "t_first_token_ms": 2664,
+          "t_first_audio_ms": 2880,
+          "wall_ms": 3472,
+          "audio_total_ms": 9550,
+          "visemes": 178,
+          "subtitle_cues": 30,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 31,
+              "audio_ms": 1812,
+              "start_ms": 0,
+              "tts_ms": 36,
+              "align_ms": 54
+            },
+            {
+              "i": 1,
+              "chars": 146,
+              "audio_ms": 7738,
+              "start_ms": 1812,
+              "tts_ms": 118,
+              "align_ms": 128
+            }
+          ]
+        },
+        {
+          "turn": 14,
+          "stage": "provokaciya",
+          "generation_id": "gen-15",
+          "clauses": 3,
+          "t_first_token_ms": 2605,
+          "t_first_audio_ms": 2951,
+          "wall_ms": 3487,
+          "audio_total_ms": 13325,
+          "visemes": 269,
+          "subtitle_cues": 42,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 43,
+              "audio_ms": 1888,
+              "start_ms": 0,
+              "tts_ms": 38,
+              "align_ms": 51
+            },
+            {
+              "i": 1,
+              "chars": 133,
+              "audio_ms": 7400,
+              "start_ms": 1888,
+              "tts_ms": 75,
+              "align_ms": 131
+            },
+            {
+              "i": 2,
+              "chars": 80,
+              "audio_ms": 4037,
+              "start_ms": 9288,
+              "tts_ms": 28,
+              "align_ms": 74
+            }
+          ]
+        },
+        {
+          "turn": 15,
+          "stage": "voprosy_kandidata",
+          "generation_id": "gen-16",
+          "clauses": 4,
+          "t_first_token_ms": 2518,
+          "t_first_audio_ms": 2801,
+          "wall_ms": 3569,
+          "audio_total_ms": 12788,
+          "visemes": 246,
+          "subtitle_cues": 46,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 38,
+              "audio_ms": 2062,
+              "start_ms": 0,
+              "tts_ms": 38,
+              "align_ms": 55
+            },
+            {
+              "i": 1,
+              "chars": 55,
+              "audio_ms": 2862,
+              "start_ms": 2062,
+              "tts_ms": 23,
+              "align_ms": 56
+            },
+            {
+              "i": 2,
+              "chars": 101,
+              "audio_ms": 5462,
+              "start_ms": 4925,
+              "tts_ms": 66,
+              "align_ms": 100
+            },
+            {
+              "i": 3,
+              "chars": 44,
+              "audio_ms": 2400,
+              "start_ms": 10388,
+              "tts_ms": 19,
+              "align_ms": 48
+            }
+          ]
+        },
+        {
+          "turn": 16,
+          "stage": "voprosy_kandidata",
+          "generation_id": "gen-17",
+          "clauses": 4,
+          "t_first_token_ms": 2278,
+          "t_first_audio_ms": 2611,
+          "wall_ms": 3075,
+          "audio_total_ms": 12762,
+          "visemes": 227,
+          "subtitle_cues": 39,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 40,
+              "audio_ms": 2200,
+              "start_ms": 0,
+              "tts_ms": 36,
+              "align_ms": 58
+            },
+            {
+              "i": 1,
+              "chars": 55,
+              "audio_ms": 3025,
+              "start_ms": 2200,
+              "tts_ms": 20,
+              "align_ms": 57
+            },
+            {
+              "i": 2,
+              "chars": 68,
+              "audio_ms": 4612,
+              "start_ms": 5225,
+              "tts_ms": 37,
+              "align_ms": 85
+            },
+            {
+              "i": 3,
+              "chars": 58,
+              "audio_ms": 2925,
+              "start_ms": 9838,
+              "tts_ms": 20,
+              "align_ms": 56
+            }
+          ]
+        }
+      ],
+      "empty_replies": [],
+      "first_audio_median_ms": 2742,
+      "first_audio_max_ms": 2963,
+      "pts_gap_max_ms": 0.0,
+      "audio_total_ms": 177850,
+      "visemes_total": 3390,
+      "cues_total": 589
+    },
+    {
+      "scenario_id": "s2_interview_stress",
+      "finished": true,
+      "stages_reached": 6,
+      "stages_total": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "otkrytie",
+          "generation_id": "gen-1",
+          "clauses": 4,
+          "t_first_token_ms": 3004,
+          "t_first_audio_ms": 3173,
+          "wall_ms": 3497,
+          "audio_total_ms": 7588,
+          "visemes": 144,
+          "subtitle_cues": 21,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 13,
+              "audio_ms": 938,
+              "start_ms": 0,
+              "tts_ms": 27,
+              "align_ms": 37
+            },
+            {
+              "i": 1,
+              "chars": 39,
+              "audio_ms": 1988,
+              "start_ms": 938,
+              "tts_ms": 21,
+              "align_ms": 52
+            },
+            {
+              "i": 2,
+              "chars": 58,
+              "audio_ms": 2938,
+              "start_ms": 2925,
+              "tts_ms": 20,
+              "align_ms": 57
+            },
+            {
+              "i": 3,
+              "chars": 32,
+              "audio_ms": 1725,
+              "start_ms": 5862,
+              "tts_ms": 15,
+              "align_ms": 37
+            }
+          ]
+        },
+        {
+          "turn": 1,
+          "stage": "davlenie",
+          "generation_id": "gen-2",
+          "clauses": 2,
+          "t_first_token_ms": 2052,
+          "t_first_audio_ms": 2433,
+          "wall_ms": 2585,
+          "audio_total_ms": 5750,
+          "visemes": 107,
+          "subtitle_cues": 17,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 37,
+              "audio_ms": 2088,
+              "start_ms": 0,
+              "tts_ms": 36,
+              "align_ms": 56
+            },
+            {
+              "i": 1,
+              "chars": 70,
+              "audio_ms": 3662,
+              "start_ms": 2088,
+              "tts_ms": 24,
+              "align_ms": 70
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "stage": "davlenie",
+          "generation_id": "gen-3",
+          "clauses": 3,
+          "t_first_token_ms": 2283,
+          "t_first_audio_ms": 2673,
+          "wall_ms": 3108,
+          "audio_total_ms": 10112,
+          "visemes": 185,
+          "subtitle_cues": 32,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 49,
+              "audio_ms": 3375,
+              "start_ms": 0,
+              "tts_ms": 63,
+              "align_ms": 73
+            },
+            {
+              "i": 1,
+              "chars": 94,
+              "audio_ms": 4600,
+              "start_ms": 3375,
+              "tts_ms": 54,
+              "align_ms": 90
+            },
+            {
+              "i": 2,
+              "chars": 41,
+              "audio_ms": 2138,
+              "start_ms": 7975,
+              "tts_ms": 18,
+              "align_ms": 45
+            }
+          ]
+        },
+        {
+          "turn": 3,
+          "stage": "obosnovanie",
+          "generation_id": "gen-4",
+          "clauses": 4,
+          "t_first_token_ms": 2413,
+          "t_first_audio_ms": 2668,
+          "wall_ms": 3117,
+          "audio_total_ms": 9700,
+          "visemes": 195,
+          "subtitle_cues": 32,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 45,
+              "audio_ms": 2038,
+              "start_ms": 0,
+              "tts_ms": 38,
+              "align_ms": 55
+            },
+            {
+              "i": 1,
+              "chars": 59,
+              "audio_ms": 3000,
+              "start_ms": 2038,
+              "tts_ms": 24,
+              "align_ms": 65
+            },
+            {
+              "i": 2,
+              "chars": 69,
+              "audio_ms": 3850,
+              "start_ms": 5038,
+              "tts_ms": 29,
+              "align_ms": 79
+            },
+            {
+              "i": 3,
+              "chars": 12,
+              "audio_ms": 812,
+              "start_ms": 8888,
+              "tts_ms": 11,
+              "align_ms": 25
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "stage": "obosnovanie",
+          "generation_id": "gen-5",
+          "clauses": 2,
+          "t_first_token_ms": 2475,
+          "t_first_audio_ms": 2626,
+          "wall_ms": 3186,
+          "audio_total_ms": 9988,
+          "visemes": 162,
+          "subtitle_cues": 29,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 44,
+              "audio_ms": 2250,
+              "start_ms": 0,
+              "tts_ms": 41,
+              "align_ms": 59
+            },
+            {
+              "i": 1,
+              "chars": 124,
+              "audio_ms": 7738,
+              "start_ms": 2250,
+              "tts_ms": 80,
+              "align_ms": 137
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "stage": "podmena",
+          "generation_id": "gen-6",
+          "clauses": 2,
+          "t_first_token_ms": 2411,
+          "t_first_audio_ms": 2691,
+          "wall_ms": 3217,
+          "audio_total_ms": 7538,
+          "visemes": 137,
+          "subtitle_cues": 22,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 22,
+              "audio_ms": 1225,
+              "start_ms": 0,
+              "tts_ms": 32,
+              "align_ms": 44
+            },
+            {
+              "i": 1,
+              "chars": 115,
+              "audio_ms": 6312,
+              "start_ms": 1225,
+              "tts_ms": 77,
+              "align_ms": 113
+            }
+          ]
+        },
+        {
+          "turn": 6,
+          "stage": "molchanie",
+          "generation_id": "gen-7",
+          "clauses": 3,
+          "t_first_token_ms": 2499,
+          "t_first_audio_ms": 2809,
+          "wall_ms": 3629,
+          "audio_total_ms": 13638,
+          "visemes": 253,
+          "subtitle_cues": 42,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 47,
+              "audio_ms": 2862,
+              "start_ms": 0,
+              "tts_ms": 47,
+              "align_ms": 63
+            },
+            {
+              "i": 1,
+              "chars": 169,
+              "audio_ms": 8738,
+              "start_ms": 2862,
+              "tts_ms": 134,
+              "align_ms": 157
+            },
+            {
+              "i": 2,
+              "chars": 39,
+              "audio_ms": 2038,
+              "start_ms": 11600,
+              "tts_ms": 16,
+              "align_ms": 42
+            }
+          ]
+        },
+        {
+          "turn": 7,
+          "stage": "dedlayn",
+          "generation_id": "gen-8",
+          "clauses": 3,
+          "t_first_token_ms": 2629,
+          "t_first_audio_ms": 2840,
+          "wall_ms": 3270,
+          "audio_total_ms": 8312,
+          "visemes": 157,
+          "subtitle_cues": 26,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 10,
+              "audio_ms": 738,
+              "start_ms": 0,
+              "tts_ms": 23,
+              "align_ms": 37
+            },
+            {
+              "i": 1,
+              "chars": 66,
+              "audio_ms": 3675,
+              "start_ms": 738,
+              "tts_ms": 40,
+              "align_ms": 79
+            },
+            {
+              "i": 2,
+              "chars": 75,
+              "audio_ms": 3900,
+              "start_ms": 4412,
+              "tts_ms": 27,
+              "align_ms": 76
+            }
+          ]
+        },
+        {
+          "turn": 8,
+          "stage": "dedlayn",
+          "generation_id": "gen-9",
+          "clauses": 4,
+          "t_first_token_ms": 2853,
+          "t_first_audio_ms": 3191,
+          "wall_ms": 3608,
+          "audio_total_ms": 11350,
+          "visemes": 236,
+          "subtitle_cues": 37,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 37,
+              "audio_ms": 1850,
+              "start_ms": 0,
+              "tts_ms": 36,
+              "align_ms": 53
+            },
+            {
+              "i": 1,
+              "chars": 27,
+              "audio_ms": 1775,
+              "start_ms": 1850,
+              "tts_ms": 16,
+              "align_ms": 40
+            },
+            {
+              "i": 2,
+              "chars": 110,
+              "audio_ms": 5075,
+              "start_ms": 3625,
+              "tts_ms": 41,
+              "align_ms": 92
+            },
+            {
+              "i": 3,
+              "chars": 54,
+              "audio_ms": 2650,
+              "start_ms": 8700,
+              "tts_ms": 20,
+              "align_ms": 55
+            }
+          ]
+        }
+      ],
+      "empty_replies": [],
+      "first_audio_median_ms": 2691,
+      "first_audio_max_ms": 3191,
+      "pts_gap_max_ms": 0.0,
+      "audio_total_ms": 83976,
+      "visemes_total": 1576,
+      "cues_total": 258
+    },
+    {
+      "scenario_id": "s3_sales_cold",
+      "finished": true,
+      "stages_reached": 6,
+      "stages_total": 6,
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "pervye_10_sekund",
+          "generation_id": "gen-1",
+          "clauses": 2,
+          "t_first_token_ms": 2213,
+          "t_first_audio_ms": 2422,
+          "wall_ms": 2494,
+          "audio_total_ms": 3300,
+          "visemes": 62,
+          "subtitle_cues": 10,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 11,
+              "audio_ms": 988,
+              "start_ms": 0,
+              "tts_ms": 26,
+              "align_ms": 40
+            },
+            {
+              "i": 1,
+              "chars": 49,
+              "audio_ms": 2312,
+              "start_ms": 988,
+              "tts_ms": 17,
+              "align_ms": 49
+            }
+          ]
+        },
+        {
+          "turn": 1,
+          "stage": "otsev",
+          "generation_id": "gen-2",
+          "clauses": 2,
+          "t_first_token_ms": 2181,
+          "t_first_audio_ms": 2384,
+          "wall_ms": 2611,
+          "audio_total_ms": 4688,
+          "visemes": 91,
+          "subtitle_cues": 18,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 23,
+              "audio_ms": 1462,
+              "start_ms": 0,
+              "tts_ms": 32,
+              "align_ms": 49
+            },
+            {
+              "i": 1,
+              "chars": 70,
+              "audio_ms": 3225,
+              "start_ms": 1462,
+              "tts_ms": 30,
+              "align_ms": 68
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "stage": "kvalifikaciya",
+          "generation_id": "gen-3",
+          "clauses": 3,
+          "t_first_token_ms": 2256,
+          "t_first_audio_ms": 2526,
+          "wall_ms": 3090,
+          "audio_total_ms": 8712,
+          "visemes": 169,
+          "subtitle_cues": 27,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 24,
+              "audio_ms": 1412,
+              "start_ms": 0,
+              "tts_ms": 29,
+              "align_ms": 50
+            },
+            {
+              "i": 1,
+              "chars": 85,
+              "audio_ms": 4700,
+              "start_ms": 1412,
+              "tts_ms": 57,
+              "align_ms": 92
+            },
+            {
+              "i": 2,
+              "chars": 50,
+              "audio_ms": 2600,
+              "start_ms": 6112,
+              "tts_ms": 21,
+              "align_ms": 55
+            }
+          ]
+        },
+        {
+          "turn": 3,
+          "stage": "kvalifikaciya",
+          "generation_id": "gen-4",
+          "clauses": 4,
+          "t_first_token_ms": 2186,
+          "t_first_audio_ms": 2481,
+          "wall_ms": 3080,
+          "audio_total_ms": 8925,
+          "visemes": 169,
+          "subtitle_cues": 27,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 33,
+              "audio_ms": 1925,
+              "start_ms": 0,
+              "tts_ms": 37,
+              "align_ms": 58
+            },
+            {
+              "i": 1,
+              "chars": 27,
+              "audio_ms": 1338,
+              "start_ms": 1925,
+              "tts_ms": 13,
+              "align_ms": 36
+            },
+            {
+              "i": 2,
+              "chars": 82,
+              "audio_ms": 4112,
+              "start_ms": 3262,
+              "tts_ms": 55,
+              "align_ms": 81
+            },
+            {
+              "i": 3,
+              "chars": 28,
+              "audio_ms": 1550,
+              "start_ms": 7375,
+              "tts_ms": 12,
+              "align_ms": 36
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "stage": "kvalifikaciya",
+          "generation_id": "gen-5",
+          "clauses": 3,
+          "t_first_token_ms": 2423,
+          "t_first_audio_ms": 2745,
+          "wall_ms": 3183,
+          "audio_total_ms": 9088,
+          "visemes": 171,
+          "subtitle_cues": 32,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 38,
+              "audio_ms": 2388,
+              "start_ms": 0,
+              "tts_ms": 41,
+              "align_ms": 60
+            },
+            {
+              "i": 1,
+              "chars": 78,
+              "audio_ms": 3812,
+              "start_ms": 2388,
+              "tts_ms": 29,
+              "align_ms": 70
+            },
+            {
+              "i": 2,
+              "chars": 49,
+              "audio_ms": 2888,
+              "start_ms": 6200,
+              "tts_ms": 26,
+              "align_ms": 63
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "stage": "cena",
+          "generation_id": "gen-6",
+          "clauses": 3,
+          "t_first_token_ms": 2866,
+          "t_first_audio_ms": 3207,
+          "wall_ms": 3580,
+          "audio_total_ms": 8625,
+          "visemes": 172,
+          "subtitle_cues": 31,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 34,
+              "audio_ms": 1938,
+              "start_ms": 0,
+              "tts_ms": 36,
+              "align_ms": 54
+            },
+            {
+              "i": 1,
+              "chars": 60,
+              "audio_ms": 3125,
+              "start_ms": 1938,
+              "tts_ms": 23,
+              "align_ms": 62
+            },
+            {
+              "i": 2,
+              "chars": 69,
+              "audio_ms": 3562,
+              "start_ms": 5062,
+              "tts_ms": 27,
+              "align_ms": 66
+            }
+          ]
+        },
+        {
+          "turn": 6,
+          "stage": "otgovorka",
+          "generation_id": "gen-7",
+          "clauses": 3,
+          "t_first_token_ms": 2842,
+          "t_first_audio_ms": 3234,
+          "wall_ms": 3558,
+          "audio_total_ms": 7925,
+          "visemes": 146,
+          "subtitle_cues": 27,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 34,
+              "audio_ms": 1762,
+              "start_ms": 0,
+              "tts_ms": 41,
+              "align_ms": 48
+            },
+            {
+              "i": 1,
+              "chars": 84,
+              "audio_ms": 4638,
+              "start_ms": 1762,
+              "tts_ms": 32,
+              "align_ms": 85
+            },
+            {
+              "i": 2,
+              "chars": 27,
+              "audio_ms": 1525,
+              "start_ms": 6400,
+              "tts_ms": 13,
+              "align_ms": 45
+            }
+          ]
+        },
+        {
+          "turn": 7,
+          "stage": "zakrytie",
+          "generation_id": "gen-8",
+          "clauses": 4,
+          "t_first_token_ms": 3371,
+          "t_first_audio_ms": 3544,
+          "wall_ms": 4445,
+          "audio_total_ms": 11050,
+          "visemes": 240,
+          "subtitle_cues": 38,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 10,
+              "audio_ms": 675,
+              "start_ms": 0,
+              "tts_ms": 23,
+              "align_ms": 34
+            },
+            {
+              "i": 1,
+              "chars": 79,
+              "audio_ms": 3575,
+              "start_ms": 675,
+              "tts_ms": 50,
+              "align_ms": 77
+            },
+            {
+              "i": 2,
+              "chars": 60,
+              "audio_ms": 2900,
+              "start_ms": 4250,
+              "tts_ms": 20,
+              "align_ms": 57
+            },
+            {
+              "i": 3,
+              "chars": 78,
+              "audio_ms": 3900,
+              "start_ms": 7150,
+              "tts_ms": 53,
+              "align_ms": 81
+            }
+          ]
+        },
+        {
+          "turn": 8,
+          "stage": "zakrytie",
+          "generation_id": "gen-9",
+          "clauses": 3,
+          "t_first_token_ms": 2105,
+          "t_first_audio_ms": 2495,
+          "wall_ms": 2916,
+          "audio_total_ms": 11638,
+          "visemes": 224,
+          "subtitle_cues": 34,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 37,
+              "audio_ms": 2525,
+              "start_ms": 0,
+              "tts_ms": 39,
+              "align_ms": 63
+            },
+            {
+              "i": 1,
+              "chars": 106,
+              "audio_ms": 5425,
+              "start_ms": 2525,
+              "tts_ms": 40,
+              "align_ms": 95
+            },
+            {
+              "i": 2,
+              "chars": 66,
+              "audio_ms": 3688,
+              "start_ms": 7950,
+              "tts_ms": 25,
+              "align_ms": 69
+            }
+          ]
+        }
+      ],
+      "empty_replies": [],
+      "first_audio_median_ms": 2526,
+      "first_audio_max_ms": 3544,
+      "pts_gap_max_ms": 0.0,
+      "audio_total_ms": 73951,
+      "visemes_total": 1444,
+      "cues_total": 244
+    },
+    {
+      "scenario_id": "s4_sales_objections",
+      "finished": true,
+      "stages_reached": 7,
+      "stages_total": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "vhod",
+          "generation_id": "gen-1",
+          "clauses": 3,
+          "t_first_token_ms": 3141,
+          "t_first_audio_ms": 3490,
+          "wall_ms": 4176,
+          "audio_total_ms": 11275,
+          "visemes": 219,
+          "subtitle_cues": 37,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 34,
+              "audio_ms": 1788,
+              "start_ms": 0,
+              "tts_ms": 44,
+              "align_ms": 51
+            },
+            {
+              "i": 1,
+              "chars": 125,
+              "audio_ms": 6788,
+              "start_ms": 1788,
+              "tts_ms": 73,
+              "align_ms": 120
+            },
+            {
+              "i": 2,
+              "chars": 57,
+              "audio_ms": 2700,
+              "start_ms": 8575,
+              "tts_ms": 21,
+              "align_ms": 53
+            }
+          ]
+        },
+        {
+          "turn": 1,
+          "stage": "istinnost",
+          "generation_id": "gen-2",
+          "clauses": 3,
+          "t_first_token_ms": 2813,
+          "t_first_audio_ms": 2923,
+          "wall_ms": 3753,
+          "audio_total_ms": 13125,
+          "visemes": 247,
+          "subtitle_cues": 41,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 15,
+              "audio_ms": 1038,
+              "start_ms": 0,
+              "tts_ms": 14,
+              "align_ms": 35
+            },
+            {
+              "i": 1,
+              "chars": 100,
+              "audio_ms": 5250,
+              "start_ms": 1038,
+              "tts_ms": 62,
+              "align_ms": 94
+            },
+            {
+              "i": 2,
+              "chars": 136,
+              "audio_ms": 6838,
+              "start_ms": 6288,
+              "tts_ms": 72,
+              "align_ms": 122
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "stage": "istinnost",
+          "generation_id": "gen-3",
+          "clauses": 3,
+          "t_first_token_ms": 2292,
+          "t_first_audio_ms": 2552,
+          "wall_ms": 3024,
+          "audio_total_ms": 11175,
+          "visemes": 219,
+          "subtitle_cues": 37,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 47,
+              "audio_ms": 2812,
+              "start_ms": 0,
+              "tts_ms": 47,
+              "align_ms": 66
+            },
+            {
+              "i": 1,
+              "chars": 90,
+              "audio_ms": 4288,
+              "start_ms": 2812,
+              "tts_ms": 31,
+              "align_ms": 85
+            },
+            {
+              "i": 2,
+              "chars": 81,
+              "audio_ms": 4075,
+              "start_ms": 7100,
+              "tts_ms": 34,
+              "align_ms": 85
+            }
+          ]
+        },
+        {
+          "turn": 3,
+          "stage": "istinnost",
+          "generation_id": "gen-4",
+          "clauses": 2,
+          "t_first_token_ms": 3201,
+          "t_first_audio_ms": 3529,
+          "wall_ms": 4037,
+          "audio_total_ms": 9162,
+          "visemes": 181,
+          "subtitle_cues": 30,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 44,
+              "audio_ms": 1912,
+              "start_ms": 0,
+              "tts_ms": 47,
+              "align_ms": 49
+            },
+            {
+              "i": 1,
+              "chars": 131,
+              "audio_ms": 7250,
+              "start_ms": 1912,
+              "tts_ms": 79,
+              "align_ms": 133
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "stage": "risk_vnedreniya",
+          "generation_id": "gen-5",
+          "clauses": 4,
+          "t_first_token_ms": 2426,
+          "t_first_audio_ms": 2675,
+          "wall_ms": 3563,
+          "audio_total_ms": 16400,
+          "visemes": 318,
+          "subtitle_cues": 49,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 15,
+              "audio_ms": 1112,
+              "start_ms": 0,
+              "tts_ms": 29,
+              "align_ms": 71
+            },
+            {
+              "i": 1,
+              "chars": 93,
+              "audio_ms": 4950,
+              "start_ms": 1112,
+              "tts_ms": 39,
+              "align_ms": 91
+            },
+            {
+              "i": 2,
+              "chars": 125,
+              "audio_ms": 6562,
+              "start_ms": 6062,
+              "tts_ms": 74,
+              "align_ms": 116
+            },
+            {
+              "i": 3,
+              "chars": 75,
+              "audio_ms": 3775,
+              "start_ms": 12625,
+              "tts_ms": 27,
+              "align_ms": 73
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "stage": "risk_vnedreniya",
+          "generation_id": "gen-6",
+          "clauses": 4,
+          "t_first_token_ms": 2598,
+          "t_first_audio_ms": 2925,
+          "wall_ms": 3845,
+          "audio_total_ms": 14638,
+          "visemes": 288,
+          "subtitle_cues": 52,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 28,
+              "audio_ms": 1550,
+              "start_ms": 0,
+              "tts_ms": 33,
+              "align_ms": 49
+            },
+            {
+              "i": 1,
+              "chars": 113,
+              "audio_ms": 6162,
+              "start_ms": 1550,
+              "tts_ms": 68,
+              "align_ms": 115
+            },
+            {
+              "i": 2,
+              "chars": 73,
+              "audio_ms": 3662,
+              "start_ms": 7712,
+              "tts_ms": 25,
+              "align_ms": 72
+            },
+            {
+              "i": 3,
+              "chars": 62,
+              "audio_ms": 3262,
+              "start_ms": 11375,
+              "tts_ms": 37,
+              "align_ms": 69
+            }
+          ]
+        },
+        {
+          "turn": 6,
+          "stage": "risk_vnedreniya",
+          "generation_id": "gen-7",
+          "clauses": 4,
+          "t_first_token_ms": 2610,
+          "t_first_audio_ms": 2942,
+          "wall_ms": 3640,
+          "audio_total_ms": 12500,
+          "visemes": 251,
+          "subtitle_cues": 42,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 29,
+              "audio_ms": 1500,
+              "start_ms": 0,
+              "tts_ms": 35,
+              "align_ms": 50
+            },
+            {
+              "i": 1,
+              "chars": 43,
+              "audio_ms": 2238,
+              "start_ms": 1500,
+              "tts_ms": 19,
+              "align_ms": 46
+            },
+            {
+              "i": 2,
+              "chars": 105,
+              "audio_ms": 5738,
+              "start_ms": 3738,
+              "tts_ms": 65,
+              "align_ms": 100
+            },
+            {
+              "i": 3,
+              "chars": 61,
+              "audio_ms": 3025,
+              "start_ms": 9475,
+              "tts_ms": 24,
+              "align_ms": 60
+            }
+          ]
+        },
+        {
+          "turn": 7,
+          "stage": "avtoritet",
+          "generation_id": "gen-8",
+          "clauses": 3,
+          "t_first_token_ms": 2885,
+          "t_first_audio_ms": 3015,
+          "wall_ms": 4263,
+          "audio_total_ms": 17800,
+          "visemes": 374,
+          "subtitle_cues": 59,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 10,
+              "audio_ms": 675,
+              "start_ms": 0,
+              "tts_ms": 23,
+              "align_ms": 34
+            },
+            {
+              "i": 1,
+              "chars": 125,
+              "audio_ms": 6112,
+              "start_ms": 675,
+              "tts_ms": 66,
+              "align_ms": 113
+            },
+            {
+              "i": 2,
+              "chars": 214,
+              "audio_ms": 11012,
+              "start_ms": 6788,
+              "tts_ms": 103,
+              "align_ms": 196
+            }
+          ]
+        },
+        {
+          "turn": 8,
+          "stage": "avtoritet",
+          "generation_id": "gen-9",
+          "clauses": 5,
+          "t_first_token_ms": 2890,
+          "t_first_audio_ms": 3235,
+          "wall_ms": 4366,
+          "audio_total_ms": 22888,
+          "visemes": 471,
+          "subtitle_cues": 73,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 42,
+              "audio_ms": 1925,
+              "start_ms": 0,
+              "tts_ms": 37,
+              "align_ms": 56
+            },
+            {
+              "i": 1,
+              "chars": 142,
+              "audio_ms": 8050,
+              "start_ms": 1925,
+              "tts_ms": 80,
+              "align_ms": 149
+            },
+            {
+              "i": 2,
+              "chars": 57,
+              "audio_ms": 3125,
+              "start_ms": 9975,
+              "tts_ms": 22,
+              "align_ms": 60
+            },
+            {
+              "i": 3,
+              "chars": 89,
+              "audio_ms": 3962,
+              "start_ms": 13100,
+              "tts_ms": 27,
+              "align_ms": 74
+            },
+            {
+              "i": 4,
+              "chars": 119,
+              "audio_ms": 5825,
+              "start_ms": 17062,
+              "tts_ms": 65,
+              "align_ms": 103
+            }
+          ]
+        },
+        {
+          "turn": 9,
+          "stage": "srochnost",
+          "generation_id": "gen-10",
+          "clauses": 5,
+          "t_first_token_ms": 2515,
+          "t_first_audio_ms": 2771,
+          "wall_ms": 3960,
+          "audio_total_ms": 20250,
+          "visemes": 420,
+          "subtitle_cues": 70,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 24,
+              "audio_ms": 1312,
+              "start_ms": 0,
+              "tts_ms": 37,
+              "align_ms": 42
+            },
+            {
+              "i": 1,
+              "chars": 79,
+              "audio_ms": 4425,
+              "start_ms": 1312,
+              "tts_ms": 49,
+              "align_ms": 85
+            },
+            {
+              "i": 2,
+              "chars": 107,
+              "audio_ms": 5350,
+              "start_ms": 5738,
+              "tts_ms": 63,
+              "align_ms": 97
+            },
+            {
+              "i": 3,
+              "chars": 72,
+              "audio_ms": 3312,
+              "start_ms": 11088,
+              "tts_ms": 21,
+              "align_ms": 62
+            },
+            {
+              "i": 4,
+              "chars": 124,
+              "audio_ms": 5850,
+              "start_ms": 14400,
+              "tts_ms": 60,
+              "align_ms": 105
+            }
+          ]
+        },
+        {
+          "turn": 10,
+          "stage": "pilot",
+          "generation_id": "gen-11",
+          "clauses": 4,
+          "t_first_token_ms": 2478,
+          "t_first_audio_ms": 2984,
+          "wall_ms": 3804,
+          "audio_total_ms": 16575,
+          "visemes": 330,
+          "subtitle_cues": 56,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 49,
+              "audio_ms": 2625,
+              "start_ms": 0,
+              "tts_ms": 39,
+              "align_ms": 61
+            },
+            {
+              "i": 1,
+              "chars": 131,
+              "audio_ms": 6512,
+              "start_ms": 2625,
+              "tts_ms": 66,
+              "align_ms": 113
+            },
+            {
+              "i": 2,
+              "chars": 109,
+              "audio_ms": 5900,
+              "start_ms": 9138,
+              "tts_ms": 51,
+              "align_ms": 104
+            },
+            {
+              "i": 3,
+              "chars": 29,
+              "audio_ms": 1538,
+              "start_ms": 15038,
+              "tts_ms": 13,
+              "align_ms": 35
+            }
+          ]
+        },
+        {
+          "turn": 11,
+          "stage": "pilot",
+          "generation_id": "gen-12",
+          "clauses": 4,
+          "t_first_token_ms": 3092,
+          "t_first_audio_ms": 3371,
+          "wall_ms": 4223,
+          "audio_total_ms": 16275,
+          "visemes": 320,
+          "subtitle_cues": 52,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 8,
+              "audio_ms": 562,
+              "start_ms": 0,
+              "tts_ms": 19,
+              "align_ms": 34
+            },
+            {
+              "i": 1,
+              "chars": 68,
+              "audio_ms": 3412,
+              "start_ms": 562,
+              "tts_ms": 39,
+              "align_ms": 74
+            },
+            {
+              "i": 2,
+              "chars": 124,
+              "audio_ms": 6512,
+              "start_ms": 3975,
+              "tts_ms": 69,
+              "align_ms": 114
+            },
+            {
+              "i": 3,
+              "chars": 113,
+              "audio_ms": 5788,
+              "start_ms": 10488,
+              "tts_ms": 36,
+              "align_ms": 100
+            }
+          ]
+        },
+        {
+          "turn": 12,
+          "stage": "pilot",
+          "generation_id": "gen-13",
+          "clauses": 5,
+          "t_first_token_ms": 3335,
+          "t_first_audio_ms": 3662,
+          "wall_ms": 4366,
+          "audio_total_ms": 16038,
+          "visemes": 321,
+          "subtitle_cues": 48,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 33,
+              "audio_ms": 1525,
+              "start_ms": 0,
+              "tts_ms": 43,
+              "align_ms": 46
+            },
+            {
+              "i": 1,
+              "chars": 29,
+              "audio_ms": 1700,
+              "start_ms": 1525,
+              "tts_ms": 15,
+              "align_ms": 40
+            },
+            {
+              "i": 2,
+              "chars": 61,
+              "audio_ms": 2975,
+              "start_ms": 3225,
+              "tts_ms": 24,
+              "align_ms": 59
+            },
+            {
+              "i": 3,
+              "chars": 126,
+              "audio_ms": 6900,
+              "start_ms": 6200,
+              "tts_ms": 61,
+              "align_ms": 117
+            },
+            {
+              "i": 4,
+              "chars": 54,
+              "audio_ms": 2938,
+              "start_ms": 13100,
+              "tts_ms": 20,
+              "align_ms": 55
+            }
+          ]
+        },
+        {
+          "turn": 13,
+          "stage": "zakrytie",
+          "generation_id": "gen-14",
+          "clauses": 4,
+          "t_first_token_ms": 2796,
+          "t_first_audio_ms": 3057,
+          "wall_ms": 3507,
+          "audio_total_ms": 12438,
+          "visemes": 211,
+          "subtitle_cues": 32,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 28,
+              "audio_ms": 1700,
+              "start_ms": 0,
+              "tts_ms": 33,
+              "align_ms": 51
+            },
+            {
+              "i": 1,
+              "chars": 60,
+              "audio_ms": 3588,
+              "start_ms": 1700,
+              "tts_ms": 23,
+              "align_ms": 69
+            },
+            {
+              "i": 2,
+              "chars": 79,
+              "audio_ms": 4688,
+              "start_ms": 5288,
+              "tts_ms": 33,
+              "align_ms": 85
+            },
+            {
+              "i": 3,
+              "chars": 43,
+              "audio_ms": 2462,
+              "start_ms": 9975,
+              "tts_ms": 20,
+              "align_ms": 49
+            }
+          ]
+        },
+        {
+          "turn": 14,
+          "stage": "zakrytie",
+          "generation_id": "gen-15",
+          "clauses": 3,
+          "t_first_token_ms": 3424,
+          "t_first_audio_ms": 3709,
+          "wall_ms": 4211,
+          "audio_total_ms": 10025,
+          "visemes": 204,
+          "subtitle_cues": 31,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 45,
+              "audio_ms": 2188,
+              "start_ms": 0,
+              "tts_ms": 38,
+              "align_ms": 60
+            },
+            {
+              "i": 1,
+              "chars": 54,
+              "audio_ms": 2800,
+              "start_ms": 2188,
+              "tts_ms": 18,
+              "align_ms": 56
+            },
+            {
+              "i": 2,
+              "chars": 96,
+              "audio_ms": 5038,
+              "start_ms": 4988,
+              "tts_ms": 62,
+              "align_ms": 93
+            }
+          ]
+        }
+      ],
+      "empty_replies": [],
+      "first_audio_median_ms": 3015,
+      "first_audio_max_ms": 3709,
+      "pts_gap_max_ms": 0.0,
+      "audio_total_ms": 220564,
+      "visemes_total": 4374,
+      "cues_total": 709
+    },
+    {
+      "scenario_id": "s5_knowledge_check",
+      "finished": true,
+      "stages_reached": 7,
+      "stages_total": 7,
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "baza",
+          "generation_id": "gen-1",
+          "clauses": 3,
+          "t_first_token_ms": 2690,
+          "t_first_audio_ms": 2803,
+          "wall_ms": 3104,
+          "audio_total_ms": 6688,
+          "visemes": 116,
+          "subtitle_cues": 15,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 12,
+              "audio_ms": 738,
+              "start_ms": 0,
+              "tts_ms": 22,
+              "align_ms": 39
+            },
+            {
+              "i": 1,
+              "chars": 80,
+              "audio_ms": 4650,
+              "start_ms": 738,
+              "tts_ms": 45,
+              "align_ms": 87
+            },
+            {
+              "i": 2,
+              "chars": 22,
+              "audio_ms": 1300,
+              "start_ms": 5388,
+              "tts_ms": 13,
+              "align_ms": 31
+            }
+          ]
+        },
+        {
+          "turn": 1,
+          "stage": "baza",
+          "generation_id": "gen-2",
+          "clauses": 2,
+          "t_first_token_ms": 2819,
+          "t_first_audio_ms": 3078,
+          "wall_ms": 3503,
+          "audio_total_ms": 8750,
+          "visemes": 180,
+          "subtitle_cues": 24,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 26,
+              "audio_ms": 1612,
+              "start_ms": 0,
+              "tts_ms": 35,
+              "align_ms": 50
+            },
+            {
+              "i": 1,
+              "chars": 143,
+              "audio_ms": 7138,
+              "start_ms": 1612,
+              "tts_ms": 75,
+              "align_ms": 129
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "stage": "utochnenie",
+          "generation_id": "gen-3",
+          "clauses": 2,
+          "t_first_token_ms": 2408,
+          "t_first_audio_ms": 2687,
+          "wall_ms": 3092,
+          "audio_total_ms": 8962,
+          "visemes": 181,
+          "subtitle_cues": 24,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 42,
+              "audio_ms": 2038,
+              "start_ms": 0,
+              "tts_ms": 38,
+              "align_ms": 57
+            },
+            {
+              "i": 1,
+              "chars": 136,
+              "audio_ms": 6925,
+              "start_ms": 2038,
+              "tts_ms": 70,
+              "align_ms": 122
+            }
+          ]
+        },
+        {
+          "turn": 3,
+          "stage": "utochnenie",
+          "generation_id": "gen-4",
+          "clauses": 2,
+          "t_first_token_ms": 2854,
+          "t_first_audio_ms": 3182,
+          "wall_ms": 3459,
+          "audio_total_ms": 7200,
+          "visemes": 137,
+          "subtitle_cues": 22,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 49,
+              "audio_ms": 2588,
+              "start_ms": 0,
+              "tts_ms": 47,
+              "align_ms": 62
+            },
+            {
+              "i": 1,
+              "chars": 91,
+              "audio_ms": 4612,
+              "start_ms": 2588,
+              "tts_ms": 39,
+              "align_ms": 84
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "stage": "utochnenie",
+          "generation_id": "gen-5",
+          "clauses": 3,
+          "t_first_token_ms": 2658,
+          "t_first_audio_ms": 2904,
+          "wall_ms": 3308,
+          "audio_total_ms": 11838,
+          "visemes": 218,
+          "subtitle_cues": 34,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 30,
+              "audio_ms": 1425,
+              "start_ms": 0,
+              "tts_ms": 37,
+              "align_ms": 44
+            },
+            {
+              "i": 1,
+              "chars": 83,
+              "audio_ms": 4675,
+              "start_ms": 1425,
+              "tts_ms": 31,
+              "align_ms": 81
+            },
+            {
+              "i": 2,
+              "chars": 107,
+              "audio_ms": 5738,
+              "start_ms": 6100,
+              "tts_ms": 42,
+              "align_ms": 102
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "stage": "procedura",
+          "generation_id": "gen-6",
+          "clauses": 2,
+          "t_first_token_ms": 3152,
+          "t_first_audio_ms": 3486,
+          "wall_ms": 3837,
+          "audio_total_ms": 9050,
+          "visemes": 175,
+          "subtitle_cues": 28,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 45,
+              "audio_ms": 2238,
+              "start_ms": 0,
+              "tts_ms": 42,
+              "align_ms": 68
+            },
+            {
+              "i": 1,
+              "chars": 127,
+              "audio_ms": 6812,
+              "start_ms": 2238,
+              "tts_ms": 52,
+              "align_ms": 122
+            }
+          ]
+        },
+        {
+          "turn": 6,
+          "stage": "procedura",
+          "generation_id": "gen-7",
+          "clauses": 3,
+          "t_first_token_ms": 2308,
+          "t_first_audio_ms": 2643,
+          "wall_ms": 2997,
+          "audio_total_ms": 10300,
+          "visemes": 209,
+          "subtitle_cues": 34,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 45,
+              "audio_ms": 2250,
+              "start_ms": 0,
+              "tts_ms": 41,
+              "align_ms": 57
+            },
+            {
+              "i": 1,
+              "chars": 67,
+              "audio_ms": 3638,
+              "start_ms": 2250,
+              "tts_ms": 27,
+              "align_ms": 71
+            },
+            {
+              "i": 2,
+              "chars": 89,
+              "audio_ms": 4412,
+              "start_ms": 5888,
+              "tts_ms": 32,
+              "align_ms": 85
+            }
+          ]
+        },
+        {
+          "turn": 7,
+          "stage": "procedura",
+          "generation_id": "gen-8",
+          "clauses": 3,
+          "t_first_token_ms": 2017,
+          "t_first_audio_ms": 2303,
+          "wall_ms": 2619,
+          "audio_total_ms": 9962,
+          "visemes": 192,
+          "subtitle_cues": 29,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 49,
+              "audio_ms": 2575,
+              "start_ms": 0,
+              "tts_ms": 43,
+              "align_ms": 65
+            },
+            {
+              "i": 1,
+              "chars": 52,
+              "audio_ms": 2988,
+              "start_ms": 2575,
+              "tts_ms": 19,
+              "align_ms": 60
+            },
+            {
+              "i": 2,
+              "chars": 89,
+              "audio_ms": 4400,
+              "start_ms": 5562,
+              "tts_ms": 29,
+              "align_ms": 83
+            }
+          ]
+        },
+        {
+          "turn": 8,
+          "stage": "srok",
+          "generation_id": "gen-9",
+          "clauses": 3,
+          "t_first_token_ms": 2522,
+          "t_first_audio_ms": 2835,
+          "wall_ms": 3063,
+          "audio_total_ms": 9425,
+          "visemes": 185,
+          "subtitle_cues": 28,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 49,
+              "audio_ms": 2538,
+              "start_ms": 0,
+              "tts_ms": 40,
+              "align_ms": 64
+            },
+            {
+              "i": 1,
+              "chars": 71,
+              "audio_ms": 3825,
+              "start_ms": 2538,
+              "tts_ms": 22,
+              "align_ms": 69
+            },
+            {
+              "i": 2,
+              "chars": 65,
+              "audio_ms": 3062,
+              "start_ms": 6362,
+              "tts_ms": 20,
+              "align_ms": 57
+            }
+          ]
+        },
+        {
+          "turn": 9,
+          "stage": "srok",
+          "generation_id": "gen-10",
+          "clauses": 3,
+          "t_first_token_ms": 2018,
+          "t_first_audio_ms": 2250,
+          "wall_ms": 2691,
+          "audio_total_ms": 10875,
+          "visemes": 200,
+          "subtitle_cues": 31,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 43,
+              "audio_ms": 2462,
+              "start_ms": 0,
+              "tts_ms": 41,
+              "align_ms": 62
+            },
+            {
+              "i": 1,
+              "chars": 70,
+              "audio_ms": 3712,
+              "start_ms": 2462,
+              "tts_ms": 26,
+              "align_ms": 71
+            },
+            {
+              "i": 2,
+              "chars": 83,
+              "audio_ms": 4700,
+              "start_ms": 6175,
+              "tts_ms": 43,
+              "align_ms": 105
+            }
+          ]
+        },
+        {
+          "turn": 10,
+          "stage": "srok",
+          "generation_id": "gen-11",
+          "clauses": 3,
+          "t_first_token_ms": 2111,
+          "t_first_audio_ms": 2560,
+          "wall_ms": 2918,
+          "audio_total_ms": 10650,
+          "visemes": 212,
+          "subtitle_cues": 34,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "stay",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 40,
+              "audio_ms": 1638,
+              "start_ms": 0,
+              "tts_ms": 34,
+              "align_ms": 51
+            },
+            {
+              "i": 1,
+              "chars": 81,
+              "audio_ms": 4562,
+              "start_ms": 1638,
+              "tts_ms": 31,
+              "align_ms": 81
+            },
+            {
+              "i": 2,
+              "chars": 86,
+              "audio_ms": 4450,
+              "start_ms": 6200,
+              "tts_ms": 37,
+              "align_ms": 84
+            }
+          ]
+        },
+        {
+          "turn": 11,
+          "stage": "keys",
+          "generation_id": "gen-12",
+          "clauses": 5,
+          "t_first_token_ms": 2899,
+          "t_first_audio_ms": 3321,
+          "wall_ms": 3663,
+          "audio_total_ms": 11812,
+          "visemes": 230,
+          "subtitle_cues": 38,
+          "pts_gaps_ms": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 38,
+              "audio_ms": 1938,
+              "start_ms": 0,
+              "tts_ms": 36,
+              "align_ms": 60
+            },
+            {
+              "i": 1,
+              "chars": 44,
+              "audio_ms": 2175,
+              "start_ms": 1938,
+              "tts_ms": 18,
+              "align_ms": 47
+            },
+            {
+              "i": 2,
+              "chars": 24,
+              "audio_ms": 1400,
+              "start_ms": 4112,
+              "tts_ms": 12,
+              "align_ms": 33
+            },
+            {
+              "i": 3,
+              "chars": 89,
+              "audio_ms": 4788,
+              "start_ms": 5512,
+              "tts_ms": 35,
+              "align_ms": 82
+            },
+            {
+              "i": 4,
+              "chars": 28,
+              "audio_ms": 1512,
+              "start_ms": 10300,
+              "tts_ms": 12,
+              "align_ms": 33
+            }
+          ]
+        },
+        {
+          "turn": 12,
+          "stage": "granica",
+          "generation_id": "gen-13",
+          "clauses": 2,
+          "t_first_token_ms": 2954,
+          "t_first_audio_ms": 3325,
+          "wall_ms": 3522,
+          "audio_total_ms": 6638,
+          "visemes": 139,
+          "subtitle_cues": 20,
+          "pts_gaps_ms": [
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 45,
+              "audio_ms": 2175,
+              "start_ms": 0,
+              "tts_ms": 37,
+              "align_ms": 56
+            },
+            {
+              "i": 1,
+              "chars": 85,
+              "audio_ms": 4462,
+              "start_ms": 2175,
+              "tts_ms": 32,
+              "align_ms": 80
+            }
+          ]
+        },
+        {
+          "turn": 13,
+          "stage": "incident",
+          "generation_id": "gen-14",
+          "clauses": 3,
+          "t_first_token_ms": 2365,
+          "t_first_audio_ms": 2716,
+          "wall_ms": 2960,
+          "audio_total_ms": 7788,
+          "visemes": 153,
+          "subtitle_cues": 24,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "next_stage",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 48,
+              "audio_ms": 2612,
+              "start_ms": 0,
+              "tts_ms": 46,
+              "align_ms": 61
+            },
+            {
+              "i": 1,
+              "chars": 24,
+              "audio_ms": 1338,
+              "start_ms": 2612,
+              "tts_ms": 14,
+              "align_ms": 31
+            },
+            {
+              "i": 2,
+              "chars": 76,
+              "audio_ms": 3838,
+              "start_ms": 3950,
+              "tts_ms": 26,
+              "align_ms": 71
+            }
+          ]
+        },
+        {
+          "turn": 14,
+          "stage": "incident",
+          "generation_id": "gen-15",
+          "clauses": 3,
+          "t_first_token_ms": 2351,
+          "t_first_audio_ms": 2676,
+          "wall_ms": 2969,
+          "audio_total_ms": 9025,
+          "visemes": 159,
+          "subtitle_cues": 27,
+          "pts_gaps_ms": [
+            0.0,
+            0.0
+          ],
+          "action": "finish",
+          "per_clause": [
+            {
+              "i": 0,
+              "chars": 44,
+              "audio_ms": 2225,
+              "start_ms": 0,
+              "tts_ms": 41,
+              "align_ms": 54
+            },
+            {
+              "i": 1,
+              "chars": 95,
+              "audio_ms": 5012,
+              "start_ms": 2225,
+              "tts_ms": 40,
+              "align_ms": 89
+            },
+            {
+              "i": 2,
+              "chars": 29,
+              "audio_ms": 1788,
+              "start_ms": 7238,
+              "tts_ms": 15,
+              "align_ms": 39
+            }
+          ]
+        }
+      ],
+      "empty_replies": [],
+      "first_audio_median_ms": 2803,
+      "first_audio_max_ms": 3486,
+      "pts_gap_max_ms": 0.0,
+      "audio_total_ms": 138963,
+      "visemes_total": 2686,
+      "cues_total": 412
+    }
+  ]
+}

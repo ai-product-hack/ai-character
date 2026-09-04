@@ -176,6 +176,72 @@ class Cancellation(unittest.TestCase):
         self.assertTrue(all(r.generation_id == g.id for r in res))
 
 
+class ControlBlock(unittest.TestCase):
+    """Управляющий JSON не должен звучать.
+
+    В нестримовом пути он срезался из целого ответа. В конвейере клаузы уходят
+    в синтез по мере готовности, и хвостовой блок приезжает приклеенным к
+    последней клаузе — агент произносил бы его вслух.
+    """
+
+    REPLY_WITH_CONTROL = ('Понял вас. А какой стек вы использовали?\n'
+                          '{"action": "next_stage"}')
+
+    def _spoken(self, text):
+        spoken = []
+
+        def spy_tts(t):
+            spoken.append(t)
+            return FakePCM([0.0] * 2400), 24000
+
+        reg = GenerationRegistry()
+        p = ReplyPipeline(token_stream(text), spy_tts, fake_align(),
+                          fake_visemes, reg)
+        res = p.run("sys", "prompt", reg.start())
+        return spoken, res, p
+
+    def test_control_json_never_reaches_tts(self):
+        spoken, _, _ = self._spoken(self.REPLY_WITH_CONTROL)
+        for t in spoken:
+            self.assertNotIn("action", t, f"в синтез ушло управляющее: {t!r}")
+            self.assertNotIn("{", t)
+
+    def test_speech_survives_stripping(self):
+        spoken, res, _ = self._spoken(self.REPLY_WITH_CONTROL)
+        joined = " ".join(spoken)
+        self.assertIn("Понял вас.", joined)
+        self.assertIn("стек", joined)
+
+    def test_control_only_clause_is_dropped(self):
+        spoken, res, p = self._spoken('Хорошо.\n{"action": "finish"}')
+        self.assertEqual(spoken, ["Хорошо."])
+        self.assertEqual(len(res), 1, "клауза из одного JSON не должна порождать звук")
+
+    def test_raw_output_kept_for_action_parsing(self):
+        """Действие разбирается из сырого ответа, а не из речи.
+
+        Стоило 104 хода подряд с действием stay: управляющий блок вырезан из
+        клауз перед синтезом, и разбор по ним не находил действие никогда.
+        Сценарии доходили до конца только принудительными переходами.
+        """
+        from app.actions import NEXT_STAGE, parse_reply
+        spoken, res, p = self._spoken(self.REPLY_WITH_CONTROL)
+        self.assertIn("action", p.last_raw, "сырой ответ обязан сохраниться целиком")
+        self.assertEqual(parse_reply(p.last_raw).action.action, NEXT_STAGE)
+        # А в речь при этом ничего управляющего не ушло.
+        self.assertNotIn("action", " ".join(spoken))
+
+    def test_raw_matches_full_stream(self):
+        text = "Первое предложение. Второе предложение."
+        _, _, p = self._spoken(text)
+        self.assertEqual(p.last_raw, text)
+
+    def test_braces_in_real_speech_are_kept(self):
+        spoken, _, _ = self._spoken('Он написал {"а": 1} в конфиге и всё сломалось.')
+        self.assertIn("{", " ".join(spoken),
+                      "фигурные скобки внутри речи вырезать нельзя")
+
+
 class Subtitles(unittest.TestCase):
     def test_cues_cover_every_word_of_the_clause(self):
         reg, p = build()

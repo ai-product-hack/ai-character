@@ -63,19 +63,37 @@ class Report:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)
 
 
-def build(state: DialogueState) -> Report:
-    """Свести состояние в отчёт. Дешёвая операция без обращений к модели —
-    поэтому её можно звать хоть после каждой реплики."""
+def build(state: DialogueState, evaluation=None) -> Report:
+    """Свести состояние в отчёт.
+
+    Дешёвая операция без обращений к модели — поэтому её можно звать хоть после
+    каждой реплики. Всё дорогое уже сделано фоновой сессией, и к моменту
+    `finish` отчёт складывается мгновенно.
+
+    Источников оценки два: `evaluate` от самого агента по ходу разговора и
+    фоновый оценщик. Второй важнее — живая модель за действием `evaluate`
+    почти не тянется (замерено: 0 вызовов из 59).
+    """
     sc = state.scenario
     criteria = []
     for c in sc.criteria:
         obs = state.observations_for(c.key)
         scores = [o.score for o in obs if o.score is not None]
+        notes = [o.note for o in obs if o.note]
+        rationale = ""
+        if evaluation is not None:
+            bg = evaluation.for_criterion(c.key)
+            scores += [a.score for a in bg]
+            notes += [a.rationale for a in bg if a.rationale]
+            if bg:
+                # Обоснование берём последнее: оно опирается на самый полный
+                # контекст разговора.
+                rationale = bg[-1].rationale
         criteria.append(CriterionResult(
             key=c.key, title=c.title, scale=c.scale,
             score=round(statistics.mean(scores), 2) if scores else None,
-            rationale="",
-            observations=[o.note for o in obs if o.note],
+            rationale=rationale,
+            observations=notes,
         ))
     return Report(
         scenario_id=sc.id,
