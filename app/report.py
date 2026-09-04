@@ -40,6 +40,7 @@ class Report:
     user_turns: int
     criteria: list[CriterionResult] = field(default_factory=list)
     transcript: list[dict] = field(default_factory=list)
+    typing: dict | None = None
     created_at: float = field(default_factory=time.time)
 
     @property
@@ -104,6 +105,33 @@ def build(state: DialogueState, evaluation=None) -> Report:
         stages_total=len(sc.stages),
         user_turns=state.user_turns,
         criteria=criteria,
-        transcript=[{"role": t.role, "text": t.text, "stage": t.stage_id}
+        transcript=[{"role": t.role, "text": t.text, "stage": t.stage_id,
+                     **({"typing": t.typing} if t.typing else {})}
                     for t in state.turns],
+        typing=_typing_summary(state),
     )
+
+
+def _typing_summary(state: DialogueState) -> dict | None:
+    """Как человек печатал: сводка по всем ответам.
+
+    Не оценка, а сигнал методисту. Ответ, набранный за девять секунд с двумя
+    переписываниями, и ответ той же длины, набранный без пауз, читаются в
+    расшифровке одинаково — разницу видно только здесь.
+    """
+    signals = [t.typing for t in state.turns if t.role == "user" and t.typing]
+    signals = [s for s in signals if s.get("confidence") != "нет данных"]
+    if not signals:
+        return None
+    firsts = [s["first_key_ms"] for s in signals if s.get("first_key_ms") is not None]
+    labels = [s["confidence"] for s in signals]
+    return {
+        "answers": len(signals),
+        "median_first_key_ms": round(statistics.median(firsts)) if firsts else None,
+        "median_longest_pause_ms": round(statistics.median(
+            [s["longest_pause_ms"] for s in signals])),
+        "median_rewrite_ratio": round(statistics.median(
+            [s["rewrite_ratio"] for s in signals]), 3),
+        "confidence": {k: labels.count(k) for k in dict.fromkeys(labels)},
+        "hesitant_answers": sum(1 for x in labels if x != "уверенно"),
+    }

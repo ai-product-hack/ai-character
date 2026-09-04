@@ -348,3 +348,60 @@ class Timings(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class SubtitlesAfterNormalization(unittest.TestCase):
+    """Нормализация размножает слова — субтитры не должны от этого разъезжаться."""
+
+    @staticmethod
+    def _chars(words):
+        """Расшифровка: слова по 200 мс, разделённые пробелом."""
+        out, t = [], 0.0
+        for i, w in enumerate(words):
+            if i:
+                out.append({"ch": " ", "ms": t})
+                t += 40
+            for ch in w:
+                out.append({"ch": ch, "ms": t})
+                t += 40
+        return out
+
+    def test_words_after_expansion_keep_their_time(self):
+        from app.pipeline import ClauseResult, subtitle_cues
+        from app.pronounce import normalize, word_map
+
+        text = "Задержка на p95 держится."
+        spoken = normalize(text).split()
+        r = ClauseResult(generation_id="g1", index=0, text=text, first=True,
+                         start_ms=0.0, audio_ms=1000.0, pcm=[], sample_rate=24000,
+                         visemes=[], chars=self._chars(spoken),
+                         word_map=word_map(text))
+        cues = subtitle_cues(r)
+        self.assertEqual([c["text"] for c in cues], text.split())
+
+        # Времена начала произнесённых слов — так же, как их считает функция.
+        starts, prev_space = [], True
+        for c in r.chars:
+            if c["ch"] == " ":
+                prev_space = True
+                continue
+            if prev_space:
+                starts.append(c["ms"])
+                prev_space = False
+
+        # «p95» развернулось в три слова, значит «держится» звучит шестым.
+        self.assertEqual(len(starts), 6)
+        self.assertAlmostEqual(cues[-1]["pts_ms"], starts[5], delta=1)
+        # А наивное сопоставление i-к-i дало бы четвёртое — раньше звука.
+        self.assertGreater(starts[5], starts[3])
+
+    def test_untouched_text_needs_no_map(self):
+        from app.pipeline import ClauseResult, subtitle_cues
+        text = "Обычная реплика без терминов."
+        words = text.split()
+        r = ClauseResult(generation_id="g1", index=0, text=text, first=True,
+                         start_ms=0.0, audio_ms=1000.0, pcm=[], sample_rate=24000,
+                         visemes=[], chars=self._chars(words), word_map=None)
+        cues = subtitle_cues(r)
+        self.assertEqual([c["text"] for c in cues], words)
+        self.assertEqual(cues[0]["pts_ms"], 0.0)

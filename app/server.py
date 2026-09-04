@@ -12,6 +12,7 @@
 """
 from __future__ import annotations
 
+import argparse
 import json
 import http.server
 import queue
@@ -27,17 +28,19 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from app import llm as llm_mod, report as report_mod        # noqa: E402
-from app.actions import parse_reply                         # noqa: E402
+from app.actions import parse_reply, repair_action          # noqa: E402
 from app.agent import SYSTEM, apply as apply_action, build_prompt   # noqa: E402
 from app.backchannel import Backchannel                     # noqa: E402
 from app.dialogue import DialogueState                      # noqa: E402
 from app.emotion_tags import SYSTEM_HINT as EMO_HINT        # noqa: E402
 from app.evaluator import BackgroundEvaluator               # noqa: E402
 from app.generation import GenerationRegistry               # noqa: E402
-from app.media import GigaAMAligner, SileroTTS, stream_deepseek     # noqa: E402
+from app.media import (GigaAMAligner, PROVIDERS, SwitchableTTS,   # noqa: E402
+                       stream_deepseek, tts_config)
 from app.pipeline import ReplyPipeline, subtitle_cues       # noqa: E402
 from app.scenario import Criterion, load_all                # noqa: E402
 from app.speculation import Speculator                      # noqa: E402
+from app.typing_signal import TypingTracker                 # noqa: E402
 from app.visemes_bridge import VisemeBridge                 # noqa: E402
 
 PORT = 8010
@@ -64,12 +67,18 @@ class Session:
         self.completed: set[str] = set()
         self.evaluator = BackgroundEvaluator(models["llm"])
         self.backchannel = models.get("backchannel")
+        self.repair_llm = models.get("repair_llm")
         self.bc_cfg = models.get("bc_cfg", {})
         # Спекуляция на недопечатанном: запрос уходит, пока человек ещё печатает.
         self.spec = Speculator(
             make_stream=lambda: stream_deepseek(models["llm"]),
             build_prompt=lambda text: build_prompt(self.state, text),
             system=SYSTEM, cfg=models.get("spec_cfg", {}))
+        # Динамика набора: время до первого нажатия, паузы, стирания. Часы
+        # отсчитываются от конца реплики агента — их ставит сервер, а не клиент:
+        # у клиента нет момента, когда персонаж договорил.
+        self.typing = TypingTracker()
+        self.t_agent_done_ms: float | None = None
         self.frames: list[tuple[dict, bytes]] = []
         self.frame_cv = threading.Condition()
         self.marks: list[dict] = []
@@ -86,8 +95,15 @@ class Session:
         """
         with self.lock:
             if user_text is not None:
-                self.state.add_user(user_text)
-                self._emit({"kind": "user", "text": user_text})
+                # Нуль отсчёта — момент, когда агент договорил. Он мог
+                # сдвинуться уже после первых нажатий, поэтому подставляется
+                # здесь, а не при наблюдении.
+                sig = self.typing.summarise(final_length=len(user_text),
+                                            origin_ms=self.t_agent_done_ms)
+                self.typing.reset()
+                self.state.add_user(user_text, typing=sig.to_dict())
+                self._emit({"kind": "user", "text": user_text,
+                            "typing": sig.to_dict()})
             gen = self.registry.start()
             prompt = build_prompt(self.state, user_text)
             # Если спекулятивный запрос попал — берём его: токены уже летят,
@@ -123,6 +139,18 @@ class Session:
             return                              # перебили — ничего не дописываем
 
         reply = parse_reply(self.pipe.last_raw)
+        # Реплика без управляющей строки: спрашиваем отдельно, что это было.
+        # Реплика уже звучит, так что на первый звук это не влияет.
+        t_repair = None
+        fell_back = reply.action.fell_back      # починка перезапишет действие
+        if fell_back and self.repair_llm is not None:
+            t_r0 = time.perf_counter()
+            st = self.state.stage
+            fixed = repair_action(self.repair_llm, reply.speakable,
+                                  st.goal if st else "", self.state.is_last_stage)
+            t_repair = (time.perf_counter() - t_r0) * 1000
+            if fixed is not None:
+                reply.action = fixed
         with self.lock:
             happened = apply_action(self.state, reply, gen.id)
             self.completed.add(gen.id)
@@ -146,6 +174,11 @@ class Session:
             "clauses": len(results),
             "action": happened["action"],
             "forced": happened.get("forced", False),
+            # Без этих двух полей доля реплик без управляющей строки не
+            # измеряется — а именно её мы и чиним.
+            "fell_back": fell_back,
+            "repaired": reply.action.repaired,
+            "t_repair_ms": round(t_repair) if t_repair is not None else None,
         })
         self._emit({
             "kind": "state", "generation_id": gen.id,
@@ -157,9 +190,30 @@ class Session:
             "face": "listening" if self.state.finished else "speaking",
             "t_first_audio_ms": round(em["t_first_audio"] or 0),
             "t_first_speech_ms": round(em["t_first_speech"] or 0),
+            # Оверлею: то, что видно только серверу. Без этих полей на показе
+            # нечем показать, что спекуляция и починка вообще работают.
+            "spec_hit": spec_hit,
+            "spec_cover": round(cover, 3) if user_text is not None else None,
+            "repaired": reply.action.repaired,
+            "t_first_token_ms": ttft,
         })
+        # Нуль отсчёта набора: с этого момента ход человека. Наблюдения НЕ
+        # сбрасываются — набранное, пока агент ещё говорил, тоже сигнал.
+        self.t_agent_done_ms = time.perf_counter() * 1000
         if self.state.finished:
             self._emit({"kind": "finished"})
+
+    def note_typing(self, text: str) -> None:
+        """Наблюдение за набором. Часы абсолютные, нуль ставится при подведении.
+
+        Если агент ещё не говорил, нулём становится первое наблюдение: паузы и
+        стирания от этого не зависят, а «до первого нажатия» на первом ходу и
+        нечему мерить.
+        """
+        now = time.perf_counter() * 1000
+        if self.t_agent_done_ms is None:
+            self.t_agent_done_ms = now
+        self.typing.observe(now, len(text))
 
     # ------------------------------------------------------------- отправка
 
@@ -323,6 +377,19 @@ def parse_criteria(text: str) -> list[Criterion]:
     return out
 
 
+CONFIG = ROOT / "app" / "config.json"
+
+
+def load_config() -> dict:
+    """Конфиг приложения. Переключение провайдера синтеза — одна строка здесь."""
+    try:
+        return json.loads(CONFIG.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {}
+    except json.JSONDecodeError as e:
+        raise SystemExit(f"{CONFIG}: {e}")
+
+
 class _ReplayStream:
     """Обёртка вокруг летящего запроса под интерфейс потока конвейера.
 
@@ -346,10 +413,13 @@ class App:
         print("поднимаю модели…")
         t0 = time.perf_counter()
         self.models = {
-            "tts": SileroTTS(voice="eugene"),
+            "tts": SwitchableTTS(tts_config()),
             "aligner": GigaAMAligner(),
             "bridge": VisemeBridge(),
             "llm": llm_mod.DeepSeekLLM(),
+            # Отдельный дешёвый клиент для второго разбора: ответ — одно слово,
+            # и держать под него бюджет основной реплики незачем.
+            "repair_llm": llm_mod.DeepSeekLLM(max_tokens=8, temperature=0),
         }
         # Заполнители готовятся здесь и лежат в памяти: по Enter не считается
         # ничего, иначе смысл теряется.
@@ -361,12 +431,16 @@ class App:
         # Порог короткий намеренно: полсекунды тишины и есть то, что заполнитель
         # убирает. Случай «ответ пришёл быстро» — это попадание спекуляции с
         # уже готовым результатом, а не ожидание в шестьсот миллисекунд.
-        self.models["bc_cfg"] = {"enabled": True, "after_ms": 120, "lead_ms": 150}
-        self.models["spec_cfg"] = {"enabled": True, "min_chars": 15, "idle_ms": 400,
-                                   "relaunch_growth": 0.4, "reuse_cover": 0.6}
+        cfg = load_config()
+        self.models["bc_cfg"] = {k: v for k, v in cfg.get("backchannel", {}).items()
+                                 if not k.startswith("_")} or \
+            {"enabled": True, "after_ms": 120, "lead_ms": 150}
+        self.models["spec_cfg"] = {k: v for k, v in cfg.get("speculation", {}).items()
+                                   if not k.startswith("_")}
         print(f"  заполнители: {bc.describe()}")
         self.scenarios = load_all(ROOT / "data" / "scenarios")
         self.session: Session | None = None
+        print(f"  синтез: {self.models['tts'].describe()}")
         print(f"готово за {time.perf_counter() - t0:.1f} с, "
               f"сценариев {len(self.scenarios)}")
 
@@ -379,6 +453,30 @@ class App:
         self.session = Session(sc, criteria_text, self.models)
         threading.Thread(target=self.session.speak, args=(None,), daemon=True).start()
         return self.session
+
+
+    def switch_tts(self, provider: str) -> dict:
+        """Сменить синтезатор на ходу и пересобрать заполнители.
+
+        Заполнители переозвучиваются обязательно: они звучат непосредственно
+        перед репликой, и если голос сменится между ними, на стыке будет слышно
+        двух разных людей. Текущая генерация гасится по той же причине — иначе
+        голос сменился бы посреди реплики.
+        """
+        if provider not in PROVIDERS:
+            raise ValueError(f"нет провайдера «{provider}»")
+        tts = self.models["tts"]
+        t0 = time.perf_counter()
+        changed = tts.switch(provider)          # бросит, если движок не собрался
+        if changed:
+            if self.session:
+                self.session.cancel()
+            self.models["backchannel"].warm(
+                tts, lambda pcm, sr: self.models["aligner"](pcm, sr),
+                self.models["bridge"])
+        return {"changed": changed, "took_ms": round((time.perf_counter() - t0) * 1000),
+                "tts": tts.describe(),
+                "backchannel": self.models["backchannel"].describe()}
 
 
 APP: App | None = None
@@ -414,6 +512,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                                 "criteria": [{"key": c.key, "title": c.title}
                                              for c in s.criteria]}
                                for s in APP.scenarios])
+        if u.path == "/api/tts":
+            return self._json({"providers": list(PROVIDERS),
+                               "tts": APP.models["tts"].describe()})
+        if u.path == "/api/health":
+            # Чем синтезируем прямо сейчас. На показе это единственный способ
+            # заметить, что сетевой голос отвалился и говорит запасной.
+            tts = APP.models["tts"]
+            return self._json({"tts": tts.describe(),
+                               "scenarios": len(APP.scenarios),
+                               "session": bool(APP.session)})
         if u.path == "/api/report":
             if not APP.session:
                 return self._json({"error": "сессия не начата"}, 400)
@@ -473,8 +581,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if u.path == "/api/typing":
             if not APP.session:
                 return self._json({"ok": False})
-            launched = APP.session.spec.on_typing(data.get("text", ""))
+            sess = APP.session
+            sess.note_typing(data.get("text", ""))
+            launched = sess.spec.on_typing(data.get("text", ""))
             return self._json({"ok": True, "launched": launched})
+        if u.path == "/api/tts":
+            try:
+                return self._json(APP.switch_tts(data.get("provider", "")))
+            except SystemExit as e:            # нет ключа, нет такого голоса
+                return self._json({"error": str(e)}, 400)
+            except Exception as e:             # noqa: BLE001 — сеть, API, что угодно
+                return self._json({"error": f"{type(e).__name__}: {e}"}, 400)
         if u.path == "/api/cancel":
             return self._json({"ok": True, "cancelled": APP.session.cancel()})
         return self._json({"error": "нет такого метода"}, 404)
@@ -495,10 +612,15 @@ class Threaded(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
 def main():
     global APP
+    # Порт задаётся снаружи, чтобы репетиция могла поднять свой сервер, не
+    # выбивая тот, что уже открыт в браузере.
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--port", type=int, default=PORT)
+    port = ap.parse_args().port
     APP = App()
-    with Threaded(("", PORT), Handler) as httpd:
-        print(f"методист:  http://localhost:{PORT}/app/web/methodist.html")
-        print(f"сотрудник: http://localhost:{PORT}/app/web/trainee.html")
+    with Threaded(("", port), Handler) as httpd:
+        print(f"методист:  http://localhost:{port}/app/web/methodist.html")
+        print(f"сотрудник: http://localhost:{port}/app/web/trainee.html")
         httpd.serve_forever()
 
 

@@ -3,6 +3,7 @@
 //   avatar.load(url)
 //   avatar.setState(state)                    listening | thinking | speaking | interrupted
 //   avatar.setEmotion(emotion, intensity)     skeptical | pressing | warming | impressed | neutral
+//   avatar.noteActivity()                     человек печатает — не торопить
 //   avatar.playGeneration(genId, visemeTrack)
 //   avatar.cancel(genId)
 //   avatar.attachClock(audioClock)
@@ -93,6 +94,16 @@ export class Avatar {
   setState(state) {
     if (!this.states) throw new Error('avatar: модель ещё не загружена');
     this.states.set(state);
+    return this;
+  }
+
+  /**
+   * Человек печатает. Гасит нарастающее нетерпение, не меняя состояния:
+   * персонаж ждёт спокойно, пока видит работу, и начинает торопить, только
+   * когда экран замер.
+   */
+  noteActivity() {
+    if (this.states) this.states.noteActivity();
     return this;
   }
 

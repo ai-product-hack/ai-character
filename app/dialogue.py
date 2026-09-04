@@ -26,6 +26,9 @@ class Turn:
     stage_id: str
     generation_id: str | None = None
     at: float = field(default_factory=time.time)
+    # Как этот ответ печатали: время до первого нажатия, паузы, правки.
+    # Только у реплик пользователя и только в вебе — в скриптовых прогонах None.
+    typing: dict | None = None
 
 
 @dataclass
@@ -94,8 +97,8 @@ class DialogueState:
 
     # --------------------------------------------------------------- реплики
 
-    def add_user(self, text: str) -> Turn:
-        t = Turn("user", text, self.stage_id)
+    def add_user(self, text: str, typing: dict | None = None) -> Turn:
+        t = Turn("user", text, self.stage_id, typing=typing)
         self.turns.append(t)
         return t
 

@@ -19,6 +19,8 @@ import random
 import time
 from dataclasses import dataclass, field
 
+from .pronounce import normalize
+
 
 @dataclass
 class Filler:
@@ -48,10 +50,20 @@ class Backchannel:
         self.warmup_ms = 0.0
 
     def warm(self, tts, align, to_visemes) -> "Backchannel":
-        """Синтезировать и разметить всё заранее. Зовётся один раз на старте."""
+        """Синтезировать и разметить всё заранее.
+
+        Зовётся на старте и ещё раз при смене голоса: заполнитель обязан
+        звучать тем же голосом, что и реплика за ним, иначе на стыке слышно
+        двух разных людей. Поэтому список сначала чистится — повторный вызов
+        заменяет заполнители, а не добавляет вторые.
+        """
         t0 = time.perf_counter()
+        self.fillers.clear()
+        self._last = -1
         for text in self.texts:
-            pcm, sr = tts(text)
+            # По умолчанию заполнители чисто русские, но методист может задать
+            # свои — правило «в синтез идёт нормализованное» действует и здесь.
+            pcm, sr = tts(normalize(text))
             chars = align(pcm, sr)
             self.fillers.append(Filler(
                 text=text, pcm=pcm, sample_rate=sr,

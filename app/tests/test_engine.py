@@ -330,3 +330,45 @@ class ReportShape(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class Repair(unittest.TestCase):
+    """Второй разбор для реплик, пришедших без управляющей строки."""
+
+    def test_recovers_declared_transition(self):
+        from app.actions import repair_action
+        a = repair_action(lambda s, p: "next_stage", "Хорошо, теперь про сроки.")
+        self.assertEqual(a.action, "next_stage")
+        self.assertTrue(a.repaired)
+        self.assertFalse(a.fell_back)
+
+    def test_tolerates_chatty_model(self):
+        from app.actions import repair_action
+        a = repair_action(lambda s, p: "  STAY.\n", "А почему именно так?")
+        self.assertEqual(a.action, "stay")
+
+    def test_nonsense_answer_leaves_fallback_alone(self):
+        """Не починили — значит не починили. Угадывать хуже, чем остаться."""
+        from app.actions import repair_action
+        self.assertIsNone(repair_action(lambda s, p: "не знаю", "текст"))
+
+    def test_network_failure_is_not_fatal(self):
+        from app.actions import repair_action
+
+        def boom(s, p):
+            raise RuntimeError("сеть недоступна")
+
+        self.assertIsNone(repair_action(boom, "текст"))
+
+    def test_empty_reply_costs_no_call(self):
+        """Пустую реплику разбирать нечего — и платить за это незачем."""
+        from app.actions import repair_action
+        calls = []
+        self.assertIsNone(repair_action(lambda s, p: calls.append(1), "   "))
+        self.assertEqual(calls, [])
+
+    def test_prompt_mentions_last_stage(self):
+        from app.actions import build_repair_prompt
+        p = build_repair_prompt("реплика", "знакомство", is_last_stage=True)
+        self.assertIn("знакомство", p)
+        self.assertIn("последняя", p)

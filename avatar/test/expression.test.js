@@ -241,6 +241,41 @@ describe('нетерпение в listening', () => {
     ctx.states.set('listening');            // как если бы вызвали ещё раз
     assert.equal(ctx.states.impatience, before);
   });
+
+  test('набор текста откладывает порог, а не только гасит накопленное', () => {
+    const ctx = setup();
+    ctx.states.set('listening');
+    const imp = expr.states.listening.impatience;
+    // Печатает раз в секунду дольше порога — нетерпение не должно появиться.
+    for (let i = 0; i < imp.afterSec + 4; i++) {
+      ctx.states.noteActivity();
+      run(ctx, 1);
+      assert.equal(ctx.states.impatience, 0, `нетерпение на ${i}-й секунде набора`);
+    }
+  });
+
+  test('нетерпение спадает после набора и снова растёт на тишине', () => {
+    const ctx = setup();
+    ctx.states.set('listening');
+    const imp = expr.states.listening.impatience;
+    run(ctx, imp.afterSec + imp.rampSec + 1);
+    assert.equal(ctx.states.impatience, 1);
+    ctx.states.noteActivity();
+    run(ctx, 0.1);
+    assert.equal(ctx.states.impatience, 0, 'набор должен снять нетерпение');
+    run(ctx, imp.afterSec + imp.rampSec + 1);
+    assert.equal(ctx.states.impatience, 1, 'на новой тишине нарастает снова');
+  });
+
+  test('набор не сбрасывает состояние и не трогает часы состояния', () => {
+    const ctx = setup();
+    ctx.states.set('listening');
+    run(ctx, 3);
+    const since = ctx.states.sinceEnter;
+    ctx.states.noteActivity();
+    assert.equal(ctx.states.state, 'listening');
+    assert.equal(ctx.states.sinceEnter, since);
+  });
 });
 
 describe('перебивание', () => {

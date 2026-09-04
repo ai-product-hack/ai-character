@@ -19,12 +19,13 @@ import queue
 import re
 import threading
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from .actions import strip_control
 from .emotion_tags import parse as parse_emotions, to_timeline
 from .clauses import Clause, ClauseSplitter
 from .generation import Generation, GenerationRegistry, PTSTimeline
+from .pronounce import normalize, word_map
 
 
 @dataclass
@@ -42,6 +43,25 @@ class ClauseResult:
     chars: list[dict]
     emotions: list[dict] = field(default_factory=list)
     timings: dict = field(default_factory=dict)
+    # Сколько произносимых слов дало каждое слово оригинала. Нужно субтитрам:
+    # без этого «p95» съезжает на три слова, и весь хвост клаузы выскакивает
+    # раньше звука. None — нормализация ничего не изменила.
+    word_map: list[int] | None = None
+
+
+def _scale_marks(marks, orig_len: int, spoken_len: int):
+    """Пересчитать смещения меток эмоций под нормализованный текст.
+
+    Метки приходят с позициями в ИСХОДНОМ тексте, а таймкоды выравнивания
+    считаются по произнесённому. «p95» превращается в «пи девяносто пять», и
+    дальше по клаузе расхождение только растёт. Масштабируем пропорционально:
+    точнее без посимвольного соответствия всё равно не выйдет, а эмоция
+    натекает за 200 мс и полусимвольной точности не требует.
+    """
+    if not marks or orig_len == spoken_len or orig_len == 0:
+        return marks
+    k = spoken_len / orig_len
+    return [replace(m, char_index=round(m.char_index * k)) for m in marks]
 
 
 class ReplyPipeline:
@@ -168,8 +188,18 @@ class ReplyPipeline:
             return None
         clause = Clause(clause.index, text, clause.first)
 
+        # В синтез уходит нормализованный текст, в субтитры — исходный.
+        # Русская модель молча выбрасывает латиницу и цифры, и без этого
+        # «Задержка сто миллисекунд на p95» звучит как «задержка ста
+        # миллисекундно», пока в субтитрах стоит осмысленная фраза.
+        spoken = normalize(clause.text)
+        wmap = None
+        if spoken != clause.text:
+            stats["normalized_clauses"] = stats.get("normalized_clauses", 0) + 1
+            wmap = word_map(clause.text)
+
         t0 = time.perf_counter()
-        pcm, sr = self.tts(clause.text)
+        pcm, sr = self.tts(spoken)
         t_tts = (time.perf_counter() - t0) * 1000
         if not gen.check():
             return None                     # отменили, пока синтезировали
@@ -184,7 +214,9 @@ class ReplyPipeline:
         audio_ms = len(pcm) / sr * 1000
         start_ms, shifted = timeline.add_clause(audio_ms, visemes, clause.text)
         # Эмоция едет по существующему таймлайну: тот же PTS, та же отмена.
-        emotions = to_timeline(parsed.marks, chars, clause_start_ms=start_ms)
+        emotions = to_timeline(_scale_marks(parsed.marks, len(clause.text),
+                                            len(spoken)),
+                               chars, clause_start_ms=start_ms)
 
         if stats["t_first_audio"] is None:
             stats["t_first_audio"] = (time.perf_counter() - t_start) * 1000
@@ -193,7 +225,7 @@ class ReplyPipeline:
             generation_id=gen.id, index=clause.index, text=clause.text,
             first=clause.first, start_ms=start_ms, audio_ms=audio_ms,
             pcm=pcm, sample_rate=sr, visemes=shifted, chars=chars,
-            emotions=emotions,
+            emotions=emotions, word_map=wmap,
             timings={"tts_ms": round(t_tts), "align_ms": round(t_align)},
         )
 
@@ -227,9 +259,16 @@ def subtitle_cues(result: ClauseResult, chars: list[dict] | None = None) -> list
     # Слова оригинала: их и показываем — с пунктуацией и заглавными,
     # которых в расшифровке нет.
     original = re.findall(r"\S+", result.text)
+    # Нормализация могла размножить слова («p95» -> «пи девяносто пять»).
+    # Без карты i-е слово оригинала получило бы время i-го произнесённого, то
+    # есть весь хвост клаузы выскочил бы раньше звука.
+    wmap = result.word_map
     cues = []
+    at = 0
     for i, word in enumerate(original):
-        ms = spoken[i][0] if i < len(spoken) else (
+        j = at if wmap else i
+        at += wmap[i] if wmap and i < len(wmap) else 1
+        ms = spoken[j][0] if j < len(spoken) else (
             spoken[-1][0] if spoken else 0)
         cues.append({
             "pts_ms": result.start_ms + ms,

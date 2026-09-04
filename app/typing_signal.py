@@ -59,6 +59,8 @@ class TypingSignal:
         """
         if self.samples < 2:
             return "нет данных"
+        # Отрицательное «до первого нажатия» — начал отвечать, не дослушав.
+        # Это не медлительность, и в счёт заминок оно не идёт.
         slow_start = (self.first_key_ms or 0) > 4000
         long_pause = self.longest_pause_ms > 3000
         heavy_edit = self.rewrite_ratio > 0.25
@@ -104,13 +106,23 @@ class TypingTracker:
         return 0.0 if self._last_at is None else self._last_at
 
     def summarise(self, final_length: int | None = None,
-                  total_ms: float | None = None) -> TypingSignal:
+                  total_ms: float | None = None,
+                  origin_ms: float | None = None) -> TypingSignal:
+        """Свести наблюдения. `origin_ms` — нулевая точка для «до первого нажатия».
+
+        Отсчёт отделён от наблюдений намеренно. Наблюдения приходят с
+        абсолютными часами, а нуль ставится позже — в момент, когда агент
+        договорил. Иначе набор во время речи агента пришлось бы выбрасывать, а
+        это как раз самый выразительный случай: человек начал отвечать, не
+        дослушав. У такого ответа `first_key_ms` уходит в минус, и это правда,
+        а не ошибка.
+        """
         s = TypingSignal()
         s.samples = len(self.samples)
         if not self.samples:
             s.final_length = final_length or 0
             return s
-        s.first_key_ms = self.samples[0].at_ms
+        s.first_key_ms = self.samples[0].at_ms - (origin_ms or 0)
         s.final_length = final_length if final_length is not None else self.samples[-1].length
         s.max_length = max(x.length for x in self.samples)
         s.total_ms = total_ms if total_ms is not None else \

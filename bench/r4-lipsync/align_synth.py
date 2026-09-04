@@ -57,13 +57,19 @@ def resample_linear(x, sr_from, sr_to):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--voice", default="eugene")
+    ap.add_argument("--voice", default="ru_roman")
+    ap.add_argument("--version", default=None,
+                    help="v4_ru или v5_cis_base; по умолчанию по имени голоса")
     args = ap.parse_args()
+
+    # Голоса v5 называются ru_*, у v4 — просто имена. Ошибиться версией легко,
+    # а падает оно уже на прогреве.
+    version = args.version or ("v5_cis_base" if args.voice.startswith("ru_") else "v4_ru")
 
     import torch
     torch.set_num_threads(4)
     tts, _ = torch.hub.load("snakers4/silero-models", "silero_tts",
-                            language="ru", speaker="v4_ru", trust_repo=True)
+                            language="ru", speaker=version, trust_repo=True)
     tts.to(torch.device("cpu"))
     for t in ("Прогрев.", "Ещё один прогрев, подлиннее."):
         tts.apply_tts(text=t, speaker=args.voice, sample_rate=SR_TTS)
@@ -98,7 +104,7 @@ def main():
                  if chars[i]["ch"] != " " and chars[i + 1]["ch"] != " "]
         w, errs, n_ref = wer(rep["text"], res.text)
         rows.append({
-            "reply_id": rep["id"], "voice": args.voice,
+            "reply_id": rep["id"], "voice": args.voice, "version": version,
             "text": rep["text"], "asr_text": res.text,
             "audio_s": round(len(au) / SR_TTS, 3),
             "align_ms": round(align_ms),
@@ -123,7 +129,7 @@ def main():
     inner = [r["gap_inner_median_ms"] for r in rows if r["gap_inner_median_ms"]]
     allg = [r["gap_median_ms"] for r in rows if r["gap_median_ms"]]
     ms = sorted(r["align_ms"] for r in rows)
-    print(f"\n=== голос {args.voice}, {len(rows)} реплик ===")
+    print(f"\n=== {version} / {args.voice}, {len(rows)} реплик ===")
     print(f"WER: медиана {statistics.median(wers):.3f}, среднее {statistics.mean(wers):.3f}, "
           f"макс {wers[-1]:.3f}")
     print(f"интервал символов внутри слов: медиана {statistics.median(inner):.0f} мс")

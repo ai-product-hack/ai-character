@@ -21,7 +21,7 @@ from app import llm as llm_mod                              # noqa: E402
 from app.agent import SYSTEM, build_prompt                  # noqa: E402
 from app.dialogue import DialogueState                      # noqa: E402
 from app.generation import GenerationRegistry               # noqa: E402
-from app.media import GigaAMAligner, SileroTTS, stream_deepseek   # noqa: E402
+from app.media import GigaAMAligner, build_tts, stream_deepseek, tts_config  # noqa: E402
 from app.pipeline import ReplyPipeline                      # noqa: E402
 from app.scenario import load_all                           # noqa: E402
 from app.visemes_bridge import VisemeBridge                 # noqa: E402
@@ -32,12 +32,15 @@ POINTS = ("до первого звука", "в середине первой к
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--scenario", default="s1_interview_backend")
-    ap.add_argument("--voice", default="eugene")
+    # Голос по умолчанию берётся из app/config.json — того же, по которому
+    # живёт сервер. Прибитый сюда «eugene» пережил смену Silero на v5, где
+    # такого голоса нет, и скрипт падал на подъёме моделей.
+    ap.add_argument("--voice", default=None, help="по умолчанию из app/config.json")
     ap.add_argument("--repeats", type=int, default=2)
     ap.add_argument("--out", default="bench/results/cancel_pipeline.json")
     args = ap.parse_args()
 
-    tts = SileroTTS(voice=args.voice)
+    tts = build_tts({**tts_config(), **({"voice": args.voice} if args.voice else {})})
     aligner = GigaAMAligner()
     bridge = VisemeBridge()
     llm = llm_mod.DeepSeekLLM()

@@ -24,7 +24,11 @@ export class StateMachine {
 
     this.state = 'listening';
     this.sinceEnter = 0;
-    this.impatience = 0;          // 0..1, растёт на долгой паузе в listening
+    // Часы нетерпения идут отдельно от часов состояния: человек, который
+    // печатает ответ, не «молчит», и подгонять его нечестно. Набор текста
+    // сбрасывает именно этот счётчик, не трогая ни кивки, ни само состояние.
+    this.idleSince = 0;
+    this.impatience = 0;          // 0..1, растёт на паузе БЕЗ активности
     this._nodIn = this._nextNodDelay();
     this._pose = {};              // переиспользуемый объект, без аллокаций в кадре
     this._transitionMs = null;    // разовое ускорение перехода
@@ -48,6 +52,7 @@ export class StateMachine {
     if (state === this.state) return this;
     this.state = state;
     this.sinceEnter = 0;
+    this.idleSince = 0;
     if (state !== 'listening') this.impatience = 0;
 
     const c = this.config;
@@ -106,14 +111,25 @@ export class StateMachine {
    * Один кадр. Вызывается ДО слоя эмоции, потому что задаёт ему позу.
    * @returns {number|null} время перехода для слоя эмоции, если оно не обычное
    */
+  /**
+   * Человек проявил активность — печатает. Нетерпение откатывается к нулю
+   * плавно, обычным переходом позы: резкий сброс с 0.8 на 0 читался бы как
+   * дёрганье.
+   */
+  noteActivity() {
+    this.idleSince = 0;
+    return this;
+  }
+
   update(dt) {
     this.sinceEnter += dt;
+    this.idleSince += dt;
     const c = this.config;
 
     // Нетерпение: на паузе дольше afterSec взгляд уходит в сторону, бровь
     // поднимается. Нарастает плавно за rampSec.
     if (c.impatience) {
-      const over = this.sinceEnter - c.impatience.afterSec;
+      const over = this.idleSince - c.impatience.afterSec;
       const want = over <= 0 ? 0 : Math.min(1, over / c.impatience.rampSec);
       if (want !== this.impatience) {
         this.impatience = want;

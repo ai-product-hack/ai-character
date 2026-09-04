@@ -43,6 +43,11 @@
   <table id="criteriaTable"><thead><tr>
     <th style="width:22%">критерий</th><th style="width:9%">оценка</th>
     <th>обоснование</th></tr></thead><tbody></tbody></table>
+  <h2>Как отвечали</h2>
+  <div class="row" id="typing"></div>
+  <p class="hint">Сигнал, а не оценка: время до первого нажатия, паузы внутри
+  ответа и доля переписанного. Ответ, набранный с двумя переписываниями, и
+  ответ той же длины, набранный без пауз, в расшифровке выглядят одинаково.</p>
   <h2>Ход разговора</h2>
   <pre id="transcript"></pre>
   <h2>Замеры</h2>
@@ -118,8 +123,25 @@ function render(rep) {
       `<td>${c.rationale || (c.observations||[]).join('; ') || '—'}</td>`;
     tb.appendChild(tr);
   }
+  const tp = rep.typing;
+  $('typing').innerHTML = tp
+    ? `<span>ответов ${tp.answers}</span>` +
+      Object.entries(tp.confidence)
+        .map(([k, n]) => `<span>${k}: <span class="score">${n}</span></span>`).join('') +
+      `<span>до первого нажатия ${tp.median_first_key_ms ?? '—'} мс</span>` +
+      `<span>самая долгая пауза ${tp.median_longest_pause_ms} мс</span>` +
+      `<span>переписано ${Math.round(tp.median_rewrite_ratio * 100)}%</span>`
+    : '<span class="hint">нет данных: диалог шёл не из браузера</span>';
+
+  // Метка уверенности идёт рядом со своей репликой: сводка говорит, что было
+  // трудно, а строка — что именно.
   $('transcript').textContent = (rep.transcript||[])
-    .map(t => `${t.role === 'agent' ? 'Агент' : 'Сотрудник'} [${t.stage}]: ${t.text}`)
+    .map(t => {
+      const who = t.role === 'agent' ? 'Агент' : 'Сотрудник';
+      const c = t.typing && t.typing.confidence !== 'нет данных'
+        ? ` (${t.typing.confidence})` : '';
+      return `${who}${c} [${t.stage}]: ${t.text}`;
+    })
     .join('\n');
   $('marks').textContent = JSON.stringify(
     {marks: rep.marks, evaluator: rep.evaluator}, null, 1);

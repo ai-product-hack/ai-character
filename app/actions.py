@@ -57,6 +57,7 @@ class AgentAction:
     note: str = ""
     raw: str = ""
     fell_back: bool = False       # действие не разобрано, откатились на STAY
+    repaired: bool = False        # действие восстановлено вторым разбором
 
     @property
     def advances(self) -> bool:
@@ -151,3 +152,56 @@ def _looks_like_control(chunk: str) -> bool:
 def parse_reply(blob: str) -> AgentReply:
     """Разобрать полный ответ модели на реплику и действие."""
     return AgentReply(text=strip_control(blob), action=parse_action(blob))
+
+
+# --------------------------------------------------------------- починка
+
+REPAIR_SYSTEM = (
+    "Ты разбираешь реплику интервьюера. Отвечай ОДНИМ словом из списка: "
+    "next_stage — интервьюер закончил с текущей темой и переходит к следующей; "
+    "finish — интервью окончено, интервьюер прощается; "
+    "stay — тема не закрыта, разговор продолжается. "
+    "Ничего, кроме одного слова."
+)
+
+
+def build_repair_prompt(reply_text: str, stage_title: str = "",
+                        is_last_stage: bool = False) -> str:
+    lines = []
+    if stage_title:
+        lines.append(f"Текущая тема: {stage_title}")
+    if is_last_stage:
+        lines.append("Это последняя тема сценария.")
+    lines.append(f"Реплика интервьюера:\n{reply_text}")
+    lines.append("Одно слово:")
+    return "\n".join(lines)
+
+
+def repair_action(ask, reply_text: str, stage_title: str = "",
+                  is_last_stage: bool = False) -> AgentAction | None:
+    """Второй разбор для реплик, пришедших без управляющей строки.
+
+    Не спасение от галлюцинаций, а закрытие дыры в протоколе: примерно каждая
+    десятая реплика приходит без последней строки, и молчание модели сейчас
+    неотличимо от объявленного `stay`. Разница существенная — из-за неё
+    сценарий может простоять на этапе до принудительного перехода по бюджету.
+
+    Спрашиваем по УЖЕ СКАЗАННОМУ тексту, одним словом, с крошечным бюджетом
+    токенов. Реплика к этому моменту звучит, так что на первый звук это не
+    влияет; влияет только на момент обновления этапа.
+
+    `ask` — вызываемое (system, prompt) -> str. Любая ошибка означает «не
+    починили»: возвращаем None, и остаётся обычный откат на STAY.
+    """
+    if not reply_text.strip():
+        return None
+    try:
+        out = ask(REPAIR_SYSTEM,
+                  build_repair_prompt(reply_text, stage_title, is_last_stage))
+    except Exception:                                      # noqa: BLE001
+        return None
+    word = re.sub(r"[^a-z_]", "", str(out or "").strip().lower())
+    for name in (NEXT_STAGE, FINISH, STAY):
+        if name in word:
+            return AgentAction(action=name, raw=str(out)[:80], repaired=True)
+    return None
