@@ -150,20 +150,35 @@ describe('состояния визуально различимы', () => {
     }
   });
 
-  test('thinking уводит взгляд вверх-влево', () => {
+  test('thinking мягко отводит взгляд и периодически возвращает контакт', () => {
     const ctx = setup();
     ctx.states.set('thinking');
     run(ctx, 2.0);
-    assert.ok(ctx.behavior.gazeBias.yaw < -10, 'взгляд должен уйти влево');
-    assert.ok(ctx.behavior.gazeBias.pitch > 5, 'и вверх');
-    // Сам взгляд должен оказаться в той области, а не метаться к собеседнику.
-    let inRegion = 0, total = 0;
-    run(ctx, 6.0, () => {
+    assert.ok(ctx.behavior.gazeBias.yaw < -5 && ctx.behavior.gazeBias.yaw > -12,
+      'отвод должен читаться, но не уходить далеко в сторону');
+    assert.ok(ctx.behavior.gazeBias.pitch > 2 && ctx.behavior.gazeBias.pitch < 7,
+      'взгляд немного вверх, а не в потолок');
+
+    let contact = 0, averted = 0, total = 0;
+    let avertedRun = 0, longestAvertedRun = 0;
+    run(ctx, 20.0, () => {
       total++;
-      if (ctx.behavior.gaze.yaw < -5 && ctx.behavior.gaze.pitch > 2) inRegion++;
+      const distance = Math.hypot(ctx.behavior.gaze.yaw, ctx.behavior.gaze.pitch);
+      if (distance < 1.5) contact++;
+      if (ctx.behavior.gaze.yaw < -4 && ctx.behavior.gaze.pitch > 1) {
+        averted++;
+        avertedRun++;
+        longestAvertedRun = Math.max(longestAvertedRun, avertedRun);
+      } else {
+        avertedRun = 0;
+      }
     });
-    assert.ok(inRegion / total > 0.7,
-      `взгляд в нужной области только ${(100 * inRegion / total).toFixed(0)}% времени`);
+    assert.ok(averted / total > 0.25, 'задумчивый отвод должен оставаться заметным');
+    assert.ok(contact / total > 0.08, 'должны быть короткие возвраты к собеседнику');
+    assert.ok(longestAvertedRun / 60 < 2.1,
+      `непрерывный отвод длился ${(longestAvertedRun / 60).toFixed(1)} с`);
+    assert.ok(ctx.morphs.get('eyeSquintLeft') > 0.04,
+      'лёгкий прищур должен собирать задумчивое выражение');
   });
 
   test('начало речи возвращает взгляд к собеседнику', () => {

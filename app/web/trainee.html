@@ -201,7 +201,12 @@ function handle(h, payload) {
       // закончилось, а не в том же сетевом пакете, где оно только стартовало.
       const src = backchannelSources.get(h.generation_id);
       if (src) src.addEventListener('ended', () => {
-        if (currentGen === h.generation_id) avatar.setState(face);
+        // Основная клауза могла успеть приехать и включить speaking ещё до
+        // конца короткого «угу». В таком порядке старый callback не имеет
+        // права снова увести глаза в thinking поверх уже начавшейся речи.
+        if (currentGen === h.generation_id && !contentAccented) {
+          avatar.setState(face);
+        }
         backchannelSources.delete(h.generation_id);
       }, {once:true});
     } else if (h.after_audio) {

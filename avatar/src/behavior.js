@@ -108,6 +108,7 @@ export class Microbehavior {
     // СМЕЩАЮТ поведение, а не подменяют его.
     this.gazeBias = { yaw: 0, pitch: 0 };       // куда смещены точки фиксации
     this.gazeStyle = null;                      // профиль состояния: контакт/отводы
+    this.gazeAnchorIn = Infinity;               // обязательный возврат к собеседнику
     this.blinkScale = 1;                        // множитель интервала моргания
     this.headTiltDeg = 0;                       // текущий наклон от состояния
     this.headPitchDeg = 0;                      // текущий наклон от эмоции
@@ -143,7 +144,12 @@ export class Microbehavior {
   }
 
   /** Переопределения характера саккад для текущего состояния. */
-  setGazeStyle(style) { this.gazeStyle = style || null; }
+  setGazeStyle(style) {
+    const next = style || null;
+    if (next === this.gazeStyle) return;
+    this.gazeStyle = next;
+    this.gazeAnchorIn = this._nextAnchorDelay();
+  }
 
   /** Множитель интервала моргания: больше единицы — моргания реже. */
   setBlinkScale(k) { this.blinkScale = k > 0 ? k : 1; }
@@ -192,7 +198,15 @@ export class Microbehavior {
 
   _fixationDuration() {
     const f = this.cfg.gaze.fixation;
-    return (f.minMs + this.gazeRnd.uniform() * (f.maxMs - f.minMs)) / 1000;
+    const scale = this.gazeStyle?.fixationScale ?? 1;
+    return (f.minMs + this.gazeRnd.uniform() * (f.maxMs - f.minMs))
+      * scale / 1000;
+  }
+
+  _nextAnchorDelay() {
+    const range = this.gazeStyle?.anchorEverySec;
+    if (!range) return Infinity;
+    return range[0] + this.gazeRnd.uniform() * (range[1] - range[0]);
   }
 
   _startSaccade() {
@@ -214,7 +228,17 @@ export class Microbehavior {
     // взгляд уходит вверх-влево и разглядывает уже ТУ область, а не мечется
     // между ней и собеседником.
     const bx = this.gazeBias.yaw, by = this.gazeBias.pitch;
-    if (this.gazeRnd.uniform() < (P.returnChance ?? S.returnChance)) {
+    // При размышлении человек не держит одну точку в потолке: иногда быстро
+    // проверяет лицо собеседника и снова отводит глаза. anchorChance задаёт
+    // именно такие короткие возвраты, независимо от смещённого gazeBias.
+    const anchorDue = this.gazeAnchorIn <= 0;
+    if (anchorDue || ((P.anchorChance ?? 0) > 0 &&
+        this.gazeRnd.uniform() < P.anchorChance)) {
+      const jitter = P.anchorJitterDeg ?? 0.6;
+      g.toYaw = (this.gazeRnd.uniform() * 2 - 1) * jitter;
+      g.toPitch = (this.gazeRnd.uniform() * 2 - 1) * jitter;
+      this.gazeAnchorIn = this._nextAnchorDelay();
+    } else if (this.gazeRnd.uniform() < (P.returnChance ?? S.returnChance)) {
       const jitter = P.returnJitterDeg ?? S.returnJitterDeg;
       g.toYaw = bx + (this.gazeRnd.uniform() * 2 - 1) * jitter;
       g.toPitch = by + (this.gazeRnd.uniform() * 2 - 1) * jitter;
@@ -249,9 +273,10 @@ export class Microbehavior {
 
   _updateGaze(dt) {
     const g = this.gaze;
+    this.gazeAnchorIn -= dt;
     g.t += dt;
     if (g.phase === 'fixate') {
-      if (g.t >= g.duration) this._startSaccade();
+      if (g.t >= g.duration || this.gazeAnchorIn <= 0) this._startSaccade();
     } else {
       if (g.t >= g.duration) {
         g.yaw = g.toYaw; g.pitch = g.toPitch;
