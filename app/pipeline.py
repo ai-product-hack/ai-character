@@ -22,6 +22,7 @@ import time
 from dataclasses import dataclass, field
 
 from .actions import strip_control
+from .emotion_tags import parse as parse_emotions, to_timeline
 from .clauses import Clause, ClauseSplitter
 from .generation import Generation, GenerationRegistry, PTSTimeline
 
@@ -39,6 +40,7 @@ class ClauseResult:
     sample_rate: int
     visemes: list[dict]
     chars: list[dict]
+    emotions: list[dict] = field(default_factory=list)
     timings: dict = field(default_factory=dict)
 
 
@@ -152,6 +154,18 @@ class ReplyPipeline:
             return None
         if text != clause.text:
             stats["clauses_with_control"] = stats.get("clauses_with_control", 0) + 1
+
+        # Теги эмоций вырезаются ДО синтеза, но их позиции запоминаются: дальше
+        # они превратятся в pts_ms по тем же таймкодам, что и висемы.
+        parsed = parse_emotions(text)
+        if parsed.dropped:
+            stats["emotion_tags_dropped"] = stats.get("emotion_tags_dropped", 0) + parsed.dropped
+        if parsed.marks:
+            stats["emotion_marks"] = stats.get("emotion_marks", 0) + len(parsed.marks)
+        text = parsed.text
+        if not text:
+            # Клауза целиком состояла из тега.
+            return None
         clause = Clause(clause.index, text, clause.first)
 
         t0 = time.perf_counter()
@@ -169,6 +183,8 @@ class ReplyPipeline:
         visemes = self.to_visemes(chars)
         audio_ms = len(pcm) / sr * 1000
         start_ms, shifted = timeline.add_clause(audio_ms, visemes, clause.text)
+        # Эмоция едет по существующему таймлайну: тот же PTS, та же отмена.
+        emotions = to_timeline(parsed.marks, chars, clause_start_ms=start_ms)
 
         if stats["t_first_audio"] is None:
             stats["t_first_audio"] = (time.perf_counter() - t_start) * 1000
@@ -177,6 +193,7 @@ class ReplyPipeline:
             generation_id=gen.id, index=clause.index, text=clause.text,
             first=clause.first, start_ms=start_ms, audio_ms=audio_ms,
             pcm=pcm, sample_rate=sr, visemes=shifted, chars=chars,
+            emotions=emotions,
             timings={"tts_ms": round(t_tts), "align_ms": round(t_align)},
         )
 

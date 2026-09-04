@@ -59,7 +59,7 @@ window.addEventListener('error', e => fail(e.error || e.message));
 window.addEventListener('unhandledrejection', e => fail(e.reason));
 
 let avatar, ctx, clock, analyser, currentGen = null, anchored = false;
-let cues = [], subsUntil = 0;
+let cues = [], emoMarks = [], emoApplied = -1;
 const stats = {firstAudioMs: null, firstSpeechMs: null, clauses: 0,
                drops: 0, seq: 0, backchannels: 0};
 
@@ -166,6 +166,10 @@ function handle(h, payload) {
     cues = cues.concat(h.cues);
     return;
   }
+  if (h.kind === 'emotions') {
+    emoMarks = emoMarks.concat(h.marks).sort((a, b) => a.pts_ms - b.pts_ms);
+    return;
+  }
 }
 
 function playAudio(h, payload) {
@@ -175,6 +179,7 @@ function playAudio(h, payload) {
     currentGen = h.generation_id;
     anchored = false;
     cues = [];
+    emoMarks = []; emoApplied = -1;
     stats.clauses = 0;
     avatar.setState('speaking');
   }
@@ -195,11 +200,13 @@ function playAudio(h, payload) {
 let live = [];
 
 function onCancel(gid) {
-  // Перебивание гасит звук, лицо и субтитры одним движением.
+  // Перебивание гасит звук, лицо, субтитры и эмоцию одним движением.
   for (const s of live) { try { s.stop(); } catch (_) {} }
   live = [];
   avatar.cancel(gid);
   cues = [];
+  emoMarks = []; emoApplied = -1;
+  avatar.setEmotion('neutral', 1);      // эмоция откатывается вместе со всем
   $('subs').textContent = '';
   currentGen = null;
   anchored = false;
@@ -211,7 +218,26 @@ function loop(now) {
   requestAnimationFrame(loop);
   avatar.frame(now);
   drawSubs();
+  applyEmotions();
   if ($('hud').style.display !== 'none') drawHud();
+}
+
+// Амплитуда умеренная: на полуреалистичном лице большая мимика превращает
+// персонажа в мультик. Натекание и спад делает сам слой эмоции за 200 мс.
+const EMO_INTENSITY = 0.45;
+
+function applyEmotions() {
+  if (!clock || clock.t0 === null || !emoMarks.length) return;
+  const ms = clock.nowMs();
+  if (ms === null) return;
+  // Эмоция едет по тому же PTS, что висемы и субтитры: своего таймера нет.
+  let i = emoApplied;
+  while (i + 1 < emoMarks.length && emoMarks[i + 1].pts_ms <= ms) i++;
+  if (i === emoApplied || i < 0) return;
+  emoApplied = i;
+  const m = emoMarks[i];
+  avatar.setEmotion(m.emotion, EMO_INTENSITY * (m.intensity ?? 1));
+  stats.emotion = m.emotion;
 }
 
 function drawSubs() {
@@ -229,6 +255,7 @@ function drawHud() {
   $('hud').textContent =
     `FPS            ${d.fps.toFixed(0)}\n` +
     `состояние      ${d.state}\n` +
+    `эмоция         ${d.emotion.name} ${d.emotion.intensity.toFixed(2)}\n` +
     `generation_id  ${v.genId ?? '—'}\n` +
     `первый звук    ${stats.firstAudioMs ?? '—'} мс` +
       (stats.backchannels ? '  (заполнитель)' : '') + `\n` +
@@ -267,6 +294,19 @@ async function send() {
 
 $('send').onclick = send;
 $('msg').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+
+// Спекуляция на недопечатанном: сервер получает растущий текст и запускает
+// запрос к модели, не дожидаясь Enter. Отправляем с задержкой — на каждое
+// нажатие слать нечего, решение о запуске принимает сервер.
+let typingTimer = null;
+$('msg').addEventListener('input', () => {
+  clearTimeout(typingTimer);
+  const text = $('msg').value;
+  typingTimer = setTimeout(() => {
+    fetch('/api/typing', {method:'POST', body: JSON.stringify({text})})
+      .catch(() => {});           // спекуляция не имеет права ломать ввод
+  }, 250);
+});
 $('hudBtn').onclick = () => {
   const h = $('hud');
   h.style.display = h.style.display === 'none' ? 'block' : 'none';

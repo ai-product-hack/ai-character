@@ -31,11 +31,13 @@ from app.actions import parse_reply                         # noqa: E402
 from app.agent import SYSTEM, apply as apply_action, build_prompt   # noqa: E402
 from app.backchannel import Backchannel                     # noqa: E402
 from app.dialogue import DialogueState                      # noqa: E402
+from app.emotion_tags import SYSTEM_HINT as EMO_HINT        # noqa: E402
 from app.evaluator import BackgroundEvaluator               # noqa: E402
 from app.generation import GenerationRegistry               # noqa: E402
 from app.media import GigaAMAligner, SileroTTS, stream_deepseek     # noqa: E402
 from app.pipeline import ReplyPipeline, subtitle_cues       # noqa: E402
 from app.scenario import Criterion, load_all                # noqa: E402
+from app.speculation import Speculator                      # noqa: E402
 from app.visemes_bridge import VisemeBridge                 # noqa: E402
 
 PORT = 8010
@@ -63,6 +65,11 @@ class Session:
         self.evaluator = BackgroundEvaluator(models["llm"])
         self.backchannel = models.get("backchannel")
         self.bc_cfg = models.get("bc_cfg", {})
+        # Спекуляция на недопечатанном: запрос уходит, пока человек ещё печатает.
+        self.spec = Speculator(
+            make_stream=lambda: stream_deepseek(models["llm"]),
+            build_prompt=lambda text: build_prompt(self.state, text),
+            system=SYSTEM, cfg=models.get("spec_cfg", {}))
         self.frames: list[tuple[dict, bytes]] = []
         self.frame_cv = threading.Condition()
         self.marks: list[dict] = []
@@ -83,8 +90,18 @@ class Session:
                 self._emit({"kind": "user", "text": user_text})
             gen = self.registry.start()
             prompt = build_prompt(self.state, user_text)
-            self.stream = stream_deepseek(self.models["llm"])
-            self.pipe.llm_stream = self.stream
+            # Если спекулятивный запрос попал — берём его: токены уже летят,
+            # а то и накопились. Промах стоит потраченных токенов, не задержки.
+            flight, cover = (self.spec.take(user_text) if user_text is not None
+                             else (None, 0.0))
+            if flight is not None:
+                self.stream = flight.stream
+                self.pipe.llm_stream = _ReplayStream(flight)
+                spec_hit = True
+            else:
+                self.stream = stream_deepseek(self.models["llm"])
+                self.pipe.llm_stream = self.stream
+                spec_hit = False
 
         t0 = time.perf_counter()
         pending: queue.Queue = queue.Queue()
@@ -97,7 +114,8 @@ class Session:
                                    args=(gen, t0, pending, DONE, em), daemon=True)
         emitter.start()
 
-        results = self.pipe.run(SYSTEM, prompt, gen, on_result=pending.put)
+        results = self.pipe.run(SYSTEM + "\n\n" + EMO_HINT, prompt, gen,
+                                on_result=pending.put)
         pending.put(DONE)
         emitter.join(timeout=10)
 
@@ -112,9 +130,14 @@ class Session:
                     "text": reply.speakable, "stage": self.state.stage_id})
         self.evaluator.submit(self.state)
 
+        ttft = round(self.pipe.last_stats.get("t_first_token") or 0)
+        if user_text is not None:
+            self.spec.note_ttft(ttft, spec_hit)
         self.marks.append({
             "generation_id": gen.id,
-            "t_first_token_ms": round(self.pipe.last_stats.get("t_first_token") or 0),
+            "spec_hit": spec_hit,
+            "spec_cover": round(cover, 3) if user_text is not None else None,
+            "t_first_token_ms": ttft,
             # Первый звук — то, что слышит человек. Первая содержательная
             # реплика — другая величина, и знать надо обе.
             "t_first_audio_ms": round(em["t_first_audio"] or 0),
@@ -226,12 +249,23 @@ class Session:
                     "clause": idx,
                     "cues": [{**c, "pts_ms": c["pts_ms"] + off, "clause": idx}
                              for c in subtitle_cues(r)]})
+        if r.emotions:
+            self._emit({"kind": "emotions", "generation_id": r.generation_id,
+                        "clause": idx,
+                        "marks": [{**e, "pts_ms": e["pts_ms"] + off}
+                                  for e in r.emotions]})
 
     def cancel(self) -> str | None:
         """Перебивание: гасим ВСЮ цепочку одним движением."""
         gid = self.registry.cancel()
         if self.stream is not None:
             self.stream.cancel()
+        # Спекуляцию здесь НЕ гасим. Она относится к сообщению пользователя, а
+        # не к реплике агента: перебивание как раз и есть отправка сообщения,
+        # ради которого запрос улетел вперёд. Первая версия звала drop() отсюда
+        # и убивала ровно тот запрос, который собиралась использовать —
+        # попаданий было ноль. Устаревший запрос гасится сам: при перезапуске
+        # по росту буфера и при промахе по префиксу.
         if gid:
             with self.lock:
                 # Из истории вычищаем только НЕДОГОВОРЁННОЕ. Реплику, которую
@@ -263,6 +297,7 @@ class Session:
         rep = report_mod.build(self.state, self.evaluator.log)
         d = rep.to_dict()
         d["marks"] = self.marks
+        d["speculation"] = self.spec.stats.summary()
         d["evaluator"] = {"calls": self.evaluator.log.calls,
                           "errors": self.evaluator.log.errors,
                           "total_ms": round(self.evaluator.log.total_ms)}
@@ -288,6 +323,24 @@ def parse_criteria(text: str) -> list[Criterion]:
     return out
 
 
+class _ReplayStream:
+    """Обёртка вокруг летящего запроса под интерфейс потока конвейера.
+
+    Конвейер зовёт `stream(system, prompt)` и получает генератор. Здесь аргументы
+    игнорируются: запрос уже ушёл со своим промптом, и переспрашивать модель
+    заново значило бы выбросить весь выигрыш.
+    """
+
+    def __init__(self, flight):
+        self.flight = flight
+
+    def cancel(self):
+        self.flight.cancel()
+
+    def __call__(self, system, prompt):
+        return self.flight.replay()
+
+
 class App:
     def __init__(self):
         print("поднимаю модели…")
@@ -309,6 +362,8 @@ class App:
         # убирает. Случай «ответ пришёл быстро» — это попадание спекуляции с
         # уже готовым результатом, а не ожидание в шестьсот миллисекунд.
         self.models["bc_cfg"] = {"enabled": True, "after_ms": 120, "lead_ms": 150}
+        self.models["spec_cfg"] = {"enabled": True, "min_chars": 15, "idle_ms": 400,
+                                   "relaunch_growth": 0.4, "reuse_cover": 0.6}
         print(f"  заполнители: {bc.describe()}")
         self.scenarios = load_all(ROOT / "data" / "scenarios")
         self.session: Session | None = None
@@ -415,6 +470,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             threading.Thread(target=APP.session.speak,
                              args=(data.get("text", ""),), daemon=True).start()
             return self._json({"ok": True, "cancelled": gid})
+        if u.path == "/api/typing":
+            if not APP.session:
+                return self._json({"ok": False})
+            launched = APP.session.spec.on_typing(data.get("text", ""))
+            return self._json({"ok": True, "launched": launched})
         if u.path == "/api/cancel":
             return self._json({"ok": True, "cancelled": APP.session.cancel()})
         return self._json({"error": "нет такого метода"}, 404)

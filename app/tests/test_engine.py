@@ -57,12 +57,12 @@ class ActionParsing(unittest.TestCase):
         a = parse_action('Реплика.\n```json\n{"action": "finish"}\n```')
         self.assertEqual(a.action, FINISH)
 
-    def test_evaluate_with_payload(self):
+    def test_evaluate_still_parses_for_old_records(self):
+        """Действие убрано из промпта, но разбор старых записей падать не должен."""
         a = parse_action('Так.\n{"action":"evaluate","criterion":"structure",'
                          '"score":"4","note":"ок"}')
         self.assertEqual(a.action, EVALUATE)
-        self.assertEqual(a.criterion, "structure")
-        self.assertEqual(a.score, 4, "строковый score должен приводиться к числу")
+        self.assertFalse(a.fell_back)
 
     def test_last_object_wins(self):
         # Модель порой рассуждает вслух и оставляет по дороге лишние объекты.
@@ -99,6 +99,20 @@ class ActionParsing(unittest.TestCase):
         self.assertFalse(state.finished)
         self.assertFalse(happened["advanced"])
         self.assertFalse(happened["fell_back"])
+
+    def test_emotion_tags_stripped_from_speech(self):
+        """Теги не должны оставаться ни в истории, ни в отчёте, ни в контексте.
+
+        Вырезание только перед синтезом их из озвучки убирало, но на экране,
+        в расшифровке и в промпте следующего хода они оставались.
+        """
+        r = parse_reply('[emo:skeptical] А цифры будут?\n{"action": "stay"}')
+        self.assertEqual(r.speakable, "А цифры будут?")
+        self.assertNotIn("emo", r.speakable)
+
+    def test_broken_emotion_tag_stripped_too(self):
+        r = parse_reply('Понял вас [emo:war\n{"action": "stay"}')
+        self.assertNotIn("[", r.speakable)
 
     def test_control_stripped_from_speech(self):
         r = parse_reply('Расскажите подробнее.\n{"action": "next_stage"}')
@@ -257,8 +271,10 @@ class StateOwnership(unittest.TestCase):
         self.assertIn("Первый ответ пользователя.", p)
         self.assertIn("уже замечено кое-что", p)
         self.assertIn("Свежая реплика.", p)
+        # Критерии попадают в промпт названиями, а не ключами: ключи были нужны
+        # действию evaluate, которого больше нет.
         for c in sc.criteria:
-            self.assertIn(c.key, p)
+            self.assertIn(c.title, p)
 
     def test_cancelled_generation_leaves_no_trace(self):
         sc = SCENARIOS[0]
