@@ -291,3 +291,51 @@ class EmittedIsNotHeard(unittest.TestCase):
         """Часы, заякоренные в спящем контексте, уезжают на десятки секунд."""
         from app.server import heard_text
         self.assertEqual(heard_text(self.CLAUSES, 87000), "Раз. Два. Три.")
+
+
+class HistoryBubbleFollowsPlaybackNotEmission(unittest.TestCase):
+    """Пузырь в истории закрывается по концу ЗВУКА, а не по концу отправки.
+
+    Та же ошибка «отправлено ≠ услышано», что и на сервере, повторённая в
+    клиенте. Кадр `agent` приходит, когда все клаузы ОТПРАВЛЕНЫ, — на этот
+    момент колонки играют вторую фразу. Закрытие пузыря по нему резало реплику
+    надвое: первый пузырь с парой слов («Отлично. Тогда»), второй — с полным
+    текстом. Поймано на скриншоте от владельца.
+
+    Проверки текстовые: логика живёт в браузере, юнит-стенда для неё нет.
+    Ловят они не всё, но именно возврат этой ошибки — ловят.
+    """
+
+    def setUp(self):
+        import pathlib
+        self.src = (pathlib.Path(__file__).resolve().parents[2] / "app" / "web"
+                    / "trainee.html").read_text(encoding="utf-8")
+
+    def _handler(self, kind: str) -> str:
+        """Тело обработчика кадра `kind` до следующего `if (h.kind`."""
+        start = self.src.index(f"if (h.kind === '{kind}')")
+        rest = self.src[start + 10:]
+        end = rest.find("if (h.kind ===")
+        return rest[:end if end > 0 else 400]
+
+    def test_agent_frame_does_not_close_the_bubble(self):
+        self.assertNotIn("closeLiveTurn", self._handler("agent"),
+                         "кадр `agent` — это конец ОТПРАВКИ, а не конец речи")
+
+    def test_bubble_closes_where_the_face_returns_to_listening(self):
+        """Тот же момент и та же лестница ожидания конца звука."""
+        i = self.src.index("h.after_audio")
+        self.assertIn("closeLiveTurn(false)", self.src[i:i + 900])
+
+    def test_interruption_still_marks_the_bubble(self):
+        i = self.src.index("function onCancel")
+        self.assertIn("closeLiveTurn(true)", self.src[i:i + 400])
+
+    def test_bubble_is_bound_to_its_generation(self):
+        """Без привязки закрытый пузырь воскресал новым, с полным текстом."""
+        self.assertIn("liveGen", self.src)
+        self.assertIn("liveDone", self.src)
+
+    def test_reply_without_audio_still_reaches_history(self):
+        """Нет звука — нет таймкодов. Молчащая история хуже несинхронной."""
+        self.assertIn("fallbackAgentTurn", self._handler("agent"))

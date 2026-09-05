@@ -313,9 +313,14 @@ function handle(h, payload) {
     return;
   }
   if (h.kind === 'agent') {
-    // Текст уже в истории — он накапливался по словам вместе с речью. Здесь
-    // только закрываем пузырь, чтобы следующая реплика начала новый.
-    closeLiveTurn(false);
+    // Пузырь здесь НЕ закрываем. Этот кадр означает «все клаузы отправлены», а
+    // не «человек дослушал»: конвейер работает с опережением, и на этот момент
+    // колонки играют вторую фразу. Закрытие тут резало реплику надвое —
+    // первый пузырь с парой слов, второй с полным текстом.
+    //
+    // Остаётся страховка: если по этой генерации в историю не попало ни слова
+    // (не было звука, а значит и таймкодов), показываем текст разом.
+    fallbackAgentTurn(h.generation_id, h.text);
     return;
   }
   if (h.kind === 'cancel') { onCancel(h.generation_id); return; }
@@ -366,7 +371,12 @@ function handle(h, payload) {
       // только затем возвращаем живое слушающее поведение.
       const src = lastContentSource;
       const apply = () => {
-        if (currentGen === h.generation_id) avatar.setState(face);
+        if (currentGen !== h.generation_id) return;
+        avatar.setState(face);
+        // Реплика дозвучала — вот теперь пузырь в истории закончен. Тот же
+        // момент, что и возврат лица в listening, и по той же причине: судить
+        // надо по концу ЗВУКА, а не по концу отправки.
+        closeLiveTurn(false);
       };
       if (!src || endedSources.has(src)) apply();
       else src.addEventListener('ended', apply, {once:true});
@@ -656,15 +666,30 @@ function addTurn(role, text) {
 // едут субтитры, — поэтому отдельного таймера и второго источника правды не
 // появляется. Заодно история перестаёт расходиться с услышанным: при
 // перебивании в ней остаётся ровно то, что успело прозвучать.
-let liveTurn = null, liveWords = 0;
+// Пузырь принадлежит ГЕНЕРАЦИИ и закрывается ровно один раз. Без привязки к
+// генерации и без флага «уже закрыт» реплика двоилась: пузырь закрывался, а
+// слова продолжали идти и начинали второй — с самого начала и целиком.
+let liveTurn = null, liveWords = 0, liveGen = null, liveDone = false;
 
 function streamAgentWords(words) {
-  if (!words.length) return;
-  if (!liveTurn) { liveTurn = addTurn('agent', ''); liveWords = 0; }
+  if (!currentGen) return;
+  if (liveGen !== currentGen) {          // новая реплика — новый пузырь
+    liveTurn = null; liveWords = 0; liveDone = false; liveGen = currentGen;
+  }
+  if (liveDone || !words.length) return;  // закрытый пузырь не воскрешаем
+  if (!liveTurn) liveTurn = addTurn('agent', '');
   if (words.length === liveWords) return;
   liveWords = words.length;
   liveTurn.querySelector('.txt').textContent = words.join(' ');
   $('history').scrollTop = 1e9;
+}
+
+/** Реплика прозвучала целиком, но в историю ничего не попало (не было звука
+ *  и таймкодов). Показываем текст разом — молчащая история хуже несинхронной. */
+function fallbackAgentTurn(gen, text) {
+  if (!text || liveGen === gen && liveWords) return;
+  liveGen = gen; liveDone = true; liveTurn = null; liveWords = 0;
+  addTurn('agent', text);
 }
 
 /** Реплика закончилась или оборвана: следующая начнёт новый пузырь. */
@@ -674,6 +699,7 @@ function closeLiveTurn(interrupted) {
     txt.textContent = txt.textContent.replace(/[…]*$/, '') + '…';
     liveTurn.classList.add('cut');
   }
+  liveDone = true;
   liveTurn = null;
   liveWords = 0;
 }
