@@ -153,6 +153,7 @@ voice ID находятся в [`app/config.json`](app/config.json).
 | [research/R5-avatar.md](research/R5-avatar.md) | инструмент проверки готов; **скриншотов нет**, источники за регистрацией |
 | [research/R6-echo-barge-in.md](research/R6-echo-barge-in.md) | стенд готов; **числа требуют человека у микрофона** |
 | [research/R7-references.md](research/R7-references.md) | разбор по документам и исходникам |
+| [research/R8-llm-latency.md](research/R8-llm-latency.md) | измерено: TTFT и цена сценария у DeepSeek против Claude |
 | [research/gpu-budget.md](research/gpu-budget.md) | смета Runpod: $5.3 на исследование, $20 с запасом |
 
 ## Спайки
@@ -186,10 +187,10 @@ voice ID находятся в [`app/config.json`](app/config.json).
 
 1. **Живые записи** — `python3 bench/data-gen/record_live.py --device 1`,
    ~15 минут. Разблокирует выводы R1 (термины) и R2 (конец хода). Самое важное.
-2. **Решение по LLM.** Ключ появился, замер сделан: DeepSeek даёт TTFT
-   1899 мс, и метрика 3000 мс выполняется в **13 случаях из 20** даже со
-   спекуляцией. Нужно решить — принимаем и маскируем бэкчэннелом, или ищем
-   более быстрого провайдера. См. `RISKS.md`, риск №4.
+2. **Решение по LLM.** Замерено и сравнено (`research/R8-llm-latency.md`):
+   TTFT у DeepSeek 2330 мс, у `claude-haiku-4-5` — 772 мс при цене вчетверо
+   выше (6 $ против 1.6 $ за сотню сценариев). Нужно решить, платим ли за
+   задержку. Качество реплик не сравнивалось — это отдельная работа.
 3. **Прогон R6** — `cd bench/r6-echo && ./run.sh`, ~10 минут, нужен человек.
 4. **Аватар из Avaturn** в `data/avatars/` — проверка занимает минуту.
 5. **Послушать** `bench/r3-tts/samples/` и выбрать голос: оценку на слух

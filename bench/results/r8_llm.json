@@ -1,0 +1,278 @@
+{
+  "max_tokens": 300,
+  "repeats": 2,
+  "scenario": "s1_interview_backend",
+  "prices_per_mtok": {
+    "deepseek-chat": [
+      0.27,
+      1.1
+    ],
+    "claude-haiku-4-5": [
+      1.0,
+      5.0
+    ],
+    "claude-sonnet-5": [
+      3.0,
+      15.0
+    ],
+    "claude-opus-5": [
+      5.0,
+      25.0
+    ]
+  },
+  "per_scenario_tokens": {
+    "scenario_id": "s1_interview_backend",
+    "turns": 22,
+    "in": 51537,
+    "out": 2015,
+    "system_repeated": 24926
+  },
+  "summary": {
+    "deepseek-chat": {
+      "ttft_median": 2330,
+      "ttft_min": 2152,
+      "ttft_max": 2620,
+      "total_median": 2993,
+      "usd_per_scenario": 0.01613
+    },
+    "claude-haiku-4-5": {
+      "ttft_median": 772,
+      "ttft_min": 756,
+      "ttft_max": 2248,
+      "total_median": 1988,
+      "usd_per_scenario": 0.06161
+    },
+    "claude-sonnet-5": {
+      "ttft_median": 941,
+      "ttft_min": 905,
+      "ttft_max": 1489,
+      "total_median": 2400,
+      "usd_per_scenario": 0.18484
+    },
+    "claude-opus-5": {
+      "ttft_median": 949,
+      "ttft_min": 815,
+      "ttft_max": 1431,
+      "total_median": 2895,
+      "usd_per_scenario": 0.30806
+    }
+  },
+  "calls": [
+    {
+      "ttft_ms": 1488.661957992008,
+      "total_ms": 2593.4542499890085,
+      "in": 1670,
+      "out": 80,
+      "chars": 174,
+      "model": "claude-sonnet-5",
+      "depth": "первый ход"
+    },
+    {
+      "ttft_ms": 773.5188749793451,
+      "total_ms": 2602.368541993201,
+      "in": 2105,
+      "out": 131,
+      "chars": 324,
+      "model": "claude-haiku-4-5",
+      "depth": "конец"
+    },
+    {
+      "ttft_ms": 970.8127499907278,
+      "total_ms": 3990.5987920064945,
+      "in": 2228,
+      "out": 122,
+      "chars": 294,
+      "model": "claude-opus-5",
+      "depth": "конец"
+    },
+    {
+      "ttft_ms": 815.079166990472,
+      "total_ms": 2749.482249986613,
+      "in": 1995,
+      "out": 103,
+      "chars": 229,
+      "model": "claude-opus-5",
+      "depth": "середина"
+    },
+    {
+      "ttft_ms": 938.7148329988122,
+      "total_ms": 2174.8420000076294,
+      "in": 1670,
+      "out": 75,
+      "chars": 167,
+      "model": "claude-opus-5",
+      "depth": "первый ход"
+    },
+    {
+      "ttft_ms": 819.1664580081124,
+      "total_ms": 2941.964416007977,
+      "in": 1995,
+      "out": 107,
+      "chars": 243,
+      "model": "claude-opus-5",
+      "depth": "середина"
+    },
+    {
+      "ttft_ms": 959.6897090086713,
+      "total_ms": 4077.3769590014126,
+      "in": 2228,
+      "out": 116,
+      "chars": 285,
+      "model": "claude-opus-5",
+      "depth": "конец"
+    },
+    {
+      "ttft_ms": 912.1798329870217,
+      "total_ms": 3211.300625000149,
+      "in": 2228,
+      "out": 115,
+      "chars": 244,
+      "model": "claude-sonnet-5",
+      "depth": "конец"
+    },
+    {
+      "ttft_ms": 1431.3571249949746,
+      "total_ms": 2848.1545420072507,
+      "in": 1670,
+      "out": 77,
+      "chars": 167,
+      "model": "claude-opus-5",
+      "depth": "первый ход"
+    },
+    {
+      "ttft_ms": 826.8967079930007,
+      "total_ms": 2178.397582989419,
+      "in": 2105,
+      "out": 111,
+      "chars": 275,
+      "model": "claude-haiku-4-5",
+      "depth": "конец"
+    },
+    {
+      "ttft_ms": 937.5419999996666,
+      "total_ms": 2184.321999986423,
+      "in": 1995,
+      "out": 73,
+      "chars": 174,
+      "model": "claude-sonnet-5",
+      "depth": "середина"
+    },
+    {
+      "ttft_ms": 2299.366208986612,
+      "total_ms": 3166.202541993698,
+      "in": 1666,
+      "out": 90,
+      "chars": 299,
+      "model": "deepseek-chat",
+      "depth": "конец"
+    },
+    {
+      "ttft_ms": 2468.619666993618,
+      "total_ms": 2966.8480420077685,
+      "in": 1491,
+      "out": 62,
+      "chars": 202,
+      "model": "deepseek-chat",
+      "depth": "середина"
+    },
+    {
+      "ttft_ms": 2186.0400839941576,
+      "total_ms": 2557.1749590162653,
+      "in": 1239,
+      "out": 42,
+      "chars": 138,
+      "model": "deepseek-chat",
+      "depth": "первый ход"
+    },
+    {
+      "ttft_ms": 2619.683208002243,
+      "total_ms": 3145.0265829917043,
+      "in": 1491,
+      "out": 53,
+      "chars": 163,
+      "model": "deepseek-chat",
+      "depth": "середина"
+    },
+    {
+      "ttft_ms": 2248.334917007014,
+      "total_ms": 2974.1910000157077,
+      "in": 1871,
+      "out": 56,
+      "chars": 134,
+      "model": "claude-haiku-4-5",
+      "depth": "середина"
+    },
+    {
+      "ttft_ms": 757.9154999984894,
+      "total_ms": 1745.4714160121512,
+      "in": 1553,
+      "out": 94,
+      "chars": 214,
+      "model": "claude-haiku-4-5",
+      "depth": "первый ход"
+    },
+    {
+      "ttft_ms": 2152.4924999976065,
+      "total_ms": 3019.8481249972247,
+      "in": 1666,
+      "out": 87,
+      "chars": 293,
+      "model": "deepseek-chat",
+      "depth": "конец"
+    },
+    {
+      "ttft_ms": 756.1890840006527,
+      "total_ms": 1472.6559999980964,
+      "in": 1553,
+      "out": 79,
+      "chars": 183,
+      "model": "claude-haiku-4-5",
+      "depth": "первый ход"
+    },
+    {
+      "ttft_ms": 2359.871499997098,
+      "total_ms": 2688.0112499929965,
+      "in": 1239,
+      "out": 42,
+      "chars": 137,
+      "model": "deepseek-chat",
+      "depth": "первый ход"
+    },
+    {
+      "ttft_ms": 905.1235420047306,
+      "total_ms": 3195.7805840065703,
+      "in": 2228,
+      "out": 128,
+      "chars": 284,
+      "model": "claude-sonnet-5",
+      "depth": "конец"
+    },
+    {
+      "ttft_ms": 944.6035000146367,
+      "total_ms": 2205.57566700154,
+      "in": 1995,
+      "out": 66,
+      "chars": 146,
+      "model": "claude-sonnet-5",
+      "depth": "середина"
+    },
+    {
+      "ttft_ms": 1175.3664579882752,
+      "total_ms": 2096.024792001117,
+      "in": 1670,
+      "out": 73,
+      "chars": 172,
+      "model": "claude-sonnet-5",
+      "depth": "первый ход"
+    },
+    {
+      "ttft_ms": 770.5107080109883,
+      "total_ms": 1797.2964580112603,
+      "in": 1871,
+      "out": 82,
+      "chars": 197,
+      "model": "claude-haiku-4-5",
+      "depth": "середина"
+    }
+  ]
+}
