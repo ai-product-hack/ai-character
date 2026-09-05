@@ -7,6 +7,10 @@
    стилей стоит тридцати строк и не может отвалиться. */
 
 .rep { color: #dde3ec; font: 14px/1.55 -apple-system, system-ui, sans-serif; }
+/* Цвет ссылки задан явно: браузерный #551a8b для посещённых на тёмном фоне
+   практически не читается. На печати ссылка становится обычным текстом. */
+.rep a { color: #7fd1ff; }
+.rep a:visited { color: #7fd1ff; }
 .rep h2 { font-size: 15px; margin: 26px 0 8px; color: #8b96a8; font-weight: 500;
           letter-spacing: .02em; }
 .rep h2:first-child { margin-top: 0; }
@@ -112,4 +116,5 @@
   .rep .meter { background: #e4e4e4; }
   .rep .meter i { background: #777; }
   .rep .anchors b { color: #333; }
+  .rep a, .rep a:visited { color: #111; text-decoration: none; }
 }

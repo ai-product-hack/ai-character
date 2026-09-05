@@ -15,6 +15,9 @@
  button.primary{border-color:#7fd1ff;color:#7fd1ff}
  button.ghost{border-color:#232a38;color:#8b96a8;padding:3px 7px;font-size:12px}
  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+ /* Своего цвета у ссылок не было, и браузер красил посещённые в #551a8b — на
+    тёмном фоне это почти не видно, а ссылка сотруднику здесь главная. */
+ a{color:#7fd1ff} a:visited{color:#7fd1ff} a:hover{color:#a6e2ff}
  .card{border:1px solid #232a38;border-radius:8px;padding:14px 16px;background:#141922;
        margin-bottom:12px}
  .card.dim{opacity:.55}

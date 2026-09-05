@@ -74,6 +74,16 @@
  #finishInner{max-width:900px;margin:0 auto;padding:0 20px}
  #finishBar{display:flex;gap:8px;align-items:center;margin-bottom:14px}
  #finishBar .grow{flex:1;color:#8b96a8;font-size:13px}
+ /* Ворота: пока звук не разбужен, разговор не начинается. Браузер включает
+    аудиоконтекст только по жесту, и без этого первая реплика уходила в
+    тишину — человек видел молчащего аватара и не понимал, сломано ли. */
+ #gate{position:fixed;inset:0;z-index:25;background:#05060af2;display:flex;
+   align-items:center;justify-content:center}
+ #gate.off{display:none}
+ #gateBox{max-width:420px;text-align:center;padding:24px}
+ #gateTitle{font-size:19px;font-weight:600;margin-bottom:8px}
+ #gateText{color:#8b96a8;font-size:13px;line-height:1.5;margin:0 0 18px}
+ #gateGo{font-size:15px;padding:10px 20px;border-color:#7fd1ff;color:#7fd1ff}
  /* На печати оверлей перестаёт быть оверлеем. Фиксированный контейнер со
     своей прокруткой браузер обрезает по первой странице: на экране отчёт
     целый, а в PDF от него остаётся шапка. Правило живёт здесь, а не в
@@ -109,6 +119,13 @@
   </div>
 </div>
 <div id="err"></div>
+
+<div id="gate"><div id="gateBox">
+  <div id="gateTitle">Тренажёр готов</div>
+  <p id="gateText">Собеседник начнёт разговор, как только вы нажмёте. Браузер не
+  включает звук без этого — иначе первая реплика уйдёт в тишину.</p>
+  <button id="gateGo">начать разговор</button>
+</div></div>
 
 <div id="finish"><div id="finishInner">
   <div id="finishBar" class="noprint">
@@ -189,11 +206,28 @@ async function boot() {
     send,
   };
   requestAnimationFrame(loop);
+  // К потоку подключаемся ТОЛЬКО после жеста — см. ворота ниже. Кадры на
+  // сервере копятся с самого старта сессии и отдаются с нулевого индекса,
+  // так что ничего не теряется: первая реплика доиграет целиком, просто
+  // начнётся тогда, когда её есть кому услышать.
+}
+
+// Ворота. Раньше клиент подключался сразу, первая реплика приходила до того,
+// как человек успевал что-то нажать, и уходила в тишину: браузер держит
+// аудиоконтекст в suspended до жеста. Человек видел молчащего аватара и не
+// понимал, сломано ли. Побочно это же ломало часы аудио — таймлайн якорился
+// в спящем контексте и после resume() разъезжался на десятки секунд.
+$('gateGo').onclick = async () => {
+  $('gateGo').disabled = true;
+  ensureAudio();
+  try { await ctx.resume(); } catch (e) { fail(e); }
+  $('gate').classList.add('off');
+  $('msg').focus();
   // Ошибка в цикле чтения раньше терялась молча, и выглядело это как «агент
   // замолчал»: кадры на сервере есть, клиент их не берёт. Теперь падение
   // видно, и поток переподключается.
   connectForever();
-}
+};
 
 function ensureAudio() {
   if (!ctx) {
@@ -400,6 +434,13 @@ function playAudio(h, payload) {
 
 let live = [];
 
+/** Сколько миллисекунд реплики человек успел услышать. null — речи не было. */
+function heardNow() {
+  if (!currentGen || !clock || clock.t0 === null) return null;
+  const ms = clock.nowMs();
+  return ms === null ? null : Math.max(0, Math.round(ms));
+}
+
 function onCancel(gid) {
   // Перебивание гасит звук, лицо, субтитры и эмоцию одним движением.
   for (const s of live) { try { s.stop(); } catch (_) {} }
@@ -597,8 +638,15 @@ async function send() {
   tAsk = performance.now();
   // Enter во время речи агента = перебивание: гасим локально сразу, не дожидаясь
   // сервера, иначе между нажатием и ответом сети звучит уже отменённое.
+  //
+  // Позицию воспроизведения снимаем ДО onCancel: он сбрасывает якорь часов, и
+  // после него узнать, сколько человек успел услышать, уже не у кого. Сервер
+  // знает только то, что ОТПРАВИЛ, а отправляет он с опережением — без этого
+  // числа в историю попадал весь абзац, включая непрозвучавшее.
+  const heardMs = heardNow();
   if (currentGen) { onCancel(currentGen); avatar.setState('interrupted'); }
-  await fetch(api('/api/message'), {method:'POST', body: JSON.stringify({text})});
+  await fetch(api('/api/message'), {method:'POST',
+                                    body: JSON.stringify({text, heard_ms: heardMs})});
 }
 
 // Отчёт показывается в момент finish — это прямое требование кейса. Он уже

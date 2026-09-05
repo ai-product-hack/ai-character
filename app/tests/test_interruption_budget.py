@@ -198,3 +198,96 @@ class FinishedSessionStopsAcceptingTurns(unittest.TestCase):
         self.assertEqual(code, 409)
         self.assertTrue(body["finished"])
         self.assertIn("reason", body, "клиенту нужно, ЧЕМ именно кончилось")
+
+
+class OnlyWhatWasActuallyHeard(unittest.TestCase):
+    """В историю идёт услышанное, а не отправленное.
+
+    Замечание с живого прогона: «если я перебил его на половине абзаца, у него
+    дальше в контекст пойдёт весь этот абзац; он не будет понимать, что его
+    перебили». Так и было: клауза засчитывалась в момент ОТПРАВКИ клиенту, а
+    конвейер работает с опережением намеренно — синтез бежит впереди
+    воспроизведения, и две-три следующие клаузы уже отправлены.
+    """
+
+    CLAUSES = [
+        {"start_ms": 0, "audio_ms": 800, "text": "Первая фраза."},
+        {"start_ms": 800, "audio_ms": 900, "text": "Вторая фраза."},
+        {"start_ms": 1700, "audio_ms": 700, "text": "Третья фраза."},
+        {"start_ms": 2400, "audio_ms": 600, "text": "Четвёртая фраза."},
+    ]
+
+    def test_unstarted_clauses_are_dropped(self):
+        from app.server import heard_text
+        said = heard_text(self.CLAUSES, heard_ms=1000)
+        self.assertEqual(said, "Первая фраза. Вторая фраза.")
+
+    def test_clause_in_progress_counts(self):
+        """Начавшаяся прозвучала хотя бы частично — агент вправе её помнить."""
+        from app.server import heard_text
+        self.assertIn("Вторая", heard_text(self.CLAUSES, heard_ms=801))
+
+    def test_interruption_before_any_audio_leaves_nothing(self):
+        from app.server import heard_text
+        self.assertEqual(heard_text(self.CLAUSES, heard_ms=-5), "")
+
+    def test_full_playback_keeps_everything(self):
+        from app.server import heard_text
+        said = heard_text(self.CLAUSES, heard_ms=9000)
+        self.assertEqual(len(said.split(".")) - 1, 4)
+
+    def test_without_a_clock_everything_sent_is_kept(self):
+        """Скриптовые прогоны звук не играют — старое поведение остаётся."""
+        from app.server import heard_text
+        said = heard_text(self.CLAUSES, heard_ms=None)
+        self.assertIn("Четвёртая", said)
+
+    def test_old_string_format_still_reads(self):
+        from app.server import heard_text
+        self.assertEqual(heard_text(["А.", "Б."], heard_ms=10), "А. Б.")
+
+    def test_empty_is_empty(self):
+        from app.server import heard_text
+        self.assertEqual(heard_text([], heard_ms=100), "")
+
+
+class EmittedIsNotHeard(unittest.TestCase):
+    """«Дописана» и «дослушана» — разные вещи.
+
+    Это оказалось сутью жалобы. Конвейер отправляет клаузы с опережением и
+    помечает генерацию завершённой, когда отправил ПОСЛЕДНЮЮ, — а звук в этот
+    момент играет вторую. Проверка «генерация не завершена» поэтому почти
+    никогда не срабатывала на живом перебивании, и реплика оставалась в
+    истории целиком. Замерено в браузере: перебивание на 5.1 с при отправке,
+    закончившейся к 3 с, — вся реплика в 451 символ уходила в контекст.
+    """
+
+    CLAUSES = [
+        {"start_ms": 0, "audio_ms": 1000, "text": "Раз."},
+        {"start_ms": 1000, "audio_ms": 1000, "text": "Два."},
+        {"start_ms": 2000, "audio_ms": 1000, "text": "Три."},
+    ]
+
+    def test_cut_short_is_judged_by_the_clock_not_by_emission(self):
+        from app.server import was_cut_short
+        self.assertTrue(was_cut_short(self.CLAUSES, 1500))
+
+    def test_playback_past_the_end_is_not_a_cut(self):
+        from app.server import was_cut_short
+        self.assertFalse(was_cut_short(self.CLAUSES, 3000))
+        self.assertFalse(was_cut_short(self.CLAUSES, 99000))
+
+    def test_no_clock_is_not_a_cut(self):
+        """Иначе каждая реплика в скриптовом прогоне считалась бы оборванной."""
+        from app.server import was_cut_short
+        self.assertFalse(was_cut_short(self.CLAUSES, None))
+
+    def test_broken_clock_is_not_a_cut(self):
+        from app.server import was_cut_short
+        for bogus in ("ага", float("nan"), float("inf"), None):
+            self.assertFalse(was_cut_short(self.CLAUSES, bogus), bogus)
+
+    def test_clock_past_the_end_keeps_everything(self):
+        """Часы, заякоренные в спящем контексте, уезжают на десятки секунд."""
+        from app.server import heard_text
+        self.assertEqual(heard_text(self.CLAUSES, 87000), "Раз. Два. Три.")

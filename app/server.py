@@ -80,10 +80,10 @@ class Session:
         # Генерации, которые доиграли до конца. Их реплики пользователь
         # услышал, и стирать их из истории при следующей отмене нельзя.
         self.completed: set[str] = set()
-        # Текст клауз, реально ушедших клиенту, по генерациям. При перебивании
-        # это единственный источник правды о том, что человек услышал:
-        # `apply_action` до истории уже не доберётся.
-        self.spoken: dict[str, list[str]] = {}
+        # Клаузы, ушедшие клиенту, с их местом на таймлайне. При перебивании
+        # отсюда берётся то, что человек успел УСЛЫШАТЬ, — по позиции его
+        # часов аудио: `apply_action` до истории уже не доберётся.
+        self.spoken: dict[str, list[dict]] = {}
         # Ход пользователя, породивший генерацию. Нужен, чтобы перебитый обмен
         # не списывал бюджет этапа.
         self.gen_turn: dict[str, object] = {}
@@ -398,10 +398,18 @@ class Session:
             lead = self.bc_cfg.get("lead_ms", 150)
             em["offset_ms"] = max(em["offset_ms"], elapsed + lead)
         em["_placed"] = True
-        self.spoken.setdefault(r.generation_id, []).append(r.text)
 
         off = em["offset_ms"]
         idx = r.index + em["clause_base"]
+        # Клауза запоминается ВМЕСТЕ с её местом на таймлайне клиента — тем
+        # самым `start_ms`, что уходит в кадре звука. Раньше здесь копился
+        # голый текст, и на перебивании в историю попадало всё ОТПРАВЛЕННОЕ.
+        # А конвейер работает с опережением намеренно: синтез бежит впереди
+        # воспроизведения. Значит две-три следующие клаузы уже отправлены и
+        # засчитывались как сказанные, хотя человек их не слышал — агент потом
+        # продолжал так, будто произнёс весь абзац.
+        self.spoken.setdefault(r.generation_id, []).append(
+            {"start_ms": r.start_ms + off, "audio_ms": r.audio_ms, "text": r.text})
         if em["t_first_audio"] is None:
             em["t_first_audio"] = (time.perf_counter() - t0) * 1000
         if em["t_first_speech"] is None:
@@ -469,8 +477,15 @@ class Session:
                     "current": self.state.stage_index}
         return {}
 
-    def cancel(self) -> str | None:
-        """Перебивание: гасим ВСЮ цепочку одним движением."""
+    def cancel(self, heard_ms: float | None = None) -> str | None:
+        """Перебивание: гасим ВСЮ цепочку одним движением.
+
+        `heard_ms` — позиция воспроизведения у клиента в момент нажатия, по
+        часам аудио. Это единственный источник правды о том, что человек
+        услышал: сервер знает лишь то, что ОТПРАВИЛ, а отправляет он с
+        опережением. Без него (скриптовые прогоны, старый клиент) остаётся
+        прежнее поведение — считаем услышанным всё отправленное.
+        """
         gid = self.registry.cancel()
         if self.stream is not None:
             self.stream.cancel()
@@ -482,13 +497,22 @@ class Session:
         # по росту буфера и при промахе по префиксу.
         if gid:
             with self.lock:
-                if gid not in self.completed:
+                clauses = self.spoken.get(gid, [])
+                # «Дописана» и «дослушана» — разные вещи, и это оказалось
+                # главным в жалобе «перебил на половине, а в контекст ушёл весь
+                # абзац». Конвейер отправляет клаузы с опережением и помечает
+                # генерацию завершённой, когда отправил ПОСЛЕДНЮЮ, — а звук в
+                # этот момент играет вторую. Проверка `gid not in completed`
+                # поэтому почти никогда не срабатывала на живом перебивании, и
+                # реплика оставалась в истории целиком.
+                cut_short = was_cut_short(clauses, heard_ms)
+                if gid not in self.completed or cut_short:
                     # Недоговорённое из истории убираем, но НЕ целиком:
                     # прозвучавшую часть пользователь слышал, и агент обязан
                     # её помнить, иначе он переспросит то, на что уже получил
                     # ответ. Возвращаем ровно озвученные клаузы.
                     self.state.drop_generation(gid)
-                    said = " ".join(self.spoken.get(gid, [])).strip()
+                    said = heard_text(clauses, heard_ms)
                     if said:
                         self.state.add_interrupted_agent(said, gid)
                     # Обмен не состоялся — агент не договорил свой вопрос.
@@ -553,6 +577,61 @@ class Session:
             self.saved = report_mod.save(d)
         d["saved_to"] = self.saved
         return d
+
+
+def _heard_position(clauses: list, heard_ms) -> float | None:
+    """Позицию воспроизведения — в число, если ей можно верить.
+
+    None означает «доверять нечему, считай услышанным всё»: так ведут себя
+    скриптовые прогоны без звука, старый клиент и сломанные часы.
+    """
+    if not clauses or not isinstance(clauses[0], dict) or heard_ms is None:
+        return None
+    try:
+        heard = float(heard_ms)
+    except (TypeError, ValueError):
+        return None
+    if heard != heard or heard in (float("inf"), float("-inf")):   # noqa: PLR0124
+        return None
+    return heard
+
+
+def was_cut_short(clauses: list, heard_ms) -> bool:
+    """Оборвали ли реплику на полуслове.
+
+    Не то же самое, что «генерация не завершилась»: конвейер помечает её
+    завершённой, когда ОТПРАВИЛ последнюю клаузу, а звук в этот момент играет
+    вторую. Судить надо по часам человека, а не по состоянию отправки.
+    """
+    heard = _heard_position(clauses, heard_ms)
+    if heard is None:
+        return False
+    end = max(c["start_ms"] + c["audio_ms"] for c in clauses)
+    return heard < end
+
+
+def heard_text(clauses: list, heard_ms: float | None) -> str:
+    """Что из отправленного человек успел услышать.
+
+    Клауза засчитывается, если она успела НАЧАТЬСЯ к моменту перебивания.
+    Начавшаяся прозвучала хотя бы частично, и агент вправе о ней помнить;
+    не начавшаяся не звучала вовсе, и держать её в истории — значит заставлять
+    агента продолжать так, будто он договорил.
+
+    Дробить клаузу по середине не пытаемся: у нас нет отображения времени в
+    символы внутри неё, а клауза и так короткая — это одна фраза, а не абзац.
+    """
+    if not clauses:
+        return ""
+    everything = " ".join(c if isinstance(c, str) else c["text"]
+                          for c in clauses).strip()
+    # Старый формат, прогоны без звука, сломанные часы: всё отправленное.
+    # Безопасная сторона здесь именно эта: обрезать по недостоверным часам
+    # значило бы стирать то, что человек на самом деле слышал.
+    heard = _heard_position(clauses, heard_ms)
+    if heard is None or not was_cut_short(clauses, heard):
+        return everything
+    return " ".join(c["text"] for c in clauses if c["start_ms"] <= heard).strip()
 
 
 def parse_criteria(text: str) -> list[Criterion]:
@@ -966,7 +1045,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if sess is None:
                 return None
             # Enter во время речи агента = перебивание. Одно движение гасит всё.
-            gid = sess.cancel()
+            # `heard_ms` — сколько человек успел услышать по своим часам аудио.
+            gid = sess.cancel(data.get("heard_ms"))
             threading.Thread(target=sess.speak,
                              args=(data.get("text", ""),), daemon=True).start()
             return self._json({"ok": True, "cancelled": gid})
@@ -1008,7 +1088,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if u.path == "/api/cancel":
             sess = self._need_session(u, data)
             return None if sess is None else self._json(
-                {"ok": True, "cancelled": sess.cancel()})
+                {"ok": True, "cancelled": sess.cancel(data.get("heard_ms"))})
         return self._json({"error": "нет такого метода"}, 404)
 
     def _json(self, obj, code=200):
