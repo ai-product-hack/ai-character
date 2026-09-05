@@ -5,3 +5,6 @@ __pycache__/
 node_modules/
 bench/r3-tts/compare/**/*.wav
 bench/r3-tts/round2/**/*.wav
+# История прогонов: отчёт дописывается сюда одной строкой на каждый finish.
+# Это рантайм-артефакт, а не исходник, и растёт он быстро.
+data/reports/

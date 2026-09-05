@@ -1,0 +1,19 @@
+{
+  "mechanic": "обратное интервью: агент — сильный кандидат",
+  "kind": "interview",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 36712
+    }
+  ],
+  "total_ms": 36712,
+  "wall_s": 37.3,
+  "problems": [],
+  "notes": []
+}

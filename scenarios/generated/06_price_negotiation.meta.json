@@ -1,0 +1,19 @@
+{
+  "mechanic": "торг с числовым исходом",
+  "kind": "negotiation",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 32982
+    }
+  ],
+  "total_ms": 32982,
+  "wall_s": 33.3,
+  "problems": [],
+  "notes": []
+}

@@ -13,25 +13,18 @@
 """
 import json
 import pathlib
-import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from app import translit                                  # noqa: E402
 SRC = ROOT / "data" / "scenarios"
 
 
 def slug(goal: str, n: int) -> str:
     """id этапа из цели: «глубина роли» -> «glubina_roli»."""
-    table = {
-        "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e", "ё": "e",
-        "ж": "zh", "з": "z", "и": "i", "й": "y", "к": "k", "л": "l", "м": "m",
-        "н": "n", "о": "o", "п": "p", "р": "r", "с": "s", "т": "t", "у": "u",
-        "ф": "f", "х": "h", "ц": "c", "ч": "ch", "ш": "sh", "щ": "sch",
-        "ъ": "", "ы": "y", "ь": "", "э": "e", "ю": "yu", "я": "ya",
-    }
-    out = "".join(table.get(ch, ch if ch.isalnum() else "_") for ch in goal.lower())
-    out = re.sub(r"_+", "_", out).strip("_")
-    return out or f"stage_{n}"
+    return translit.slug(goal, f"stage_{n}")
 
 
 def hint_for(step: dict, persona: str) -> str:

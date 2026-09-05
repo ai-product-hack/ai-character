@@ -2,7 +2,8 @@
 //
 //   avatar.load(url)
 //   avatar.setState(state)                    listening | thinking | speaking | interrupted
-//   avatar.setEmotion(emotion, intensity)     skeptical | pressing | warming | impressed | neutral
+//   avatar.setEmotion(emotion, intensity)     neutral | skeptical | pressing | warming |
+//                                             impressed | angry | anxious
 //   avatar.noteActivity()                     человек печатает — не торопить
 //   avatar.playGeneration(genId, visemeTrack)
 //   avatar.cancel(genId)
@@ -23,7 +24,13 @@ import { StateMachine } from './states.js';
 import { AudioClock } from './clock.js';
 
 export { STATES } from './states.js';
-export const EMOTIONS = Object.freeze(['neutral', 'skeptical', 'pressing', 'warming', 'impressed']);
+// Первые пять лежат на оси «холодно → тепло» и выводятся из накопленных
+// оценок; angry и anxious на ней не лежат — их назначает персона сценария или
+// разметка [emo:] в реплике. Для слоя эмоции разницы нет, она вся в том, кто
+// эмоцию включает.
+export const EMOTIONS = Object.freeze([
+  'neutral', 'skeptical', 'pressing', 'warming', 'impressed', 'angry', 'anxious',
+]);
 
 export class Avatar {
   /**

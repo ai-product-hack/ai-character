@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import http.server
 import queue
 import pathlib
@@ -23,26 +24,28 @@ import sys
 import threading
 import time
 import urllib.parse
+import uuid
 
 import numpy as np
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app import llm as llm_mod, report as report_mod        # noqa: E402
+from app import generator as gen_mod, llm as llm_mod, report as report_mod  # noqa: E402
 from app.actions import parse_reply, repair_action          # noqa: E402
 from app.agent import SYSTEM, apply as apply_action, build_prompt   # noqa: E402
 from app.backchannel import Backchannel                     # noqa: E402
 from app.dialogue import DialogueState                      # noqa: E402
 from app.emotion_drive import mood_from                     # noqa: E402
-from app.emotion_tags import SYSTEM_HINT as EMO_HINT        # noqa: E402
+from app.emotion_tags import EMOTIONS, SYSTEM_HINT as EMO_HINT   # noqa: E402
 from app.panels import SYSTEM_HINT as PANEL_HINT, skills_payload   # noqa: E402
 from app.evaluator import BackgroundEvaluator               # noqa: E402
 from app.generation import GenerationRegistry               # noqa: E402
 from app.media import (GigaAMAligner, PROVIDERS, SwitchableTTS,   # noqa: E402
                        stream_deepseek, tts_config)
 from app.pipeline import ReplyPipeline, subtitle_cues       # noqa: E402
-from app.scenario import Criterion, load_all                # noqa: E402
+from app.scenario import Criterion, Scenario, load_all      # noqa: E402
+from app.templates import TYPES                             # noqa: E402
 from app.speculation import Speculator                      # noqa: E402
 from app.typing_signal import TypingTracker                 # noqa: E402
 from app.visemes_bridge import VisemeBridge                 # noqa: E402
@@ -54,8 +57,15 @@ PORT = 8010
 class Session:
     """Один тренировочный диалог. Живёт в процессе сервера."""
 
-    def __init__(self, scenario, criteria_text: str, models):
+    def __init__(self, scenario, criteria_text: str, models, session_id: str = ""):
         self.scenario = scenario
+        # Идентификатор сессии. По нему сотрудник открывает свой экран, а
+        # методист забирает отчёт: словарь в памяти процесса, никакой базы.
+        self.id = session_id or uuid.uuid4().hex[:8]
+        # Отчёт пишется на диск ровно один раз — на `finish`. Опрашивают его
+        # каждые две секунды, и без этого флага история прогонов состояла бы из
+        # сотни копий одного разговора.
+        self.saved = ""
         if criteria_text.strip():
             self.scenario.criteria = parse_criteria(criteria_text) or scenario.criteria
         self.state = DialogueState(scenario)
@@ -427,7 +437,8 @@ class Session:
             # оценок. Разметка от модели главнее: если она сказала
             # «impressed», это точнее среднего балла. Но молчит она часто, а
             # ровное лицо весь показ — хуже, чем эмоция от механики продукта.
-            mood = mood_from(self.evaluator.log, self.scenario.criteria)
+            mood = mood_from(self.evaluator.log, self.scenario.criteria,
+                             baseline=self.scenario.persona.start_emotion)
             if mood.intensity > 0:
                 self._emit({"kind": "emotions", "generation_id": r.generation_id,
                             "clause": idx, "from_scores": True,
@@ -488,7 +499,24 @@ class Session:
                     if turn is not None:
                         turn.counted = False
             self._emit({"kind": "cancel", "generation_id": gid})
+        # Потолок диалога проверяется и здесь, а не только после удавшейся
+        # реплики. Проверка жила в `apply_action`, то есть срабатывала лишь
+        # когда генерация доходила до конца, — и разговор, у которого
+        # перебиты последние ходы, проезжал мимо неё: замерено на прогоне с
+        # 13 перебиваниями, 23 хода при потолке 23 и `finished=False`. Это
+        # ровно тот случай, ради которого потолок и заведён: собеседник,
+        # перебивающий каждую реплику, иначе не даёт сценарию закончиться.
+        self._finish_if_out_of_budget()
         return gid
+
+    def _finish_if_out_of_budget(self) -> bool:
+        """Закрыть диалог, если ходы кончились. Идемпотентно."""
+        with self.lock:
+            if self.state.finished or not self.state.dialogue_budget_spent:
+                return False
+            self.state.finish("бюджет диалога исчерпан")
+        self._emit({"kind": "finished", "reason": self.state.finish_reason})
+        return True
 
     # ----------------------------------------------------------------- кадры
 
@@ -508,13 +536,22 @@ class Session:
 
     def report(self) -> dict:
         self.evaluator.drain(timeout=20)
-        rep = report_mod.build(self.state, self.evaluator.log)
+        # Общий вывод стоит одного запроса и потому считается только на
+        # `finish`: пока диалог идёт, отчёт опрашивают каждые две секунды.
+        conclusion = (self.evaluator.conclusion(self.state)
+                      if self.state.finished else "")
+        rep = report_mod.build(self.state, self.evaluator.log,
+                               session_id=self.id, conclusion=conclusion)
         d = rep.to_dict()
+        d["scenario"] = self.scenario.to_dict()
         d["marks"] = self.marks
         d["speculation"] = self.spec.stats.summary()
         d["evaluator"] = {"calls": self.evaluator.log.calls,
                           "errors": self.evaluator.log.errors,
                           "total_ms": round(self.evaluator.log.total_ms)}
+        if self.state.finished and not self.saved:
+            self.saved = report_mod.save(d)
+        d["saved_to"] = self.saved
         return d
 
 
@@ -611,20 +648,88 @@ class App:
                                    if not k.startswith("_")}
         print(f"  заполнители: {bc.describe()}")
         self.scenarios = load_all(ROOT / "data" / "scenarios")
+        # Текущая сессия остаётся: экран сотрудника, репетиция и стенды
+        # обращаются к ней без идентификатора, и ломать это ради ссылки
+        # незачем. Реестр рядом — для второго экрана и для истории.
         self.session: Session | None = None
+        self.sessions: dict[str, Session] = {}
+        # Утверждённые артефакты: замороженный JSON по идентификатору сессии.
+        # Словарь в памяти процесса, никакой базы — как и договаривались.
+        self.approved: dict[str, dict] = {}
+        # Генерации сценариев из текста. Ключ Anthropic отдельный от DeepSeek:
+        # диалог и генерация — разные задачи с разными требованиями.
+        self.jobs = gen_mod.Jobs(self._make_generator)
+        self.gen_cfg = {k: v for k, v in load_config().get("generator", {}).items()
+                        if not k.startswith("_")}
+        self._generator = None
+        self._generator_lock = threading.Lock()
         print(f"  синтез: {self.models['tts'].describe()}")
         print(f"готово за {time.perf_counter() - t0:.1f} с, "
               f"сценариев {len(self.scenarios)}")
 
-    def start(self, scenario_id: str, criteria_text: str) -> Session:
-        sc = next((s for s in self.scenarios if s.id == scenario_id), self.scenarios[0])
+    def _make_generator(self):
+        """Генератор сценариев. Клиент один на процесс, поднимается лениво.
+
+        Лениво — потому что ключа Anthropic может не быть вовсе, а сервер
+        обязан подниматься и без него: селектор готовых сценариев работает
+        всегда, и это его смысл.
+        """
+        with self._generator_lock:
+            if self._generator is None:
+                self._generator = gen_mod.AnthropicGenerator(**self.gen_cfg)
+            return self._generator
+
+    def resolve(self, spec) -> Scenario:
+        """Сценарий из того, что прислал экран методиста.
+
+        Три источника, и все три нужны: идентификатор из селектора готовых
+        (страховка на показе), утверждённый артефакт по ссылке (сотрудник
+        открывает свой экран) и сценарий целиком (методист нажал «начать»
+        сразу после approve).
+        """
+        if isinstance(spec, dict):
+            return Scenario.from_dict(spec)
+        if isinstance(spec, str) and spec in self.approved:
+            return Scenario.from_dict(self.approved[spec]["scenario"])
+        sc = next((s for s in self.scenarios if s.id == spec), None)
+        return (sc or self.scenarios[0]).copy()
+
+    def approve(self, raw: dict) -> dict:
+        """Заморозить артефакт и выдать ссылку.
+
+        Approve превращает артефакт в неизменяемый JSON. Правки после него на
+        идущий диалог не влияют: сессия работает с копией, снятой здесь, —
+        иначе поехала бы метрика завершения, ведь этапы можно и удалить.
+        """
+        # Ключи и id дописываются здесь: критерий, добавленный методистом
+        # руками, приходит без ключа — придумывать идентификаторы его никто
+        # не просил.
+        sc = Scenario.from_dict(gen_mod.fill_identifiers(raw))
+        problems = sc.validate()
+        if problems:
+            raise ValueError("; ".join(problems))
+        sid = uuid.uuid4().hex[:8]
+        frozen = sc.to_dict()
+        self.approved[sid] = {"scenario": frozen, "at": time.time(),
+                              "title": sc.title}
+        return {"session": sid, "scenario": frozen,
+                "trainee_url": f"/app/web/trainee.html?session={sid}",
+                "report_url": f"/app/web/methodist.html?session={sid}"}
+
+    def start(self, spec, criteria_text: str = "", session_id: str = "") -> Session:
         # Свежая копия сценария: критерии методиста не должны протечь в
         # следующую сессию.
-        from app.scenario import Scenario
-        sc = Scenario.from_dict(sc.to_dict())
-        self.session = Session(sc, criteria_text, self.models)
+        sc = self.resolve(spec).copy()
+        sid = session_id or (spec if isinstance(spec, str) and spec in self.approved
+                             else uuid.uuid4().hex[:8])
+        self.session = Session(sc, criteria_text, self.models, session_id=sid)
+        self.sessions[sid] = self.session
         threading.Thread(target=self.session.speak, args=(None,), daemon=True).start()
         return self.session
+
+    def session_for(self, sid: str | None) -> Session | None:
+        """Сессия по идентификатору; без него — текущая."""
+        return self.sessions.get(sid) if sid else self.session
 
 
     def switch_tts(self, provider: str) -> dict:
@@ -676,14 +781,59 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     # ------------------------------------------------------------------ GET
 
+    def _sid(self, u, data: dict | None = None) -> str | None:
+        """Идентификатор сессии из запроса. Нет — значит текущая.
+
+        Экран сотрудника и репетиция обращаются без него; ссылка методиста
+        приносит его в query. Обе формы обязаны работать.
+        """
+        if data and data.get("session"):
+            return str(data["session"])
+        q = urllib.parse.parse_qs(u.query).get("session")
+        return q[0] if q else None
+
+    def _need_session(self, u, data=None):
+        sess = APP.session_for(self._sid(u, data))
+        if sess is None:
+            self._json({"error": "сессия не начата"}, 400)
+        return sess
+
     def do_GET(self):
         u = urllib.parse.urlparse(self.path)
         if u.path == "/api/scenarios":
-            return self._json([{"id": s.id, "title": s.title, "type": s.type,
-                                "stages": len(s.stages),
-                                "criteria": [{"key": c.key, "title": c.title}
-                                             for c in s.criteria]}
-                               for s in APP.scenarios])
+            return self._json({
+                "scenarios": [{"id": s.id, "title": s.title, "type": s.type,
+                               "stages": len(s.stages), "source": s.source,
+                               "persona": s.persona.to_dict(),
+                               "criteria": [{"key": c.key, "title": c.title}
+                                            for c in s.criteria]}
+                              for s in APP.scenarios],
+                "types": TYPES,
+                # Палитра эмоций отдаётся сервером, а не дублируется в
+                # странице. Дубль уже стоил ошибки: страница знала пять
+                # состояний, генератор вернул шестое, и селектор молча
+                # подставил neutral поверх выбора генератора.
+                "emotions": list(EMOTIONS),
+            })
+        if u.path == "/api/scenario":
+            sid = urllib.parse.parse_qs(u.query).get("id", [""])[0]
+            sc = next((x for x in APP.scenarios if x.id == sid), None)
+            if sc is None:
+                return self._json({"error": "нет такого сценария"}, 404)
+            return self._json({"scenario": sc.to_dict()})
+        if u.path == "/api/generate":
+            job = APP.jobs.get(urllib.parse.parse_qs(u.query).get("id", [""])[0])
+            if job is None:
+                return self._json({"error": "нет такой генерации"}, 404)
+            return self._json(job.to_dict())
+        if u.path == "/api/artifact":
+            # Утверждённый артефакт по ссылке: это открывает экран сотрудника.
+            sid = urllib.parse.parse_qs(u.query).get("session", [""])[0]
+            art = APP.approved.get(sid)
+            if art is None:
+                return self._json({"error": "нет такой сессии"}, 404)
+            return self._json({"session": sid, **art,
+                               "started": sid in APP.sessions})
         if u.path == "/api/tts":
             tts = APP.models["tts"]
             return self._json({"providers": list(PROVIDERS),
@@ -696,17 +846,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._json({"tts": tts.describe(),
                                "scenarios": len(APP.scenarios),
                                "voice": APP.models.get("endpointer") is not None,
+                               "generator": bool(os.environ.get("ANTHROPIC_API_KEY")),
+                               "sessions": len(APP.sessions),
                                "session": bool(APP.session)})
         if u.path == "/api/report":
-            if not APP.session:
-                return self._json({"error": "сессия не начата"}, 400)
-            return self._json(APP.session.report())
+            sess = self._need_session(u)
+            return None if sess is None else self._json(sess.report())
         if u.path == "/api/stream":
-            return self._stream(int(urllib.parse.parse_qs(u.query).get("from", ["0"])[0]))
+            q = urllib.parse.parse_qs(u.query)
+            return self._stream(int(q.get("from", ["0"])[0]), self._sid(u))
         return super().do_GET()
 
-    def _stream(self, start: int):
-        if not APP.session:
+    def _stream(self, start: int, sid: str | None = None):
+        session = APP.session_for(sid)
+        if session is None:
             return self._json({"error": "сессия не начата"}, 400)
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
@@ -716,7 +869,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         idx = start
         try:
             while True:
-                batch = APP.session.frames_from(idx)
+                batch = session.frames_from(idx)
                 if not batch:
                     # Держим соединение: браузер переподключаться не должен.
                     self._chunk(struct.pack("<II", 2, 0) + b"{}")
@@ -744,28 +897,67 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Звук приходит сырым PCM16, а не JSON: разбирать его как текст нельзя,
         # поэтому ветка стоит до общего разбора тела.
         if u.path == "/api/audio":
-            if not APP.session:
-                return self._json({"error": "сессия не начата"}, 400)
+            sess = self._need_session(u)
+            if sess is None:
+                return None
             pcm = np.frombuffer(body, dtype="<i2").astype(np.float32) / 32768
-            return self._json(APP.session.push_audio(pcm))
+            return self._json(sess.push_audio(pcm))
 
         data = json.loads(body or b"{}")
 
+        # ------------------------------------------------------- артефакт
+        if u.path == "/api/generate":
+            text = (data.get("text") or "").strip()
+            if len(text) < 40:
+                return self._json({"error": "текст слишком короткий: из двух "
+                                            "строк сценарий не выводится"}, 400)
+            job = APP.jobs.start(text, data.get("kind", ""))
+            return self._json(job.to_dict())
+        if u.path == "/api/refine":
+            # Чат-слой: обёртка над артефактом, а не отдельный продукт.
+            # Синхронный запрос — правка занимает столько же, сколько
+            # генерация, и ждать её методист согласен, глядя на артефакт.
+            msg = (data.get("message") or "").strip()
+            if not msg:
+                return self._json({"error": "пустая просьба"}, 400)
+            try:
+                out = gen_mod.refine(APP._make_generator(), data.get("scenario") or {},
+                                     msg, data.get("protect") or [])
+            except Exception as e:                          # noqa: BLE001
+                return self._json({"error": f"{type(e).__name__}: {e}"}, 400)
+            summary = "готово"
+            if out["lost"]:
+                summary = ("артефакт перегенерирован; состав этапов или критериев "
+                           "изменился, поэтому часть ваших правок вернуть на место "
+                           "не удалось — проверьте: " + ", ".join(out["lost"]))
+            return self._json({**out, "summary": summary})
+        if u.path == "/api/approve":
+            try:
+                return self._json(APP.approve(data.get("scenario") or {}))
+            except (ValueError, KeyError, TypeError) as e:
+                return self._json({"error": f"артефакт не проходит проверку: {e}"}, 400)
+
         if u.path == "/api/start":
-            APP.start(data.get("scenario"), data.get("criteria", ""))
-            return self._json({"ok": True})
+            # Сценарий приходит либо целиком (утверждённый артефакт), либо
+            # идентификатором из селектора готовых, либо идентификатором
+            # утверждённой сессии.
+            spec = data.get("artifact") or data.get("session") or data.get("scenario")
+            sess = APP.start(spec, data.get("criteria", ""))
+            return self._json({"ok": True, "session": sess.id,
+                               "scenario": sess.scenario.to_dict()})
         if u.path == "/api/message":
-            if not APP.session:
-                return self._json({"error": "сессия не начата"}, 400)
+            sess = self._need_session(u, data)
+            if sess is None:
+                return None
             # Enter во время речи агента = перебивание. Одно движение гасит всё.
-            gid = APP.session.cancel()
-            threading.Thread(target=APP.session.speak,
+            gid = sess.cancel()
+            threading.Thread(target=sess.speak,
                              args=(data.get("text", ""),), daemon=True).start()
             return self._json({"ok": True, "cancelled": gid})
         if u.path == "/api/typing":
-            if not APP.session:
+            sess = APP.session_for(self._sid(u, data))
+            if sess is None:
                 return self._json({"ok": False})
-            sess = APP.session
             sess.note_typing(data.get("text", ""))
             launched = sess.spec.on_typing(data.get("text", ""))
             return self._json({"ok": True, "launched": launched})
@@ -777,9 +969,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:             # noqa: BLE001 — сеть, API, что угодно
                 return self._json({"error": f"{type(e).__name__}: {e}"}, 400)
         if u.path == "/api/voice":
-            if not APP.session:
-                return self._json({"error": "сессия не начата"}, 400)
-            v = APP.session.voice
+            sess = self._need_session(u, data)
+            if sess is None:
+                return None
+            v = sess.voice
             if v.endpointer is None:
                 return self._json({"error": "эндпоинтер не поднялся: "
                                             "нет пакета silero-vad"}, 400)
@@ -787,12 +980,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 v.enabled = bool(data["on"])
                 v.start()
             if data.get("ptt") == "up":
-                return self._json(APP.session.end_utterance())
+                return self._json(sess.end_utterance())
             return self._json({"ok": True, "on": v.enabled,
                                "silence_ms": v.endpointer.silence_ms,
                                "stats": v.stats})
         if u.path == "/api/cancel":
-            return self._json({"ok": True, "cancelled": APP.session.cancel()})
+            sess = self._need_session(u, data)
+            return None if sess is None else self._json(
+                {"ok": True, "cancelled": sess.cancel()})
         return self._json({"error": "нет такого метода"}, 404)
 
     def _json(self, obj, code=200):

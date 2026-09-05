@@ -1,0 +1,28 @@
+{
+  "mechanic": "человек презентует, агент разбирает",
+  "kind": "presentation",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": false,
+      "problems": [
+        "критериев 7, нужно от 3 до 6"
+      ],
+      "error": "",
+      "ms": 31395
+    },
+    {
+      "n": 2,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 32112
+    }
+  ],
+  "total_ms": 63506,
+  "wall_s": 64.5,
+  "problems": [],
+  "notes": []
+}

@@ -11,6 +11,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from app.evaluator import EvaluationLog                       # noqa: E402
+from app.scenario import Persona                              # noqa: E402
 from app.pipeline import ClauseResult                         # noqa: E402
 from app.server import Session                               # noqa: E402
 
@@ -32,7 +33,10 @@ class SpeakingAfterBackchannel(unittest.TestCase):
         # Настроение по оценкам берётся на первой клаузе — без этих двух
         # полей проверка состояния лица падала бы на постороннем.
         session.evaluator = types.SimpleNamespace(log=EvaluationLog())
-        session.scenario = types.SimpleNamespace(criteria=[])
+        # Персона нужна ради стартовой эмоции: без оценок настроение берётся
+        # из неё, и лицо не остаётся ровным с первой реплики.
+        session.scenario = types.SimpleNamespace(
+            criteria=[], persona=Persona(role="проверяющий"))
         frames = []
         session._emit = lambda header, payload=b"": frames.append((header, payload))
         em = {

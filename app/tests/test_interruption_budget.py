@@ -17,6 +17,7 @@ from app.dialogue import DialogueState                        # noqa: E402
 from app.scenario import load_all                             # noqa: E402
 
 SCENARIOS = load_all(ROOT / "data" / "scenarios")
+BASE = next(s for s in SCENARIOS if s.id == "s1_interview_backend")
 
 
 def stay(state, text="Ответ."):
@@ -27,7 +28,7 @@ def stay(state, text="Ответ."):
 
 class Budget(unittest.TestCase):
     def setUp(self):
-        self.state = DialogueState(SCENARIOS[0], max_turns_per_stage=3)
+        self.state = DialogueState(BASE, max_turns_per_stage=3)
 
     def test_interrupted_turn_does_not_spend_budget(self):
         t = self.state.add_user("Перебиваю.")
@@ -56,7 +57,7 @@ class SpokenPartSurvives(unittest.TestCase):
     """Прозвучавшее нельзя терять: пользователь это слышал."""
 
     def setUp(self):
-        self.state = DialogueState(SCENARIOS[0])
+        self.state = DialogueState(BASE)
 
     def test_interrupted_reply_stays_in_history(self):
         self.state.add_user("Мой ответ.")
@@ -83,7 +84,7 @@ class DialogueCeiling(unittest.TestCase):
     """Диалог обязан заканчиваться, даже если перебивать каждую реплику."""
 
     def test_endless_interruptions_still_terminate(self):
-        state = DialogueState(SCENARIOS[0])
+        state = DialogueState(BASE)
         for _ in range(state.dialogue_max_turns + 5):
             if state.finished:
                 break
@@ -103,9 +104,60 @@ class DialogueCeiling(unittest.TestCase):
 
     def test_ceiling_does_not_fire_early(self):
         """Обычный диалог должен успевать закончиться сам."""
-        state = DialogueState(SCENARIOS[0])
+        state = DialogueState(BASE)
         for _ in range(state.dialogue_max_turns - 1):
             if state.finished:
                 break
             stay(state)
         self.assertNotIn("бюджет диалога", state.finish_reason)
+
+
+class CapHoldsWhenTheLastTurnsAreInterrupted(unittest.TestCase):
+    """Потолок диалога должен срабатывать и на перебивании.
+
+    Проверка жила только в `apply`, то есть срабатывала, когда генерация
+    доходила до конца. Разговор, у которого перебиты последние ходы, проезжал
+    мимо: замерено на прогоне с 13 перебиваниями — 23 хода при потолке 23 и
+    `finished=False`. Это ровно тот случай, ради которого потолок и заведён.
+    """
+
+    def _session(self):
+        """Сессия без моделей: нужны только состояние, блокировка и кадры."""
+        import threading
+        import types
+        from app.server import Session
+        s = Session.__new__(Session)
+        s.state = DialogueState(BASE)
+        s.lock = threading.Lock()
+        s.frames = []
+        s.frame_cv = threading.Condition()
+        s._emit = lambda header, payload=b"": s.frames.append(header)
+        return s
+
+    def test_budget_is_checked_on_cancel_too(self):
+        s = self._session()
+        while not s.state.dialogue_budget_spent:
+            s.state.add_user("Ответ.")
+        self.assertFalse(s.state.finished, "предусловие: движок ещё не закрыл диалог")
+
+        self.assertTrue(s._finish_if_out_of_budget())
+        self.assertTrue(s.state.finished)
+        self.assertEqual(s.state.finish_reason, "бюджет диалога исчерпан")
+        self.assertIn("finished", [f["kind"] for f in s.frames],
+                      "клиент обязан узнать о конце, иначе отчёт не покажется")
+
+    def test_check_is_idempotent(self):
+        """Перебивания идут подряд — второй раз закрывать нечего."""
+        s = self._session()
+        while not s.state.dialogue_budget_spent:
+            s.state.add_user("Ответ.")
+        s._finish_if_out_of_budget()
+        self.assertFalse(s._finish_if_out_of_budget())
+        self.assertEqual([f["kind"] for f in s.frames].count("finished"), 1)
+
+    def test_does_not_fire_early(self):
+        s = self._session()
+        for _ in range(s.state.dialogue_max_turns - 1):
+            s.state.add_user("Ответ.")
+        self.assertFalse(s._finish_if_out_of_budget())
+        self.assertFalse(s.state.finished)

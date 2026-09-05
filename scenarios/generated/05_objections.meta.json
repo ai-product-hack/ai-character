@@ -1,0 +1,19 @@
+{
+  "mechanic": "эскалация возражений по нарастающей",
+  "kind": "sales",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 28367
+    }
+  ],
+  "total_ms": 28367,
+  "wall_s": 29.2,
+  "problems": [],
+  "notes": []
+}

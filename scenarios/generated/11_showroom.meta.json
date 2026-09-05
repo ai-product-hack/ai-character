@@ -1,0 +1,19 @@
+{
+  "mechanic": "покупатель сам не знает, чего хочет",
+  "kind": "support",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 39118
+    }
+  ],
+  "total_ms": 39118,
+  "wall_s": 39.3,
+  "problems": [],
+  "notes": []
+}

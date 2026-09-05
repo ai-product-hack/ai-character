@@ -26,7 +26,7 @@
 4. Нажмите «сохранить в avatar/clips». Сервер принимает только безопасное имя
    и пишет JSON строго в `avatar/clips/`.
 
-Нужный набор: `neutral`, `skeptical`, `pressing`, `warming`, `impressed`, затем
+Нужный набор: `neutral`, `skeptical`, `pressing`, `warming`, `impressed`, `angry`, `anxious`, затем
 короткие `nod-agreement`, `raised-brow`, `slight-doubt`. Для кивка держите лицо
 спокойным и кивайте из шеи; вместе с 52 коэффициентами сохраняется относительный
 поворот головы.

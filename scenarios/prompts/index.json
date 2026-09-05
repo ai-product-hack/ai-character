@@ -1,0 +1,18 @@
+{
+  "_": "Тринадцать входов генератора, по одному на МЕХАНИКУ диалога, а не на тему. Тема ничего не доказывает: тринадцать сценариев про продажи — это тринадцать вариантов одного и того же. `kind` — необязательная подсказка методиста, ровно та, что выбирается селектором на экране.",
+  "prompts": [
+    {"file": "01_tech_interview.txt",   "kind": "interview",    "mechanic": "углубление по ответу, ловля поверхностности"},
+    {"file": "02_hr_screen.txt",        "kind": "hr",           "mechanic": "чек-лист: мотивация, ожидания, локация"},
+    {"file": "03_reverse_interview.txt","kind": "interview",    "mechanic": "обратное интервью: агент — сильный кандидат"},
+    {"file": "04_cold_contact.txt",     "kind": "sales",        "mechanic": "агент не заинтересован и хочет закончить"},
+    {"file": "05_objections.txt",       "kind": "sales",        "mechanic": "эскалация возражений по нарастающей"},
+    {"file": "06_price_negotiation.txt","kind": "negotiation",  "mechanic": "торг с числовым исходом"},
+    {"file": "07_angry_client.txt",     "kind": "support",      "mechanic": "старт на пике эмоции, задача снизить градус"},
+    {"file": "08_bad_news.txt",         "kind": "management",   "mechanic": "агент реагирует эмоционально, человек держит рамку"},
+    {"file": "09_feedback_denial.txt",  "kind": "management",   "mechanic": "агент отрицает и защищается"},
+    {"file": "10_regulation_exam.txt",  "kind": "knowledge",    "mechanic": "строгие правильные ответы по регламенту"},
+    {"file": "11_showroom.txt",         "kind": "support",      "mechanic": "покупатель сам не знает, чего хочет"},
+    {"file": "12_intake.txt",           "kind": "intake",       "mechanic": "собеседник тревожен и путается"},
+    {"file": "13_pitch_qa.txt",         "kind": "presentation", "mechanic": "человек презентует, агент разбирает"}
+  ]
+}

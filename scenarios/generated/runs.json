@@ -1,0 +1,160 @@
+[
+  {
+    "file": "01_tech_interview",
+    "mechanic": "углубление по ответу, ловля поверхностности",
+    "fallback": false,
+    "wall_s": 37.3,
+    "attempts": 1,
+    "stages": 7,
+    "criteria": 6,
+    "emotion": "skeptical",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "02_hr_screen",
+    "mechanic": "чек-лист: мотивация, ожидания, локация",
+    "fallback": false,
+    "wall_s": 39.3,
+    "attempts": 1,
+    "stages": 7,
+    "criteria": 6,
+    "emotion": "neutral",
+    "problems": [],
+    "notes": [
+      "манера давления не описана"
+    ]
+  },
+  {
+    "file": "03_reverse_interview",
+    "mechanic": "обратное интервью: агент — сильный кандидат",
+    "fallback": false,
+    "wall_s": 37.3,
+    "attempts": 1,
+    "stages": 7,
+    "criteria": 6,
+    "emotion": "neutral",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "04_cold_contact",
+    "mechanic": "агент не заинтересован и хочет закончить",
+    "fallback": false,
+    "wall_s": 68.5,
+    "attempts": 2,
+    "stages": 7,
+    "criteria": 6,
+    "emotion": "skeptical",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "05_objections",
+    "mechanic": "эскалация возражений по нарастающей",
+    "fallback": false,
+    "wall_s": 29.2,
+    "attempts": 1,
+    "stages": 5,
+    "criteria": 6,
+    "emotion": "skeptical",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "06_price_negotiation",
+    "mechanic": "торг с числовым исходом",
+    "fallback": false,
+    "wall_s": 33.3,
+    "attempts": 1,
+    "stages": 6,
+    "criteria": 5,
+    "emotion": "skeptical",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "07_angry_client",
+    "mechanic": "старт на пике эмоции, задача снизить градус",
+    "fallback": false,
+    "wall_s": 37.3,
+    "attempts": 1,
+    "stages": 6,
+    "criteria": 6,
+    "emotion": "angry",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "08_bad_news",
+    "mechanic": "агент реагирует эмоционально, человек держит рамку",
+    "fallback": false,
+    "wall_s": 32.2,
+    "attempts": 1,
+    "stages": 6,
+    "criteria": 6,
+    "emotion": "skeptical",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "09_feedback_denial",
+    "mechanic": "агент отрицает и защищается",
+    "fallback": false,
+    "wall_s": 33.3,
+    "attempts": 1,
+    "stages": 6,
+    "criteria": 5,
+    "emotion": "skeptical",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "10_regulation_exam",
+    "mechanic": "строгие правильные ответы по регламенту",
+    "fallback": false,
+    "wall_s": 36.3,
+    "attempts": 1,
+    "stages": 7,
+    "criteria": 6,
+    "emotion": "neutral",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "11_showroom",
+    "mechanic": "покупатель сам не знает, чего хочет",
+    "fallback": false,
+    "wall_s": 39.3,
+    "attempts": 1,
+    "stages": 6,
+    "criteria": 6,
+    "emotion": "neutral",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "12_intake",
+    "mechanic": "собеседник тревожен и путается",
+    "fallback": false,
+    "wall_s": 37.3,
+    "attempts": 1,
+    "stages": 7,
+    "criteria": 6,
+    "emotion": "anxious",
+    "problems": [],
+    "notes": []
+  },
+  {
+    "file": "13_pitch_qa",
+    "mechanic": "человек презентует, агент разбирает",
+    "fallback": false,
+    "wall_s": 64.5,
+    "attempts": 2,
+    "stages": 6,
+    "criteria": 6,
+    "emotion": "skeptical",
+    "problems": [],
+    "notes": []
+  }
+]

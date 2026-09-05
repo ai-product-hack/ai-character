@@ -138,3 +138,74 @@ class Timeline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class WiderPalette(unittest.TestCase):
+    """Гнев и тревога: две эмоции вне оси оценок.
+
+    До них разгневанный клиент получал `pressing`, а тревожный пациент — тот же
+    `pressing`. Первое было приближением, второе просто неверно: тревога не
+    давление.
+    """
+
+    def test_both_are_in_the_whitelist(self):
+        self.assertIn("angry", EMOTIONS)
+        self.assertIn("anxious", EMOTIONS)
+
+    def test_tags_parse(self):
+        for tag, want in (("angry", "angry"), ("anxious", "anxious")):
+            p = parse(f"[emo:{tag}]Это возмутительно.")
+            self.assertEqual(p.opening, want)
+            self.assertEqual(p.text, "Это возмутительно.")
+            self.assertEqual(p.dropped, 0)
+
+    def test_russian_aliases(self):
+        for word, want in (("гнев", "angry"), ("ярость", "angry"),
+                           ("злость", "angry"), ("тревога", "anxious"),
+                           ("волнение", "anxious"), ("беспокойство", "anxious")):
+            self.assertEqual(parse(f"[emo:{word}]Текст.").opening, want, word)
+
+    def test_whitelist_matches_the_avatar_config(self):
+        """Контракт со слоем эмоции. Разъезд здесь виден только на показе."""
+        import json
+        import pathlib
+        root = pathlib.Path(__file__).resolve().parents[2]
+        cfg = json.loads((root / "avatar" / "expression.config.json")
+                         .read_text(encoding="utf-8"))
+        in_config = {k for k in cfg["emotions"] if not k.startswith("_")}
+        self.assertEqual(in_config, set(EMOTIONS))
+
+    def test_every_emotion_has_a_clip_file(self):
+        import json
+        import pathlib
+        root = pathlib.Path(__file__).resolve().parents[2]
+        cfg = json.loads((root / "avatar" / "expression.config.json")
+                         .read_text(encoding="utf-8"))
+        for name, e in cfg["emotions"].items():
+            if name.startswith("_"):
+                continue
+            self.assertTrue((root / "avatar" / "clips" / e["clip"]).exists(),
+                            f"{name}: нет клипа {e['clip']}")
+
+
+class NoSecondCopyOfThePalette(unittest.TestCase):
+    """Палитра живёт в одном месте, а страницы получают её от сервера.
+
+    Копия в `methodist.html` уже стоила ошибки: страница знала пять эмоций,
+    генератор вернул шестую, селектор молча подставил neutral — и выбор
+    генератора пропадал, причём незаметно, потому что neutral валиден.
+    """
+
+    def test_methodist_page_does_not_hardcode_the_list(self):
+        import pathlib
+        root = pathlib.Path(__file__).resolve().parents[2]
+        page = (root / "app" / "web" / "methodist.html").read_text(encoding="utf-8")
+        for emotion in ("skeptical", "impressed", "warming"):
+            self.assertNotIn(f"'{emotion}'", page,
+                             "палитра снова захардкожена в странице")
+
+    def test_server_serves_the_palette(self):
+        import pathlib
+        root = pathlib.Path(__file__).resolve().parents[2]
+        server = (root / "app" / "server.py").read_text(encoding="utf-8")
+        self.assertIn('"emotions": list(EMOTIONS)', server)

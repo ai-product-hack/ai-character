@@ -1,0 +1,19 @@
+{
+  "mechanic": "строгие правильные ответы по регламенту",
+  "kind": "knowledge",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 35453
+    }
+  ],
+  "total_ms": 35453,
+  "wall_s": 36.3,
+  "problems": [],
+  "notes": []
+}

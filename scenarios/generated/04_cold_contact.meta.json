@@ -1,0 +1,28 @@
+{
+  "mechanic": "агент не заинтересован и хочет закончить",
+  "kind": "sales",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": false,
+      "problems": [
+        "критериев 7, нужно от 3 до 6"
+      ],
+      "error": "",
+      "ms": 40542
+    },
+    {
+      "n": 2,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 27904
+    }
+  ],
+  "total_ms": 68447,
+  "wall_s": 68.5,
+  "problems": [],
+  "notes": []
+}

@@ -1,0 +1,1626 @@
+{
+  "summary": {
+    "scenarios": 1,
+    "finished": 1,
+    "turns": 22,
+    "first_audio_ms": {
+      "median": 130,
+      "max": 133
+    },
+    "first_speech_ms": {
+      "median": 2079,
+      "max": 3486
+    },
+    "filler_share": 1.0,
+    "speculation": {
+      "tries": 14,
+      "hits": 9,
+      "hit_rate": 0.64
+    },
+    "emotions": 15,
+    "emotion_share": 0.68,
+    "panels": 5,
+    "voice": {
+      "turns": 7,
+      "asr_ms": 111,
+      "first_audio_ms": 122
+    },
+    "text_first_audio_ms": 131,
+    "interrupts": {
+      "count": 7,
+      "per_scenario": [
+        7
+      ],
+      "leaked_frames": 0,
+      "last_stray_ms_max": 0
+    },
+    "control_line": {
+      "missing": 0,
+      "repaired": 0,
+      "missing_share": 0.0,
+      "repair_ms_median": null
+    },
+    "typing": {
+      "answers": 14,
+      "confidence": {
+        "уверенно": 13,
+        "с заминками": 1,
+        "неуверенно": 0
+      }
+    }
+  },
+  "tts": {
+    "name": "switchable",
+    "provider": "silero",
+    "loaded": [
+      "silero"
+    ],
+    "engine": {
+      "name": "silero",
+      "version": "v5_cis_base",
+      "voice": "ru_roman",
+      "sample_rate": 24000,
+      "load_s": 2.0,
+      "offline": true
+    }
+  },
+  "args": {
+    "scenario": "s8_feedback_denial",
+    "turns": 26,
+    "port": 8043,
+    "interrupt_rate": 0.35,
+    "voice_every": 3,
+    "min_interrupts": 2,
+    "interrupt_after": [
+      0.4,
+      2.0
+    ],
+    "timeout": 90,
+    "settle": 0.6,
+    "seed": 42,
+    "out": "bench/results/rehearsal_s8_feedback_denial.json"
+  },
+  "runs": [
+    {
+      "scenario_id": "s8_feedback_denial",
+      "title": "Обратная связь тимлиду, который срывает сроки и не согласен с этим",
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+          "typed_ms": 0,
+          "t_first_audio_ms": 133,
+          "reported_first_audio_ms": 131,
+          "reported_first_speech_ms": 2376,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 1,
+          "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+          "typed_ms": 1465,
+          "t_first_audio_ms": 129,
+          "reported_first_audio_ms": 127,
+          "reported_first_speech_ms": 1567,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 2,
+          "stage": null,
+          "typed_ms": 1649,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 660,
+            "generation_id": "gen-3",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 3,
+          "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+          "typed_ms": 0,
+          "t_first_audio_ms": 121,
+          "reported_first_audio_ms": 219,
+          "reported_first_speech_ms": 2489,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 4,
+          "stage": null,
+          "typed_ms": 1362,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1815,
+            "generation_id": "gen-5",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 5,
+          "stage": "proverit_uderzhitsya_li_rukovoditel_pri",
+          "typed_ms": 1429,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": 130,
+          "reported_first_speech_ms": 1927,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "pressing"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 6,
+          "stage": "proverit_uderzhitsya_li_rukovoditel_pri",
+          "typed_ms": 0,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": 241,
+          "reported_first_speech_ms": 3486,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 7,
+          "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+          "typed_ms": 1611,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 1707,
+          "clauses": 5,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "pressing"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 8,
+          "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+          "typed_ms": 1668,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 126,
+          "reported_first_speech_ms": 1504,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "pressing"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 9,
+          "stage": null,
+          "typed_ms": 0,
+          "t_first_audio_ms": 121,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1263,
+            "generation_id": "gen-10",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 10,
+          "stage": null,
+          "typed_ms": 1408,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1470,
+            "generation_id": "gen-11",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 11,
+          "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+          "typed_ms": 1327,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": 131,
+          "reported_first_speech_ms": 1947,
+          "clauses": 5,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "neutral"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 12,
+          "stage": null,
+          "typed_ms": 0,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 707,
+            "generation_id": "gen-13",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 13,
+          "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+          "typed_ms": 1508,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": 130,
+          "reported_first_speech_ms": 1510,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "neutral"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 14,
+          "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+          "typed_ms": 1558,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 122,
+          "reported_first_speech_ms": 2079,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "neutral"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 15,
+          "stage": "proverit_svernet_li_rukovoditel_razgovor",
+          "typed_ms": 0,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": 228,
+          "reported_first_speech_ms": 2631,
+          "clauses": 5,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "pressing"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 16,
+          "stage": "proverit_svernet_li_rukovoditel_razgovor",
+          "typed_ms": 1634,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": 130,
+          "reported_first_speech_ms": 2257,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "neutral"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 17,
+          "stage": "proverit_svernet_li_rukovoditel_razgovor",
+          "typed_ms": 1337,
+          "t_first_audio_ms": 131,
+          "reported_first_audio_ms": 129,
+          "reported_first_speech_ms": 1850,
+          "clauses": 5,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "neutral"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 18,
+          "stage": "zafiksirovat_izmerimuyu_dogovorennost_na",
+          "typed_ms": 0,
+          "t_first_audio_ms": 121,
+          "reported_first_audio_ms": 230,
+          "reported_first_speech_ms": 2486,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "neutral"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 19,
+          "stage": null,
+          "typed_ms": 1847,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 520,
+            "generation_id": "gen-20",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 20,
+          "stage": null,
+          "typed_ms": 1576,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1879,
+            "generation_id": "gen-21",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 21,
+          "stage": "zafiksirovat_izmerimuyu_dogovorennost_na",
+          "typed_ms": 0,
+          "t_first_audio_ms": 122,
+          "reported_first_audio_ms": 240,
+          "reported_first_speech_ms": 3093,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "next_stage",
+          "interrupted": null
+        }
+      ],
+      "interrupts": [
+        {
+          "after_ms": 660,
+          "generation_id": "gen-3",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1815,
+          "generation_id": "gen-5",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1263,
+          "generation_id": "gen-10",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1470,
+          "generation_id": "gen-11",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 707,
+          "generation_id": "gen-13",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 520,
+          "generation_id": "gen-20",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1879,
+          "generation_id": "gen-21",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        }
+      ],
+      "voice_turns": [
+        {
+          "turn": 3,
+          "asr_ms": 98,
+          "chars": 76,
+          "text": "раньше они жаловались это моя недоработка я говорю сейчас и говорю по фактам"
+        },
+        {
+          "turn": 6,
+          "asr_ms": 111,
+          "chars": 74,
+          "text": "договорились риск озвучиваешь как только оценка выросла на треть письменно"
+        },
+        {
+          "turn": 9,
+          "asr_ms": 124,
+          "chars": 84,
+          "text": "оценка задач твоя зана если продукт дает нереальный объем это тоже говорится заранее"
+        },
+        {
+          "turn": 12,
+          "asr_ms": 126,
+          "chars": 78,
+          "text": "записал письменное предупреждение о риске в день его появления с этим согласен"
+        },
+        {
+          "turn": 15,
+          "asr_ms": 98,
+          "chars": 76,
+          "text": "раньше они жаловались это моя недоработка я говорю сейчас и говорю по фактам"
+        },
+        {
+          "turn": 18,
+          "asr_ms": 109,
+          "chars": 74,
+          "text": "договорились риск озвучиваешь как только оценка выросла на треть письменно"
+        },
+        {
+          "turn": 21,
+          "asr_ms": 117,
+          "chars": 84,
+          "text": "оценка задач твоя зана если продукт дает нереальный объем это тоже говорится заранее"
+        }
+      ],
+      "report": {
+        "scenario_id": "s8_feedback_denial",
+        "scenario_title": "Обратная связь тимлиду, который срывает сроки и не согласен с этим",
+        "scenario_type": "management",
+        "persona": {
+          "role": "тимлид, который третий спринт подряд срывает сроки и не признаёт свою ответственность за это",
+          "tone": "уверенный, слегка раздражённый, местами саркастичный",
+          "strictness": "низкая к себе, высокая к обстоятельствам вокруг",
+          "pressure": "активно давит контраргументами и встречными вопросами",
+          "start_emotion": "skeptical"
+        },
+        "completed": true,
+        "finish_reason": "модель попросила следующий этап на последнем",
+        "stages_reached": 6,
+        "stages_total": 6,
+        "user_turns": 21,
+        "criteria": [
+          {
+            "key": "opora_na_fakty_i_daty",
+            "title": "Опора на факты и даты",
+            "scale": "1-5",
+            "score": 2.0,
+            "rationale": "Собеседник называет только 'день сдачи' без конкретных дат или спринтов.",
+            "observations": [
+              "Собеседник называет только 'день сдачи' без конкретных дат или спринтов."
+            ],
+            "citations": [
+              {
+                "turn": 3,
+                "score": 2.0,
+                "rationale": "Собеседник называет только 'день сдачи' без конкретных дат или спринтов.",
+                "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "vozvrat_k_nablyudaemomu_povedeniyu_vmest",
+            "title": "Возврат к наблюдаемому поведению вместо спора",
+            "scale": "1-5",
+            "score": 2.0,
+            "rationale": "Собеседник не возвращается к наблюдаемому поведению, а снова ссылается на внешние факторы, игнорируя предложенную конкретику.",
+            "observations": [
+              "Собеседник частично возвращается к факту, но не уточняет, когда узнал о риске, и не описывает конкретное действие.",
+              "Собеседник не возвращается к наблюдаемому поведению, а снова ссылается на внешние факторы, игнорируя предложенную конкретику."
+            ],
+            "citations": [
+              {
+                "turn": 3,
+                "score": 2.0,
+                "rationale": "Собеседник частично возвращается к факту, но не уточняет, когда узнал о риске, и не описывает конкретное действие.",
+                "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+                "source": "background"
+              },
+              {
+                "turn": 11,
+                "score": 2.0,
+                "rationale": "Собеседник не возвращается к наблюдаемому поведению, а снова ссылается на внешние факторы, игнорируя предложенную конкретику.",
+                "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "ustoychivost_k_davleniyu_i_kontrargument",
+            "title": "Устойчивость к давлению и контраргументам",
+            "scale": "1-5",
+            "score": 3.33,
+            "rationale": "Собеседник не поддаётся на контраргумент о смежниках и возвращает разговор к конкретным датам, сохраняя фокус на своей позиции.",
+            "observations": [
+              "Собеседник ссылается на 'раньше', пытаясь оправдаться, вместо того чтобы сохранять фокус на текущем поведении.",
+              "Собеседник вновь уводит разговор к смежникам вместо того, чтобы вернуться к договорённости, но не давит агрессивно.",
+              "Собеседник не поддаётся на контраргумент о смежниках и возвращает разговор к конкретным датам, сохраняя фокус на своей позиции."
+            ],
+            "citations": [
+              {
+                "turn": 4,
+                "score": 2.0,
+                "rationale": "Собеседник ссылается на 'раньше', пытаясь оправдаться, вместо того чтобы сохранять фокус на текущем поведении.",
+                "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+                "source": "background"
+              },
+              {
+                "turn": 11,
+                "score": 3.0,
+                "rationale": "Собеседник вновь уводит разговор к смежникам вместо того, чтобы вернуться к договорённости, но не давит агрессивно.",
+                "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+                "source": "background"
+              },
+              {
+                "turn": 13,
+                "score": 5.0,
+                "rationale": "Собеседник не поддаётся на контраргумент о смежниках и возвращает разговор к конкретным датам, сохраняя фокус на своей позиции.",
+                "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "otkaz_ot_rasplyvchatyh_obeschaniy",
+            "title": "Отказ от расплывчатых обещаний",
+            "scale": "1-5",
+            "score": 1.0,
+            "rationale": "Собеседник не даёт конкретного согласия на механизм, а уходит в общую мотивацию, не отклоняя и не принимая предложение.",
+            "observations": [
+              "Собеседник не даёт конкретного согласия на механизм, а уходит в общую мотивацию, не отклоняя и не принимая предложение."
+            ],
+            "citations": [
+              {
+                "turn": 26,
+                "score": 1.0,
+                "rationale": "Собеседник не даёт конкретного согласия на механизм, а уходит в общую мотивацию, не отклоняя и не принимая предложение.",
+                "stage": "proverit_svernet_li_rukovoditel_razgovor",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "izmerimaya_dogovorennost_na_sleduyuschiy",
+            "title": "Измеримая договорённость на следующий спринт",
+            "scale": "1-5",
+            "score": null,
+            "rationale": "",
+            "observations": [],
+            "citations": []
+          }
+        ],
+        "transcript": [
+          {
+            "i": 0,
+            "role": "agent",
+            "text": "Слушай, я готов выслушать, но давай сразу к делу — что именно ты считаешь проблемой? Потому что «срываю сроки» звучит слишком общо, а у меня на каждый спринт есть своя история.",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555088.39027,
+            "interrupted": false
+          },
+          {
+            "i": 1,
+            "role": "user",
+            "text": "Три спринта подряд: двенадцатого, двадцать шестого марта и девятого апреля.",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555089.859,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 2,
+              "total_ms": 1401,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 53.54,
+              "rewrite_ratio": 0.08,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 2,
+            "role": "agent",
+            "text": "Ну, допустим, ты назвал даты начала спринтов. Но вот что мне интересно: ты говоришь о переносе сроков — а когда именно ты узнал, что мы не успеваем? И что за «история» была в каждом из этих случаев? Потому что одно дело — внешние факторы, другое — когда о рисках узнают за день до релиза.",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555092.1752949,
+            "interrupted": false
+          },
+          {
+            "i": 3,
+            "role": "user",
+            "text": "Смежники были и раньше. Я говорю про то, что о риске команда узнала в день сдачи.",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555093.836087,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 11,
+              "total_ms": 1485,
+              "final_length": 81,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.55,
+              "rewrite_ratio": 0.185,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 4,
+            "role": "user",
+            "text": "раньше они жаловались это моя недоработка я говорю сейчас и говорю по фактам",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555097.8785899,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 76,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 5,
+            "role": "agent",
+            "text": "Так, стоп. «Раньше жаловались — это моя недоработка» — это ты сам сейчас признал, что паттерн повторяется. Но я не про «раньше», я про конкретику: ты говоришь, что команда узнала о риске в день сдачи — а когда ты сам узнал, что смежники не успевают? Вот это ключевой момент.",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555101.231315,
+            "interrupted": false
+          },
+          {
+            "i": 6,
+            "role": "user",
+            "text": "Мотив один: команда узнаёт о переносе последней, и это ломает планирование.",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555102.6005352,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 6,
+              "total_ms": 1197,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 62.64,
+              "rewrite_ratio": 0.107,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 7,
+            "role": "user",
+            "text": "«Буду внимательнее» мне не подходит. Мне нужен конкретный признак, что риск виден.",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555106.458818,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 3798,
+              "total_ms": 1259,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 65.13,
+              "rewrite_ratio": 0.171,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 8,
+            "role": "agent",
+            "text": "Слушай, «буду внимательнее» — это ровно то, что ты говорил и в прошлый раз, и в позапрошлый. Мне нужен не настрой, а механизм: как именно команда узнает о риске раньше дня сдачи? Что конкретно ты будешь делать иначе в следующем спринте?",
+            "stage": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+            "at": 1788555108.959053,
+            "interrupted": false
+          },
+          {
+            "i": 9,
+            "role": "user",
+            "text": "договорились риск озвучиваешь как только оценка выросла на треть письменно",
+            "stage": "proverit_uderzhitsya_li_rukovoditel_pri",
+            "at": 1788555109.2028852,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 74,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 10,
+            "role": "agent",
+            "text": "Так, «как только оценка выросла на треть» — это уже конкретнее, но давай уточним: треть от чего — от исходной оценки на старте спринта? И в какой канал пишем — в общий чат команды или тебе лично в личку? Мне важно, чтобы это было проверяемо, а не «ну я же писал где-то».",
+            "stage": "proverit_uderzhitsya_li_rukovoditel_pri",
+            "at": 1788555113.26779,
+            "interrupted": false
+          },
+          {
+            "i": 11,
+            "role": "user",
+            "text": "Требования менялись и у соседней команды, там сроки держат. Разница в предупреждении.",
+            "stage": "proverit_uderzhitsya_li_rukovoditel_pri",
+            "at": 1788555114.894294,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 14,
+              "total_ms": 1504,
+              "final_length": 85,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 56.52,
+              "rewrite_ratio": 0.082,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 12,
+            "role": "agent",
+            "text": "Так, стоп. Ты снова про смежников — я это уже слышал. Но мы только что почти договорились: риск озвучиваешь письменно, когда оценка выросла на треть. Давай зафиксируем это, а потом уже обсудим, как на это влияют требования. Итак: треть от исходной оценки на старте спринта, и пишешь в общий чат команды — так?",
+            "stage": "proverit_uderzhitsya_li_rukovoditel_pri",
+            "at": 1788555117.468653,
+            "interrupted": false
+          },
+          {
+            "i": 13,
+            "role": "user",
+            "text": "Я не обсуждаю личное отношение. Я обсуждаю три даты и то, как о них узнали.",
+            "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+            "at": 1788555119.139348,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 1,
+              "total_ms": 1442,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 52.0,
+              "rewrite_ratio": 0.187,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 14,
+            "role": "agent",
+            "text": "Слушай, я не про личное отношение, я про то, что три спринта подряд команда узнаёт о рисках в день сдачи. Ты сам сказал, что разница в предупреждении — вот я и хочу зафиксировать, как это предупреждение будет выглядеть в следующий раз. Давай не уходить в сторону: треть от исходной оценки, письменно в общий чат — так?",
+            "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+            "at": 1788555121.262048,
+            "interrupted": false
+          },
+          {
+            "i": 15,
+            "role": "user",
+            "text": "оценка задач твоя зана если продукт дает нереальный объем это тоже говорится заранее",
+            "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+            "at": 1788555121.518965,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 84,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 16,
+            "role": "user",
+            "text": "Конкретный признак: оценка выросла больше чем на треть — в тот же день в канал команды.",
+            "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+            "at": 1788555124.8101928,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 2140,
+              "total_ms": 1205,
+              "final_length": 87,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 72.19,
+              "rewrite_ratio": 0.092,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 17,
+            "role": "user",
+            "text": "Проверять будем на ретро следующего спринта, по фактам, а не по ощущениям.",
+            "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+            "at": 1788555128.2400389,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 5651,
+              "total_ms": 1176,
+              "final_length": 74,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 62.91,
+              "rewrite_ratio": 0.149,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "i": 18,
+            "role": "agent",
+            "text": "Так, «оценка выросла больше чем на треть — в тот же день в канал команды» — это уже нормальная, проверяемая формулировка. И на ретро следующего спринта посмотрим по факту. Тогда считаем, что договорились: письменно в канал, в день, когда оценка выросла на треть от исходной. Если продукт даёт нереальный объём — тоже говоришь заранее, а не в день сдачи.",
+            "stage": "proverit_ustoychivost_k_argumentu_v_pros",
+            "at": 1788555130.798657,
+            "interrupted": false
+          },
+          {
+            "i": 19,
+            "role": "user",
+            "text": "записал письменное предупреждение о риске в день его появления с этим согласен",
+            "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+            "at": 1788555131.0635562,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 78,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 20,
+            "role": "user",
+            "text": "Три спринта подряд: двенадцатого, двадцать шестого марта и девятого апреля.",
+            "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+            "at": 1788555133.8950012,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 1588,
+              "total_ms": 1383,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.21,
+              "rewrite_ratio": 0.08,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 21,
+            "role": "agent",
+            "text": "Так, погоди. Ты сейчас опять уходишь в перечисление дат и спринтов, а мы уже зафиксировали конкретную договорённость: письменное предупреждение в день, когда оценка выросла на треть. Давай не будем заново пересматривать историю — мы её знаем. Вопрос один: ты согласен с тем, что этот механизм будет работать в следующем спринте, или у тебя есть возражения по самой формулировке?",
+            "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+            "at": 1788555136.349091,
+            "interrupted": false
+          },
+          {
+            "i": 22,
+            "role": "user",
+            "text": "Смежники были и раньше. Я говорю про то, что о риске команда узнала в день сдачи.",
+            "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+            "at": 1788555137.9183471,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 10,
+              "total_ms": 1359,
+              "final_length": 81,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 59.59,
+              "rewrite_ratio": 0.16,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 23,
+            "role": "agent",
+            "text": "Слушай, я не спорю, что смежники были и раньше. Я про то, что мы с тобой только что согласовали конкретный механизм на следующий спринт. Давай не будем сейчас ворошить прошлое — мы его уже разобрали. Ты подтверждаешь, что будешь писать в канал в день, когда оценка вырастет на треть, и мы проверим это на ретро?",
+            "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+            "at": 1788555140.667776,
+            "interrupted": false
+          },
+          {
+            "i": 24,
+            "role": "user",
+            "text": "раньше они жаловались это моя недоработка я говорю сейчас и говорю по фактам",
+            "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+            "at": 1788555140.824586,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 76,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 25,
+            "role": "agent",
+            "text": "Слушай, ты сейчас сам признал свою недоработку — и это уже шаг вперёд. Но я не про «раньше» и не про жалобы смежников. Я про следующее: конкретный механизм, который мы зафиксировали — письмо в канал в день роста оценки на треть. Ты его подтверждаешь или нет?",
+            "stage": "proverit_ne_nachnet_li_rukovoditel_oprav",
+            "at": 1788555143.8758929,
+            "interrupted": false
+          },
+          {
+            "i": 26,
+            "role": "user",
+            "text": "Мотив один: команда узнаёт о переносе последней, и это ломает планирование.",
+            "stage": "proverit_svernet_li_rukovoditel_razgovor",
+            "at": 1788555145.5284019,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 17,
+              "total_ms": 1488,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 50.41,
+              "rewrite_ratio": 0.12,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 27,
+            "role": "agent",
+            "text": "Слушай, я понимаю, что тебе важно донести свою мысль про команду. Но мы уже два раза прошли по кругу: ты говоришь про проблему, я предлагаю конкретный механизм. Давай зафиксируем: письменное предупреждение в день роста оценки на треть, проверка на ретро. Ты с этим согласен — да или нет?",
+            "stage": "proverit_svernet_li_rukovoditel_razgovor",
+            "at": 1788555148.432616,
+            "interrupted": false
+          },
+          {
+            "i": 28,
+            "role": "user",
+            "text": "«Буду внимательнее» мне не подходит. Мне нужен конкретный признак, что риск виден.",
+            "stage": "proverit_svernet_li_rukovoditel_razgovor",
+            "at": 1788555149.7811131,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 10,
+              "total_ms": 1271,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 64.51,
+              "rewrite_ratio": 0.11,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 29,
+            "role": "agent",
+            "text": "Ладно, допустим, я согласен, что «буду внимательнее» — это пустое. Но ты сам посмотри: я же тебе предлагаю конкретику, а ты всё время возвращаешь меня к прошлым спринтам. Давай так: я подтверждаю, что в следующем спринте письменно предупреждаю команду в день, когда оценка вырастет на треть от исходной. Это и есть конкретный ответ.",
+            "stage": "proverit_svernet_li_rukovoditel_razgovor",
+            "at": 1788555152.4874082,
+            "interrupted": false
+          },
+          {
+            "i": 30,
+            "role": "user",
+            "text": "договорились риск озвучиваешь как только оценка выросла на треть письменно",
+            "stage": "proverit_svernet_li_rukovoditel_razgovor",
+            "at": 1788555152.667457,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 74,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 31,
+            "role": "agent",
+            "text": "Вот и отлично. Значит, фиксируем: письменное предупреждение в день роста оценки на треть, и проверим это на ретро. Мне больше ничего не нужно.",
+            "stage": "proverit_svernet_li_rukovoditel_razgovor",
+            "at": 1788555155.368433,
+            "interrupted": false
+          },
+          {
+            "i": 32,
+            "role": "user",
+            "text": "Требования менялись и у соседней команды, там сроки держат. Разница в предупреждении.",
+            "stage": "zafiksirovat_izmerimuyu_dogovorennost_na",
+            "at": 1788555157.221139,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 4,
+              "total_ms": 1635,
+              "final_length": 85,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 51.98,
+              "rewrite_ratio": 0.129,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 33,
+            "role": "user",
+            "text": "Я не обсуждаю личное отношение. Я обсуждаю три даты и то, как о них узнали.",
+            "stage": "zafiksirovat_izmerimuyu_dogovorennost_na",
+            "at": 1788555159.937307,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 2992,
+              "total_ms": 1506,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 9,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 49.8,
+              "rewrite_ratio": 0.12,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 34,
+            "role": "user",
+            "text": "оценка задач твоя зана если продукт дает нереальный объем это тоже говорится заранее",
+            "stage": "zafiksirovat_izmerimuyu_dogovorennost_na",
+            "at": 1788555162.643475,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 84,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 35,
+            "role": "agent",
+            "text": "«Зана» — это что, опечатка или жаргон? Не уходи в сторону: мы уже зафиксировали механизм — письменное предупреждение в день роста оценки на треть. Если продукт даёт нереальный объём, это тоже попадает под тот же механизм, просто раньше. Так что подтверждаешь: в следующем спринте любое изменение оценки на треть фиксируешь письменно в день, когда оно стало известно?",
+            "stage": "zafiksirovat_izmerimuyu_dogovorennost_na",
+            "at": 1788555166.498652,
+            "interrupted": false
+          }
+        ],
+        "typing": {
+          "answers": 14,
+          "median_first_key_ms": 12,
+          "median_longest_pause_ms": 0,
+          "median_rewrite_ratio": 0.12,
+          "confidence": {
+            "уверенно": 13,
+            "с заминками": 1
+          },
+          "hesitant_answers": 1
+        },
+        "conclusion": "Вы сохранили устойчивость в диалоге и смогли удержать фокус на выработке проверяемого механизма, несмотря на активное давление и уходы собеседника в прошлые заслуги и внешние обстоятельства. Вам удалось зафиксировать конкретное и измеримое правило — письменное предупреждение в день роста оценки на треть, что является сильной стороной этого разговора. Однако на протяжении всей беседы вам не хватало опоры на факты и даты, а также последовательного возврата к наблюдаемому поведению: вы часто поддавались на провокации и уходили в обсуждение смежников и «раньше», что ослабило вашу позицию. Главная рекомендация — на будущее: как только собеседник начинает уводить вас от темы, сразу возвращайте его к конкретному пункту договорённости, используя зафиксированные цифры и сроки, а не общие формулировки.",
+        "created_at": 1788555170.726613,
+        "started_at": 1788555088.39027,
+        "session_id": "c9c9e1fc",
+        "overall": 2.08,
+        "coverage": 0.8,
+        "duration_s": 82.3,
+        "cited": 4,
+        "scenario": {
+          "id": "s8_feedback_denial",
+          "title": "Обратная связь тимлиду, который срывает сроки и не согласен с этим",
+          "type": "management",
+          "persona": {
+            "role": "тимлид, который третий спринт подряд срывает сроки и не признаёт свою ответственность за это",
+            "tone": "уверенный, слегка раздражённый, местами саркастичный",
+            "strictness": "низкая к себе, высокая к обстоятельствам вокруг",
+            "pressure": "активно давит контраргументами и встречными вопросами",
+            "start_emotion": "skeptical"
+          },
+          "stages": [
+            {
+              "id": "dat_sotrudniku_uslyshat_konkretnyy_povod",
+              "goal": "Дать сотруднику услышать конкретный повод разговора",
+              "hint": "Выслушай факты о трёх спринтах спокойно, но сразу выдай первую защитную реакцию — скажи, что ситуация не так проста, как звучит",
+              "advance_when": "руководитель называет конкретные факты и даты (какие спринты, какие оценки, когда узнали о переносе), а не общие фразы про 'плохую работу'",
+              "opening": "Так, ну и что не так? У нас всё как обычно шло.",
+              "max_turns": 3
+            },
+            {
+              "id": "proverit_uderzhitsya_li_rukovoditel_pri",
+              "goal": "Проверить, удержится ли руководитель при переводе стрелок на смежников и продукт",
+              "hint": "Активно вали вину на смежников и продуктовую команду, приводи контрпримеры про изменившиеся требования, настаивай, что оценки были правильными на момент постановки",
+              "advance_when": "руководитель признаёт часть внешних факторов, но возвращает разговор к наблюдаемому поведению — как и когда сообщается о рисках, а не спорит 'нет, ты сам виноват'",
+              "opening": "Смежники три недели тянули с API, а требования продукт поменял на середине спринта — при чём тут я?",
+              "max_turns": 4
+            },
+            {
+              "id": "proverit_ustoychivost_k_argumentu_v_pros",
+              "goal": "Проверить устойчивость к аргументу 'в прошлый раз никто не жаловался'",
+              "hint": "Скажи, что раньше такие же ситуации проходили без последствий, намекни, что к тебе придираются именно сейчас",
+              "advance_when": "руководитель не соглашается с тем, что прошлое отсутствие реакции оправдывает текущую ситуацию, и держится на конкретных датах и фактах по трём последним спринтам",
+              "opening": "А в прошлый раз, когда так же сдвинулись сроки, никто и слова не сказал. Почему теперь драма?",
+              "max_turns": 3
+            },
+            {
+              "id": "proverit_ne_nachnet_li_rukovoditel_oprav",
+              "goal": "Проверить, не начнёт ли руководитель оправдываться в ответ на вопрос о мотивах",
+              "hint": "Спроси с вызовом, почему руководитель поднимает эту тему только сейчас, намекни на скрытые мотивы или личное отношение",
+              "advance_when": "руководитель не начинает оправдываться и не уходит от темы, а фиксирует факт: 'сообщаю сейчас, потому что вижу третий подряд случай' или аналогично, и возвращается к цели разговора",
+              "opening": "А почему вы вообще заговорили об этом именно сейчас, а не раньше?",
+              "max_turns": 3
+            },
+            {
+              "id": "proverit_svernet_li_rukovoditel_razgovor",
+              "goal": "Проверить, свернёт ли руководитель разговор на общее 'давай просто постараемся'",
+              "hint": "Предложи расплывчатое обещание вроде 'ладно, буду внимательнее' и попробуй закрыть тему без конкретики",
+              "advance_when": "руководитель отклоняет расплывчатую формулировку и настаивает на измеримых договорённостях — конкретный формат и сроки сообщения о рисках на следующий спринт",
+              "opening": "Хорошо, я услышал, буду стараться внимательнее следить за сроками.",
+              "max_turns": 3
+            },
+            {
+              "id": "zafiksirovat_izmerimuyu_dogovorennost_na",
+              "goal": "Зафиксировать измеримую договорённость на следующий спринт",
+              "hint": "Соглашайся неохотно, но требуй конкретики — что именно считается 'вовремя сообщил о риске', уточняй формулировки, чтобы проверить, действительно ли договорённость измерима",
+              "advance_when": "стороны фиксируют конкретное измеримое условие — например, день недели или срок до дедлайна, когда риски должны быть подняты, и способ проверки в следующем спринте",
+              "opening": "Ладно, и что конкретно вы хотите, чтобы я делал по-другому?",
+              "max_turns": 3
+            }
+          ],
+          "criteria": [
+            {
+              "key": "opora_na_fakty_i_daty",
+              "title": "Опора на факты и даты",
+              "scale": "1-5",
+              "anchor_1": "руководитель говорит 'мне кажется, ты плохо справляешься' без привязки к конкретным спринтам и датам",
+              "anchor_5": "руководитель называет конкретные спринты, даты сообщений о рисках и цифры расхождения оценок"
+            },
+            {
+              "key": "vozvrat_k_nablyudaemomu_povedeniyu_vmest",
+              "title": "Возврат к наблюдаемому поведению вместо спора",
+              "scale": "1-5",
+              "anchor_1": "руководитель отвечает 'нет, ты неправ' и вступает в спор о том, кто виноват",
+              "anchor_5": "руководитель признаёт часть внешних факторов, но каждый раз возвращает разговор к конкретному наблюдаемому действию — как и когда сообщается о рисках"
+            },
+            {
+              "key": "ustoychivost_k_davleniyu_i_kontrargument",
+              "title": "Устойчивость к давлению и контраргументам",
+              "scale": "1-5",
+              "anchor_1": "руководитель уходит от темы, начинает оправдываться за собственные решения или соглашается с тем, что 'раньше было нормально, значит и сейчас нормально'",
+              "anchor_5": "руководитель не поддаётся на 'а вот в прошлый раз' и 'почему сейчас', сохраняет фокус на цели разговора"
+            },
+            {
+              "key": "otkaz_ot_rasplyvchatyh_obeschaniy",
+              "title": "Отказ от расплывчатых обещаний",
+              "scale": "1-5",
+              "anchor_1": "руководитель соглашается закрыть разговор фразой вроде 'ладно, давай просто постараемся'",
+              "anchor_5": "руководитель явно отклоняет расплывчатую формулировку и требует конкретного, проверяемого обязательства"
+            },
+            {
+              "key": "izmerimaya_dogovorennost_na_sleduyuschiy",
+              "title": "Измеримая договорённость на следующий спринт",
+              "scale": "1-5",
+              "anchor_1": "разговор заканчивается без конкретных условий — просто 'договорились, что будет лучше'",
+              "anchor_5": "зафиксировано конкретное измеримое условие: конкретный день/срок сообщения о рисках и способ, которым это будет проверено в следующем спринте"
+            }
+          ],
+          "source": "generated",
+          "source_text": "Обратная связь подчинённому, который с ней не согласен.\n\nПовод: тимлид срывает сроки третий спринт подряд. Оценки задач занижены вдвое,\nо рисках он сообщает в день дедлайна, команда узнаёт о переносе последней.\n\nОсобенность разговора: сотрудник защищается и отрицает. У него на всё есть\nобъяснение — смежники подвели, требования менялись, задачи были недооценены\nне им, а продуктом. Он переводит стрелки, приводит контрпримеры, говорит «а\nвот в прошлый раз никто не жаловался» и «почему вы говорите об этом только\nсейчас».\n\nРуководитель должен: опираться на конкретные факты и даты, а не на «мне\nкажется»; не спорить в формате «нет, ты неправ», а возвращать к наблюдаемому\nповедению; не отступать от темы под напором объяснений; закончить измеримой\nдоговорённостью на следующий спринт.\n\nТипичная ошибка, которую тренируем: руководитель начинает оправдываться сам\nили сворачивает разговор на «ну ладно, давай просто постараемся»."
+        },
+        "marks": [
+          {
+            "generation_id": "gen-1",
+            "spec_hit": false,
+            "spec_cover": null,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2041,
+            "t_first_audio_ms": 131,
+            "t_first_speech_ms": 2376,
+            "backchannel": "Понятно.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-2",
+            "spec_hit": true,
+            "spec_cover": 0.613,
+            "spec_head_ms": 829,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1261,
+            "t_first_audio_ms": 127,
+            "t_first_speech_ms": 1567,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-4",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2196,
+            "t_first_audio_ms": 219,
+            "t_first_speech_ms": 2489,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-6",
+            "spec_hit": true,
+            "spec_cover": 0.805,
+            "spec_head_ms": 558,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1648,
+            "t_first_audio_ms": 130,
+            "t_first_speech_ms": 1927,
+            "backchannel": "Угу.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-7",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 3044,
+            "t_first_audio_ms": 241,
+            "t_first_speech_ms": 3486,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-8",
+            "spec_hit": true,
+            "spec_cover": 0.659,
+            "spec_head_ms": 627,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1544,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 1707,
+            "backchannel": "Угу.",
+            "clauses": 5,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-9",
+            "spec_hit": true,
+            "spec_cover": 0.613,
+            "spec_head_ms": 1068,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1277,
+            "t_first_audio_ms": 126,
+            "t_first_speech_ms": 1504,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-12",
+            "spec_hit": true,
+            "spec_cover": 0.676,
+            "spec_head_ms": 493,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1648,
+            "t_first_audio_ms": 131,
+            "t_first_speech_ms": 1947,
+            "backchannel": "Угу.",
+            "clauses": 5,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-14",
+            "spec_hit": true,
+            "spec_cover": 0.627,
+            "spec_head_ms": 823,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1319,
+            "t_first_audio_ms": 130,
+            "t_first_speech_ms": 1510,
+            "backchannel": "Угу.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-15",
+            "spec_hit": true,
+            "spec_cover": 0.605,
+            "spec_head_ms": 918,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1686,
+            "t_first_audio_ms": 122,
+            "t_first_speech_ms": 2079,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-16",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2235,
+            "t_first_audio_ms": 228,
+            "t_first_speech_ms": 2631,
+            "backchannel": "Понятно.",
+            "clauses": 5,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-17",
+            "spec_hit": true,
+            "spec_cover": 0.707,
+            "spec_head_ms": 575,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1871,
+            "t_first_audio_ms": 130,
+            "t_first_speech_ms": 2257,
+            "backchannel": "Хорошо.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-18",
+            "spec_hit": true,
+            "spec_cover": 0.695,
+            "spec_head_ms": 610,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1555,
+            "t_first_audio_ms": 129,
+            "t_first_speech_ms": 1850,
+            "backchannel": "Так…",
+            "clauses": 5,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-19",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2142,
+            "t_first_audio_ms": 230,
+            "t_first_speech_ms": 2486,
+            "backchannel": "Хорошо.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-22",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2653,
+            "t_first_audio_ms": 240,
+            "t_first_speech_ms": 3093,
+            "backchannel": "Понятно.",
+            "clauses": 4,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          }
+        ],
+        "speculation": {
+          "launches": 69,
+          "relaunches": 27,
+          "hits": 14,
+          "misses": 7,
+          "hit_rate": 0.667,
+          "ttft_hit_ms": 1555,
+          "ttft_miss_ms": 2235
+        },
+        "evaluator": {
+          "calls": 15,
+          "errors": [],
+          "total_ms": 52375
+        },
+        "saved_to": "/Users/alexeynau/dev/ai_character/data/reports/history.jsonl"
+      },
+      "audio_bytes": 12886200
+    }
+  ]
+}

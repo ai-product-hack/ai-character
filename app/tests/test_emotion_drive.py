@@ -115,3 +115,37 @@ class RealScenarios(unittest.TestCase):
         m = mood_from(log, sc.criteria)
         self.assertEqual(m.emotion, "skeptical")
         self.assertGreater(m.intensity, 0)
+
+
+class BaselineOutsideTheAxis(unittest.TestCase):
+    """Стартовая эмоция персоны берётся из всей палитры, а не только с оси.
+
+    Оси оценок `angry` и `anxious` не принадлежат: вывести их из баллов нельзя,
+    баллов в начале разговора ещё нет. Ровно поэтому проверка членства идёт по
+    белому списку, а не по `COLD_TO_WARM`.
+    """
+
+    def test_angry_persona_starts_angry(self):
+        m = mood_from(log_of(), CRITS, baseline="angry")
+        self.assertEqual(m.emotion, "angry")
+        self.assertGreater(m.intensity, 0, "иначе лицо ровное с первого кадра")
+
+    def test_anxious_persona_starts_anxious(self):
+        self.assertEqual(mood_from(log_of(), CRITS, baseline="anxious").emotion,
+                         "anxious")
+
+    def test_scores_push_the_baseline_out(self):
+        """Дуга принадлежит оценкам: стартовая эмоция — только начало."""
+        m = mood_from(log_of(5, 5, 5), CRITS, baseline="angry")
+        self.assertIn(m.emotion, COLD_TO_WARM)
+        self.assertNotEqual(m.emotion, "angry")
+
+    def test_unknown_baseline_is_ignored(self):
+        self.assertEqual(mood_from(log_of(), CRITS, baseline="ликование").emotion,
+                         "neutral")
+
+    def test_score_axis_never_yields_the_two_new_states(self):
+        """Оценки не должны выводить гнев: он не про качество ответов."""
+        for scores in ([1, 1, 1], [3, 3], [5, 5, 5], [1, 5, 3, 4]):
+            m = mood_from(log_of(*scores), CRITS)
+            self.assertIn(m.emotion, COLD_TO_WARM, scores)

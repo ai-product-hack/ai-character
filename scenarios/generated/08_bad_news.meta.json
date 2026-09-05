@@ -1,0 +1,19 @@
+{
+  "mechanic": "агент реагирует эмоционально, человек держит рамку",
+  "kind": "management",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 31443
+    }
+  ],
+  "total_ms": 31443,
+  "wall_s": 32.2,
+  "problems": [],
+  "notes": []
+}

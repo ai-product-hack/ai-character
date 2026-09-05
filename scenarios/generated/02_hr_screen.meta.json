@@ -1,0 +1,21 @@
+{
+  "mechanic": "чек-лист: мотивация, ожидания, локация",
+  "kind": "hr",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 39165
+    }
+  ],
+  "total_ms": 39165,
+  "wall_s": 39.3,
+  "problems": [],
+  "notes": [
+    "манера давления не описана"
+  ]
+}

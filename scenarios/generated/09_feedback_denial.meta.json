@@ -1,0 +1,19 @@
+{
+  "mechanic": "агент отрицает и защищается",
+  "kind": "management",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 33179
+    }
+  ],
+  "total_ms": 33179,
+  "wall_s": 33.3,
+  "problems": [],
+  "notes": []
+}

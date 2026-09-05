@@ -1,0 +1,19 @@
+{
+  "mechanic": "углубление по ответу, ловля поверхностности",
+  "kind": "interview",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 36432
+    }
+  ],
+  "total_ms": 36432,
+  "wall_s": 37.3,
+  "problems": [],
+  "notes": []
+}

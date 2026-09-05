@@ -22,11 +22,26 @@ from app.scenario import Scenario, load_all               # noqa: E402
 from app.stub_llm import ScriptedLLM, StubLLM             # noqa: E402
 
 SCENARIOS = load_all(ROOT / "data" / "scenarios")
+# Тесты бюджета берут сценарий ПО ИМЕНИ, а не по номеру. Номер сломался, как
+# только официальных сценариев стало десять: сортировка ставит s10 перед s1, и
+# проверки бюджета молча начали гонять другой сценарий — с собственными
+# бюджетами этапов, из-за которых часть из них проходила по совпадению.
+BASE = next(s for s in SCENARIOS if s.id == "s1_interview_backend")
 
 
 class ScenarioFormat(unittest.TestCase):
-    def test_five_scenarios_load(self):
-        self.assertEqual(len(SCENARIOS), 5, "ожидалось пять сценариев")
+    def test_official_scenarios_load(self):
+        """Десять официальных: пять написанных руками и пять сгенерированных.
+
+        Вторая пятёрка собрана генератором из текстов в `scenarios/prompts/` и
+        проверена руками — она и есть доказательство, что генератор общий.
+        """
+        self.assertEqual(len(SCENARIOS), 10, "ожидалось десять сценариев")
+        generated = [s for s in SCENARIOS if s.source == "generated"]
+        self.assertEqual(len(generated), 5, "ожидалось пять сгенерированных")
+        for s in generated:
+            self.assertTrue(s.source_text,
+                            f"{s.id}: сгенерированный сценарий без исходного текста")
 
     def test_all_valid(self):
         for s in SCENARIOS:
@@ -91,7 +106,7 @@ class ActionParsing(unittest.TestCase):
         self.assertFalse(a.fell_back)
 
     def test_explicit_stay_does_not_move_or_finish(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         agent = Agent(ScriptedLLM(['Переспрошу.\n{"action": "stay"}']))
         _, happened = agent.step(state, "Ответ.")
@@ -155,7 +170,7 @@ class Progression(unittest.TestCase):
                 json.loads(rep.to_json())              # отчёт сериализуем
 
     def test_stays_on_stage_when_action_is_garbage(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         agent = Agent(ScriptedLLM(['Продолжаем. {"action": "не_дейст']))
         before = state.stage_index
@@ -165,7 +180,7 @@ class Progression(unittest.TestCase):
         self.assertTrue(happened["fell_back"])
 
     def test_next_stage_on_last_stage_finishes(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         state.stage_index = len(sc.stages) - 1
         agent = Agent(ScriptedLLM(['Ну что ж.\n{"action": "next_stage"}']))
@@ -173,7 +188,7 @@ class Progression(unittest.TestCase):
         self.assertTrue(state.finished, "просьба идти дальше с последнего этапа = конец")
 
     def test_unknown_criterion_ignored(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         agent = Agent(ScriptedLLM(
             ['Ага.\n{"action":"evaluate","criterion":"выдуманный","score":5,"note":"н"}']))
@@ -182,7 +197,7 @@ class Progression(unittest.TestCase):
                          "критерий, которого методист не задавал, записывать нельзя")
 
     def test_known_criterion_recorded(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         key = sc.criteria[0].key
         state = DialogueState(sc)
         agent = Agent(ScriptedLLM(
@@ -205,7 +220,7 @@ class StageBudget(unittest.TestCase):
         return Agent(ScriptedLLM(['Переспрошу.\n{"action": "stay"}']))
 
     def test_budget_forces_advance(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc, max_turns_per_stage=3)
         agent = self._stuck_agent()
         for _ in range(3):
@@ -214,7 +229,7 @@ class StageBudget(unittest.TestCase):
         self.assertEqual(state.forced_advances, 1)
 
     def test_budget_counts_per_stage_not_globally(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc, max_turns_per_stage=2)
         agent = self._stuck_agent()
         for _ in range(2):
@@ -226,7 +241,7 @@ class StageBudget(unittest.TestCase):
 
     def test_budget_on_last_stage_finishes(self):
         """С последнего этапа переходить некуда — бюджет обязан завершать."""
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc, max_turns_per_stage=2)
         state.stage_index = len(sc.stages) - 1
         agent = self._stuck_agent()
@@ -237,9 +252,9 @@ class StageBudget(unittest.TestCase):
 
     def test_last_stage_gets_more_room(self):
         """Прощание не должно обрубаться тем же лимитом, что промежуточный вопрос."""
-        state = DialogueState(SCENARIOS[0], max_turns_per_stage=3)
+        state = DialogueState(BASE, max_turns_per_stage=3)
         self.assertEqual(state.stage_max_turns, 3)
-        state.stage_index = len(SCENARIOS[0].stages) - 1
+        state.stage_index = len(BASE.stages) - 1
         self.assertGreater(state.stage_max_turns, 3)
 
     def test_stuck_dialogue_always_terminates(self):
@@ -256,7 +271,7 @@ class StageBudget(unittest.TestCase):
                 self.assertEqual(state.forced_advances, len(sc.stages) - 1)
 
     def test_model_advance_does_not_count_as_forced(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc, max_turns_per_stage=5)
         agent = Agent(ScriptedLLM(['Дальше.\n{"action": "next_stage"}']))
         _, happened = agent.step(state, "Ответ.")
@@ -268,13 +283,13 @@ class StageBudget(unittest.TestCase):
 class StateOwnership(unittest.TestCase):
     def test_prompt_carries_whole_context(self):
         """Модель ничего не помнит — весь контекст обязан быть в промпте."""
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         state.add_agent("Первая реплика агента.")
         state.add_user("Первый ответ пользователя.")
         state.observe(sc.criteria[0].key, "уже замечено кое-что", 3)
         p = build_prompt(state, "Свежая реплика.")
-        self.assertIn(sc.persona[:24], p)
+        self.assertIn(sc.persona.role[:24], p)
         self.assertIn(sc.stages[0].goal, p)
         self.assertIn("Первая реплика агента.", p)
         self.assertIn("Первый ответ пользователя.", p)
@@ -286,7 +301,7 @@ class StateOwnership(unittest.TestCase):
             self.assertIn(c.title, p)
 
     def test_cancelled_generation_leaves_no_trace(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         state.add_user("Вопрос.")
         state.add_agent("Начал отвечать и был перебит.", generation_id="gen-1")
@@ -299,7 +314,7 @@ class StateOwnership(unittest.TestCase):
         self.assertNotIn("Начал отвечать", build_prompt(state, "Дальше."))
 
     def test_history_survives_other_generations(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         state.add_agent("Реплика первой генерации.", generation_id="gen-1")
         state.add_agent("Реплика второй генерации.", generation_id="gen-2")
@@ -309,7 +324,7 @@ class StateOwnership(unittest.TestCase):
 
 class ReportShape(unittest.TestCase):
     def test_report_covers_every_criterion(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         state.observe(sc.criteria[0].key, "первое", 4)
         state.observe(sc.criteria[0].key, "второе", 2)
@@ -322,7 +337,7 @@ class ReportShape(unittest.TestCase):
         self.assertEqual(len(unscored), len(sc.criteria) - 1)
 
     def test_coverage_and_overall(self):
-        sc = SCENARIOS[0]
+        sc = BASE
         state = DialogueState(sc)
         for c in sc.criteria:
             state.observe(c.key, "ок", 4)
@@ -331,7 +346,7 @@ class ReportShape(unittest.TestCase):
         self.assertEqual(rep.overall, 4.0)
 
     def test_report_without_observations_is_still_valid(self):
-        rep = report_mod.build(DialogueState(SCENARIOS[0]))
+        rep = report_mod.build(DialogueState(BASE))
         self.assertIsNone(rep.overall)
         self.assertEqual(rep.coverage, 0.0)
         json.loads(rep.to_json())

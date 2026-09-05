@@ -1,6 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Тренажёр</title>
+<link rel="stylesheet" href="/app/web/report.css">
 <style>
  :root{color-scheme:dark}
  html,body{margin:0;height:100%;background:#05060a;color:#dde3ec;overflow:hidden;
@@ -65,6 +66,23 @@
  #panel pre{background:#0a0d13;border:1px solid #1c2230;border-radius:6px;
    padding:9px;overflow:auto;max-height:40vh;font:12px/1.45 ui-monospace,monospace}
  #voiceNote.bad{color:#ff9a9a}
+ /* Отчёт на экране в момент finish. Жюри должно увидеть его сразу, а не
+    скачивать файл, — поэтому он приходит поверх сцены, а не ссылкой. */
+ #finish{position:fixed;inset:0;z-index:20;background:#0a0d12f2;overflow:auto;
+   padding:28px 0;display:none}
+ #finish.on{display:block}
+ #finishInner{max-width:900px;margin:0 auto;padding:0 20px}
+ #finishBar{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+ #finishBar .grow{flex:1;color:#8b96a8;font-size:13px}
+ /* На печати оверлей перестаёт быть оверлеем. Фиксированный контейнер со
+    своей прокруткой браузер обрезает по первой странице: на экране отчёт
+    целый, а в PDF от него остаётся шапка. Правило живёт здесь, а не в
+    report.css: про #finish знает только этот экран. */
+ @media print {
+   #finish{position:static;display:block;overflow:visible;padding:0;
+     background:#fff;inset:auto}
+   #finishInner{max-width:none;padding:0}
+ }
 </style>
 
 <div id="stage"><canvas id="c"></canvas></div>
@@ -92,15 +110,35 @@
 </div>
 <div id="err"></div>
 
+<div id="finish"><div id="finishInner">
+  <div id="finishBar" class="noprint">
+    <button id="finishPrint">печать / PDF</button>
+    <button id="finishJson">скачать JSON</button>
+    <span class="grow" id="finishNote"></span>
+    <button id="finishClose">закрыть</button>
+  </div>
+  <div class="rep" id="finishRep"></div>
+</div></div>
+
 <script type="importmap">
 {"imports":{"three":"/avatar/node_modules/three/build/three.module.js",
             "three/addons/":"/avatar/node_modules/three/examples/jsm/"}}
 </script>
 <script type="module">
 import { createAvatar } from '/avatar/src/avatar.js';
+import { renderReport } from '/app/web/report.js';
 import { AudioClock, scheduleAudioClause, shiftTimeline } from '/avatar/src/clock.js';
 
 const $ = id => document.getElementById(id);
+
+// Сотрудник приходит по ссылке методиста: ?session=… Без неё берётся текущая
+// сессия сервера — так открывали экран до появления ссылок, и ломать это
+// незачем.
+const SESSION = new URLSearchParams(location.search).get('session');
+const api = (path) => SESSION
+  ? path + (path.includes('?') ? '&' : '?') + 'session=' + encodeURIComponent(SESSION)
+  : path;
+
 const fail = e => { $('err').style.display='block';
   $('err').textContent += (e && e.stack ? e.stack : e) + '\n'; };
 window.addEventListener('error', e => fail(e.error || e.message));
@@ -176,7 +214,7 @@ function ensureAudio() {
 // -------------------------------------------------------------------- поток
 
 async function connect() {
-  const resp = await fetch('/api/stream?from=0');
+  const resp = await fetch(api('/api/stream?from=0'));
   // Экран сотрудника часто открывают раньше, чем методист нажал «начать».
   // Сервер в этот момент честно отвечает 400; это ожидание сессии, а не
   // фатальная ошибка клиента. Старый код дочитывал JSON как бинарный поток и
@@ -226,7 +264,11 @@ function handle(h, payload) {
   }
   if (h.kind === 'agent') { addTurn('agent', h.text); return; }
   if (h.kind === 'cancel') { onCancel(h.generation_id); return; }
-  if (h.kind === 'finished') { addTurn('agent', '— диалог завершён —'); return; }
+  if (h.kind === 'finished') {
+    addTurn('agent', '— диалог завершён —');
+    showFinishReport();
+    return;
+  }
   if (h.kind === 'state') {
     if (h.t_first_audio_ms) stats.firstAudioMs = h.t_first_audio_ms;
     if (h.t_first_speech_ms) stats.firstSpeechMs = h.t_first_speech_ms;
@@ -532,8 +574,41 @@ async function send() {
   // Enter во время речи агента = перебивание: гасим локально сразу, не дожидаясь
   // сервера, иначе между нажатием и ответом сети звучит уже отменённое.
   if (currentGen) { onCancel(currentGen); avatar.setState('interrupted'); }
-  await fetch('/api/message', {method:'POST', body: JSON.stringify({text})});
+  await fetch(api('/api/message'), {method:'POST', body: JSON.stringify({text})});
 }
+
+// Отчёт показывается в момент finish — это прямое требование кейса. Он уже
+// собран: фоновая сессия считала оценки по ходу разговора, здесь остаётся
+// только забрать готовое.
+let finishReport = null;
+
+async function showFinishReport() {
+  $('finishNote').textContent = 'собираю отчёт…';
+  $('finish').classList.add('on');
+  try {
+    const rep = await (await fetch(api('/api/report'))).json();
+    if (rep.error) throw new Error(rep.error);
+    finishReport = rep;
+    renderReport($('finishRep'), rep, {ns: 't'});
+    $('finishNote').textContent = rep.saved_to
+      ? 'JSON дописан: ' + rep.saved_to : '';
+  } catch (e) {
+    $('finishNote').textContent = 'отчёт не забрался: ' + (e.message || e);
+  }
+}
+
+$('finishClose').onclick = () => $('finish').classList.remove('on');
+$('finishPrint').onclick = () => window.print();
+$('finishJson').onclick = () => {
+  if (!finishReport) return;
+  const blob = new Blob([JSON.stringify(finishReport, null, 2)],
+                        {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `report_${finishReport.scenario_id}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
 
 $('send').onclick = send;
 $('msg').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
@@ -550,7 +625,7 @@ $('msg').addEventListener('input', () => {
   clearTimeout(typingTimer);
   const text = $('msg').value;
   typingTimer = setTimeout(() => {
-    fetch('/api/typing', {method:'POST', body: JSON.stringify({text})})
+    fetch(api('/api/typing'), {method:'POST', body: JSON.stringify({text})})
       .catch(() => {});           // спекуляция не имеет права ломать ввод
   }, 250);
 });
@@ -609,7 +684,7 @@ async function sendChunk(f32) {
     i16[i] = v * 32767;
   }
   try {
-    const r = await fetch('/api/audio', {method: 'POST', body: i16.buffer});
+    const r = await fetch(api('/api/audio'), {method: 'POST', body: i16.buffer});
     const d = await r.json();
     if (d.endpoint) {
       tAsk = performance.now();
@@ -624,13 +699,13 @@ $('micOn').onchange = async () => {
   if (!on) {
     micStop();
     $('ptt').disabled = true;
-    await fetch('/api/voice', {method:'POST', body: JSON.stringify({on: false})});
+    await fetch(api('/api/voice'), {method:'POST', body: JSON.stringify({on: false})});
     micSay('выключен');
     return;
   }
   micSay('включаю…');
   try {
-    const r = await fetch('/api/voice', {method:'POST',
+    const r = await fetch(api('/api/voice'), {method:'POST',
                                          body: JSON.stringify({on: true})});
     const d = await r.json();
     if (d.error) throw new Error(d.error);
@@ -649,7 +724,7 @@ $('micOn').onchange = async () => {
 async function pttUp() {
   $('ptt').classList.remove('live');
   if (!micSending) return;
-  const d = await (await fetch('/api/voice', {method:'POST',
+  const d = await (await fetch(api('/api/voice'), {method:'POST',
                                               body: JSON.stringify({ptt: 'up'})})).json();
   if (d.text) micSay(`распознано за ${d.asr_ms} мс`, 'hot');
 }

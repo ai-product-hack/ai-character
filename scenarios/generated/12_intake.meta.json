@@ -1,0 +1,19 @@
+{
+  "mechanic": "собеседник тревожен и путается",
+  "kind": "intake",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 36355
+    }
+  ],
+  "total_ms": 36355,
+  "wall_s": 37.3,
+  "problems": [],
+  "notes": []
+}

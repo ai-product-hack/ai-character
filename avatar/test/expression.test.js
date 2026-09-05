@@ -16,6 +16,7 @@ import { StateMachine, STATES } from '../src/states.js';
 import { Microbehavior } from '../src/behavior.js';
 import { VisemeLayer } from '../src/viseme.js';
 import { MorphWriter } from '../src/morphs.js';
+import { EMOTIONS } from '../src/avatar.js';
 import { ManualClock } from '../src/clock.js';
 import { LAYERS } from '../src/zones.js';
 
@@ -434,7 +435,10 @@ describe('эмоции', () => {
     assert.ok(ctx.morphs.get('mouthSmileLeft') > 0, 'заморозка — не выключение слоя');
   });
 
-  test('пять эмоций дают пять разных поз', () => {
+  // Число эмоций сверяется с белым списком, а не с константой: палитра выросла
+  // до семи, и захардкоженная пятёрка ловила бы рост набора вместо того, ради
+  // чего тест написан — что эмоции визуально различимы.
+  test('каждая эмоция даёт свою, отличимую от прочих позу', () => {
     const poses = {};
     for (const em of Object.keys(expr.emotions)) {
       if (em.startsWith('_')) continue;
@@ -445,7 +449,8 @@ describe('эмоции', () => {
       poses[em] = pose(ctx.morphs);
     }
     const names = Object.keys(poses);
-    assert.equal(names.length, 5);
+    assert.deepEqual(names.slice().sort(), [...EMOTIONS].sort(),
+      'конфиг и белый список EMOTIONS разошлись');
     for (let i = 0; i < names.length; i++) {
       for (let j = i + 1; j < names.length; j++) {
         const d = dist(poses[names[i]], poses[names[j]]);

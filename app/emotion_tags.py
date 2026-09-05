@@ -20,7 +20,15 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-EMOTIONS = ("neutral", "skeptical", "pressing", "warming", "impressed")
+# Белый список — он же контракт со слоем эмоции аватара
+# (`avatar/expression.config.json`, `EMOTIONS` в `avatar/src/avatar.js`).
+# Первые пять лежат на оси «холодно → тепло» и выводятся из накопленных оценок;
+# `angry` и `anxious` на ней не лежат — их назначает персона сценария или сама
+# модель разметкой. Пока их не было, разгневанный клиент получал `pressing`, а
+# тревожный пациент — тот же `pressing`, и второе просто неверно: тревога это
+# не давление.
+EMOTIONS = ("neutral", "skeptical", "pressing", "warming", "impressed",
+            "angry", "anxious")
 DEFAULT = "neutral"
 
 # Допускаем и русские написания: модель их предлагает сама.
@@ -30,6 +38,10 @@ ALIASES = {
     "тепло": "warming", "теплее": "warming", "одобрение": "warming",
     "интерес": "impressed", "впечатление": "impressed", "уважение": "impressed",
     "нейтрально": "neutral",
+    "гнев": "angry", "ярость": "angry", "злость": "angry", "зло": "angry",
+    "раздражение": "angry",
+    "тревога": "anxious", "волнение": "anxious", "беспокойство": "anxious",
+    "растерянность": "anxious", "испуг": "anxious",
 }
 
 _TAG = re.compile(r"\[\s*emo\s*:\s*([a-zA-Zа-яёА-ЯЁ_]+)\s*\]", re.I)
@@ -132,9 +144,14 @@ def to_timeline(marks: list[EmotionMark], chars: list[dict],
 
 SYSTEM_HINT = """
 КАЖДУЮ реплику обязательно начинай ровно с одного тега эмоции:
-[emo:neutral], [emo:skeptical],
-[emo:pressing], [emo:warming] или [emo:impressed]. Если по ходу реплики
-отношение меняется, поставь тег в этом месте ещё раз.
+[emo:neutral], [emo:skeptical], [emo:pressing], [emo:warming], [emo:impressed],
+[emo:angry] или [emo:anxious]. Если по ходу реплики отношение меняется,
+поставь тег в этом месте ещё раз.
+
+Пять первых — это шкала отношения к собеседнику, от холодного к тёплому.
+[emo:angry] — открытый гнев, а не усиленное давление: подходит, когда твоя роль
+разозлена по существу. [emo:anxious] — тревога и растерянность, а не давление:
+подходит, когда роль волнуется или боится.
 
 Теги — единственная разметка, которая разрешена. Никаких других скобок,
 звёздочек и пометок в тексте быть не должно: всё, кроме тегов, будет

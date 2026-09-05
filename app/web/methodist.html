@@ -1,161 +1,540 @@
 <!doctype html>
 <meta charset="utf-8">
 <title>Методист</title>
+<link rel="stylesheet" href="/app/web/report.css">
 <style>
- body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:24px;max-width:820px;
-      background:#111418;color:#dde3ec}
- h1{font-size:18px;margin:0 0 4px} h2{font-size:14px;margin:22px 0 6px;color:#8b96a8}
- .hint{color:#7c8697;font-size:13px;margin:0 0 14px}
- select,textarea,button{font:inherit;background:#1a1f28;color:#dde3ec;
+ body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:24px auto;max-width:980px;
+      background:#111418;color:#dde3ec;padding:0 16px}
+ h1{font-size:19px;margin:0 0 4px}
+ h2{font-size:14px;margin:24px 0 6px;color:#8b96a8;font-weight:500}
+ .hint{color:#7c8697;font-size:13px;margin:0 0 12px}
+ select,textarea,input,button{font:inherit;background:#1a1f28;color:#dde3ec;
       border:1px solid #2c3547;border-radius:5px;padding:6px 9px}
- textarea{width:100%;height:110px;box-sizing:border-box;font:13px ui-monospace,monospace}
+ textarea{width:100%;box-sizing:border-box;resize:vertical}
  button{cursor:pointer} button:hover{background:#232a35}
  button.primary{border-color:#7fd1ff;color:#7fd1ff}
- table{border-collapse:collapse;width:100%;margin-top:8px;font-size:13px}
- th,td{border:1px solid #2c3547;padding:6px 9px;text-align:left;vertical-align:top}
- th{background:#1a1f28;color:#8b96a8;font-weight:500}
- .score{font:600 15px ui-monospace,monospace;color:#7fd1ff}
- pre{background:#0c0f14;border:1px solid #232a38;border-radius:5px;padding:10px;
-     overflow:auto;font:12px/1.5 ui-monospace,monospace;max-height:320px}
- #report{display:none}
+ button.ghost{border-color:#232a38;color:#8b96a8;padding:3px 7px;font-size:12px}
  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+ .card{border:1px solid #232a38;border-radius:8px;padding:14px 16px;background:#141922;
+       margin-bottom:12px}
+ .card.dim{opacity:.55}
+ #source{height:190px;font:13px/1.5 ui-monospace,monospace}
+ .tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid #232a38}
+ .tab{padding:8px 14px;cursor:pointer;color:#8b96a8;border-bottom:2px solid transparent}
+ .tab.on{color:#dde3ec;border-bottom-color:#7fd1ff}
+ .grid{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;align-items:start}
+ .grid label{color:#8b96a8;font-size:12px;padding-top:7px}
+ .stage,.crit{border:1px solid #232a38;border-radius:6px;padding:10px 12px;
+              margin-bottom:8px;background:#12161e}
+ .stage .top,.crit .top{display:flex;gap:8px;align-items:center;margin-bottom:7px}
+ .stage .num{font:12px ui-monospace,monospace;color:#6f7c93;min-width:20px}
+ .stage input.goal,.crit input.title{flex:1;font-weight:600}
+ .stage textarea{height:52px;font-size:13px;margin-top:5px}
+ .stage .keyline,.crit .keyline{font:11px ui-monospace,monospace;color:#5c6678;
+                                margin-top:5px}
+ .crit .anchors{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+ .crit input{width:100%;box-sizing:border-box;font-size:13px}
+ .budget{width:52px;text-align:center}
+ #progress{display:none;align-items:center;gap:10px;color:#8b96a8;font-size:13px}
+ #progress.on{display:flex}
+ .spin{width:13px;height:13px;border:2px solid #2c3547;border-top-color:#7fd1ff;
+       border-radius:50%;animation:sp .8s linear infinite}
+ @keyframes sp{to{transform:rotate(360deg)}}
+ .warn{border-color:#5a4520;background:#1e1a10;color:#e8c07a}
+ .bad{border-color:#4a2222;background:#1a0d0d;color:#ff9a9a}
+ .ok{color:#9ad7a0}
+ #link{font:12px ui-monospace,monospace;color:#7fd1ff;word-break:break-all}
+ .frozen{border-color:#2b4a3a;background:#101a15}
+ #reportBox{display:none}
+ #chat{display:none}
+ #chatLog{max-height:220px;overflow:auto;font-size:13px;margin-bottom:8px}
+ #chatLog .m{margin-bottom:7px} #chatLog .m b{color:#8b96a8;font-weight:500}
+ #chatLog .m.you b{color:#7fd1ff}
 </style>
 
 <h1>Экран методиста</h1>
-<p class="hint">Выбрать сценарий, задать критерии, начать. Отчёт появится по
-завершении диалога — он собирается по ходу, а не в конце.</p>
+<p class="hint">Сценарий собирается из текста: вставьте ТЗ, вакансию, скрипт
+продаж или регламент — и получите персонажа, этапы и критерии. Всё
+редактируется, approve замораживает версию.</p>
 
-<h2>Сценарий</h2>
-<div class="row">
-  <select id="scenario"></select>
-  <button id="start" class="primary">начать</button>
-  <span id="status" class="hint" style="margin:0"></span>
+<div class="tabs">
+  <div class="tab on" data-tab="text">Создать из текста</div>
+  <div class="tab" data-tab="ready">Готовые сценарии</div>
 </div>
 
-<h2>Критерии оценки</h2>
-<p class="hint">По строке на критерий: <code>ключ: название</code>.
-Пусто — берутся критерии из сценария.</p>
-<textarea id="criteria" spellcheck="false"></textarea>
+<!-- ------------------------------------------------------- вход: текст -->
+<section id="tabText">
+  <div class="card">
+    <div class="row" style="margin-bottom:8px">
+      <label for="kind" class="hint" style="margin:0">тип тренировки</label>
+      <select id="kind"></select>
+      <span class="hint" style="margin:0">подсказка генератору, не приказ</span>
+    </div>
+    <textarea id="source" spellcheck="false" placeholder="Вставьте сюда что угодно: техзадание, описание вакансии с вилкой, скрипт продаж, регламент, свои требования свободным текстом."></textarea>
+    <div class="row" style="margin-top:10px">
+      <button id="gen" class="primary">сгенерировать сценарий</button>
+      <div id="progress"><span class="spin"></span><span id="progressText"></span></div>
+      <span id="genNote" class="hint" style="margin:0"></span>
+    </div>
+  </div>
+</section>
 
-<div id="report">
-  <h2>Отчёт</h2>
-  <div class="row" id="summary"></div>
-  <table id="criteriaTable"><thead><tr>
-    <th style="width:22%">критерий</th><th style="width:9%">оценка</th>
-    <th>обоснование</th></tr></thead><tbody></tbody></table>
-  <h2>Как отвечали</h2>
-  <div class="row" id="typing"></div>
-  <p class="hint">Сигнал, а не оценка: время до первого нажатия, паузы внутри
-  ответа и доля переписанного. Ответ, набранный с двумя переписываниями, и
-  ответ той же длины, набранный без пауз, в расшифровке выглядят одинаково.</p>
-  <h2>Ход разговора</h2>
-  <pre id="transcript"></pre>
-  <h2>Замеры</h2>
-  <pre id="marks"></pre>
-  <div class="row" style="margin-top:10px">
-    <button id="download">скачать JSON</button>
-    <button id="refresh">обновить</button>
+<!-- ------------------------------------------------- вход: готовые -->
+<section id="tabReady" hidden>
+  <div class="card">
+    <p class="hint">Страховка на показе и способ увидеть валидный сценарий
+    мгновенно, не дожидаясь генерации.</p>
+    <div class="row">
+      <select id="scenario"></select>
+      <button id="load">открыть в панели</button>
+    </div>
+  </div>
+</section>
+
+<!-- --------------------------------------------------------- артефакт -->
+<div id="artifact" hidden>
+  <h2>Артефакт сценария</h2>
+  <div id="artifactNote"></div>
+
+  <div class="card" id="metaCard">
+    <div class="grid">
+      <label>название</label><input id="aTitle">
+      <label>тип</label><select id="aType"></select>
+    </div>
+  </div>
+
+  <h2>Персона собеседника</h2>
+  <p class="hint">Это и есть «персонаж из текста». Роль и тон уходят в системный
+  промпт сессии, стартовая эмоция — в начальное состояние лица.</p>
+  <div class="card">
+    <div class="grid">
+      <label>роль</label><textarea id="pRole" rows="2"></textarea>
+      <label>тон</label><input id="pTone">
+      <label>строгость</label><input id="pStrict">
+      <label>давление</label><input id="pPressure">
+      <label>эмоция</label><select id="pEmotion"></select>
+    </div>
+  </div>
+
+  <h2>Этапы <span class="hint" id="stageCount"></span></h2>
+  <div id="stages"></div>
+  <button id="addStage" class="ghost">+ этап</button>
+
+  <h2>Критерии оценки</h2>
+  <p class="hint">Ключ латиницей генерируется из названия — придумывать
+  идентификаторы не нужно.</p>
+  <div id="crits"></div>
+  <button id="addCrit" class="ghost">+ критерий</button>
+
+  <h2>Approve</h2>
+  <div class="card" id="approveCard">
+    <p class="hint" id="approveHint">Approve замораживает версию: артефакт
+    становится неизменяемым JSON, сессия работает с ним. Правки после approve
+    на идущий диалог не влияют.</p>
+    <div class="row">
+      <button id="approve" class="primary">approve</button>
+      <button id="start">approve и начать диалог</button>
+      <span id="approveNote" class="hint" style="margin:0"></span>
+    </div>
+    <div class="row" style="margin-top:10px"><span id="link"></span></div>
+  </div>
+
+  <!-- Чат-слой поверх артефакта: обёртка, а не продукт. -->
+  <h2>Уточнить текстом</h2>
+  <div class="card" id="chatCard">
+    <p class="hint">«Сделай третий этап жёстче», «добавь критерий про
+    английский». Артефакт перегенерируется частично; поля, которые вы правили
+    руками, по умолчанию не трогаются.</p>
+    <div id="chatLog"></div>
+    <div class="row">
+      <input id="chatMsg" style="flex:1" placeholder="Что поменять?">
+      <button id="chatSend">отправить</button>
+    </div>
+    <div class="row" style="margin-top:7px">
+      <label class="hint" style="margin:0">
+        <input type="checkbox" id="chatOverride"> разрешить менять поля,
+        которые я правил руками</label>
+    </div>
+    <div id="chatNote" class="hint" style="margin:8px 0 0"></div>
   </div>
 </div>
 
-<script>
+<!-- ----------------------------------------------------------- отчёт -->
+<div id="reportBox">
+  <h2 class="noprint">Отчёт</h2>
+  <div class="row noprint" style="margin-bottom:10px">
+    <button id="print">печать / PDF</button>
+    <button id="download">скачать JSON</button>
+    <button id="refresh">обновить</button>
+    <span id="saved" class="hint" style="margin:0"></span>
+  </div>
+  <div class="rep" id="rep"></div>
+</div>
+
+<script type="module">
+import { renderReport } from '/app/web/report.js';
+
 const $ = id => document.getElementById(id);
+// Палитру эмоций отдаёт сервер: это контракт со слоем лица аватара, и второй
+// его копии здесь быть не должно. Пока копия была, генератор вернул эмоцию,
+// которой страница не знала, и селектор молча подставил neutral — выбор
+// генератора пропадал, причём незаметно.
+let EMOTIONS = [];
+let TYPES = {}, READY = [];
+let artifact = null;          // черновик: правится свободно
+let frozen = null;            // утверждённая версия: неизменяема
+let sessionId = null;
 let lastReport = null;
+let polling = false;
+// Что методист правил руками. Чат-слой такие поля не переписывает без
+// явного согласия — иначе одна просьба «сделай жёстче» стирает вечер работы.
+const touched = new Set();
 
-async function loadScenarios() {
-  const list = await (await fetch('/api/scenarios')).json();
-  for (const s of list) {
-    const o = document.createElement('option');
-    o.value = s.id;
-    o.textContent = `${s.title} (${s.stages} этапов)`;
-    $('scenario').appendChild(o);
+/* ------------------------------------------------------------- загрузка */
+
+async function boot() {
+  const d = await (await fetch('/api/scenarios')).json();
+  READY = d.scenarios; TYPES = d.types; EMOTIONS = d.emotions || ['neutral'];
+  for (const [k, v] of Object.entries(TYPES)) {
+    $('kind').append(new Option(v, k));
+    $('aType').append(new Option(v, k));
   }
-  fillCriteria(list);
-  $('scenario').onchange = () => fillCriteria(list);
+  $('kind').value = 'interview';
+  for (const e of EMOTIONS) $('pEmotion').append(new Option(e, e));
+  for (const s of READY) {
+    $('scenario').append(new Option(`${s.title} (${s.stages} этапов)`, s.id));
+  }
+  // Ссылка вида ?session=… открывает отчёт по уже утверждённой сессии.
+  const sid = new URLSearchParams(location.search).get('session');
+  if (sid) { sessionId = sid; poll(); }
 }
 
-function fillCriteria(list) {
-  const s = list.find(x => x.id === $('scenario').value) || list[0];
-  $('criteria').value = s.criteria.map(c => `${c.key}: ${c.title}`).join('\n');
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+  $('tabText').hidden = t.dataset.tab !== 'text';
+  $('tabReady').hidden = t.dataset.tab !== 'ready';
+});
+
+/* ----------------------------------------------------------- генерация */
+
+$('gen').onclick = async () => {
+  const text = $('source').value.trim();
+  if (text.length < 40) {
+    $('genNote').textContent = 'слишком коротко: из двух строк сценарий не выводится';
+    return;
+  }
+  $('gen').disabled = true;
+  $('genNote').textContent = '';
+  $('progress').classList.add('on');
+  $('progressText').textContent = 'отправляю текст модели…';
+  const t0 = Date.now();
+  const tick = setInterval(() => {
+    const s = Math.round((Date.now() - t0) / 1000);
+    $('progressText').textContent =
+      `${$('progressText').dataset.note || 'генерирую'} — ${s} с`;
+  }, 500);
+  try {
+    const started = await (await fetch('/api/generate', {method: 'POST',
+      body: JSON.stringify({text, kind: $('kind').value})})).json();
+    if (started.error) throw new Error(started.error);
+    let job = started;
+    while (job.state === 'running') {
+      await new Promise(r => setTimeout(r, 700));
+      job = await (await fetch(`/api/generate?id=${started.id}`)).json();
+      if (job.progress && job.progress.attempt) {
+        $('progressText').dataset.note =
+          `попытка ${job.progress.attempt} из ${job.progress.of}` +
+          (job.progress.attempt > 1 ? ' (повтор с исправлением)' : '');
+      }
+    }
+    showArtifact(job.scenario, job);
+  } catch (e) {
+    $('genNote').textContent = 'генерация не удалась: ' + e.message;
+    $('genNote').className = 'bad';
+  } finally {
+    clearInterval(tick);
+    $('progress').classList.remove('on');
+    delete $('progressText').dataset.note;
+    $('gen').disabled = false;
+  }
+};
+
+$('load').onclick = async () => {
+  const src = READY.find(s => s.id === $('scenario').value);
+  const full = await (await fetch(`/api/scenario?id=${src.id}`)).json();
+  showArtifact(full.scenario || full, null);
+};
+
+/* ------------------------------------------------------------ артефакт */
+
+function showArtifact(sc, job) {
+  artifact = sc;
+  frozen = null; sessionId = null;
+  touched.clear();
+  $('artifact').hidden = false;
+  $('link').textContent = '';
+  $('approveNote').textContent = '';
+  $('chatCard').classList.remove('dim');
+  $('approveCard').classList.remove('frozen');
+
+  const note = $('artifactNote');
+  if (job && job.fallback) {
+    note.className = 'card warn';
+    note.textContent = job.message || 'Модель не справилась — ниже шаблон.';
+  } else if (job) {
+    const secs = (job.total_ms / 1000).toFixed(1);
+    const tries = (job.attempts || []).length;
+    note.className = 'card';
+    note.innerHTML = `<span class="ok">сценарий сгенерирован</span> за ${secs} с` +
+      (tries > 1 ? `, попыток ${tries} (первые не прошли проверку схемы)` : '');
+  } else {
+    note.className = 'card';
+    note.textContent = 'Готовый сценарий из репозитория. Правки здесь его файл не меняют.';
+  }
+  fill();
+  $('artifact').scrollIntoView({behavior: 'smooth', block: 'start'});
 }
+
+function fill() {
+  $('aTitle').value = artifact.title || '';
+  $('aType').value = artifact.type in TYPES ? artifact.type : 'generic';
+  const p = artifact.persona || {};
+  $('pRole').value = p.role || '';
+  $('pTone').value = p.tone || '';
+  $('pStrict').value = p.strictness || '';
+  $('pPressure').value = p.pressure || '';
+  $('pEmotion').value = EMOTIONS.includes(p.start_emotion) ? p.start_emotion : 'neutral';
+  drawStages();
+  drawCriteria();
+}
+
+// Правка поля метится: чат-слой не переписывает то, что методист трогал сам.
+function mark(el, path) {
+  el.addEventListener('input', () => touched.add(path), {once: false});
+}
+
+function drawStages() {
+  const box = $('stages');
+  box.innerHTML = '';
+  $('stageCount').textContent =
+    `${artifact.stages.length} — рабочий диапазон 5–7`;
+  artifact.stages.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'stage';
+    el.innerHTML = `
+      <div class="top">
+        <span class="num">${i + 1}</span>
+        <input class="goal" value="">
+        <input class="budget" type="number" min="1" max="8" title="бюджет ходов">
+        <button class="ghost up" title="выше">↑</button>
+        <button class="ghost down" title="ниже">↓</button>
+        <button class="ghost del" title="удалить">×</button>
+      </div>
+      <textarea class="hint2" placeholder="подсказка модели: как вести себя на этом этапе"></textarea>
+      <textarea class="adv" placeholder="когда переходить дальше — словами"></textarea>
+      <textarea class="open" placeholder="реплика-затравка (необязательно)"></textarea>
+      <div class="keyline">id: ${s.id || '—'}</div>`;
+    const g = el.querySelector('.goal'), b = el.querySelector('.budget');
+    const h = el.querySelector('.hint2'), a = el.querySelector('.adv');
+    const o = el.querySelector('.open');
+    g.value = s.goal || ''; b.value = s.max_turns || '';
+    h.value = s.hint || ''; a.value = s.advance_when || ''; o.value = s.opening || '';
+    g.oninput = () => { s.goal = g.value; touched.add(`stage.${i}.goal`); };
+    b.oninput = () => { s.max_turns = b.value ? +b.value : null;
+                        touched.add(`stage.${i}.max_turns`); };
+    h.oninput = () => { s.hint = h.value; touched.add(`stage.${i}.hint`); };
+    a.oninput = () => { s.advance_when = a.value; touched.add(`stage.${i}.advance_when`); };
+    o.oninput = () => { s.opening = o.value; touched.add(`stage.${i}.opening`); };
+    el.querySelector('.del').onclick = () => {
+      artifact.stages.splice(i, 1); drawStages();
+    };
+    el.querySelector('.up').onclick = () => move(i, -1);
+    el.querySelector('.down').onclick = () => move(i, 1);
+    box.appendChild(el);
+  });
+}
+
+function move(i, d) {
+  const j = i + d;
+  if (j < 0 || j >= artifact.stages.length) return;
+  const [s] = artifact.stages.splice(i, 1);
+  artifact.stages.splice(j, 0, s);
+  drawStages();
+}
+
+$('addStage').onclick = () => {
+  artifact.stages.push({id: '', goal: 'новый этап', hint: '', advance_when: '',
+                        opening: '', max_turns: 3});
+  drawStages();
+};
+
+function drawCriteria() {
+  const box = $('crits');
+  box.innerHTML = '';
+  artifact.criteria.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'crit';
+    el.innerHTML = `
+      <div class="top">
+        <input class="title" value="">
+        <button class="ghost del" title="удалить">×</button>
+      </div>
+      <div class="anchors">
+        <input class="a1" placeholder="1 — как выглядит худший ответ">
+        <input class="a5" placeholder="5 — как выглядит лучший ответ">
+      </div>
+      <div class="keyline">ключ: ${c.key || '(сгенерируется из названия)'}</div>`;
+    const t = el.querySelector('.title'), a1 = el.querySelector('.a1'),
+          a5 = el.querySelector('.a5');
+    t.value = c.title || ''; a1.value = c.anchor_1 || ''; a5.value = c.anchor_5 || '';
+    t.oninput = () => { c.title = t.value; touched.add(`crit.${i}.title`); };
+    a1.oninput = () => { c.anchor_1 = a1.value; touched.add(`crit.${i}.anchor_1`); };
+    a5.oninput = () => { c.anchor_5 = a5.value; touched.add(`crit.${i}.anchor_5`); };
+    el.querySelector('.del').onclick = () => {
+      artifact.criteria.splice(i, 1); drawCriteria();
+    };
+    box.appendChild(el);
+  });
+}
+
+$('addCrit').onclick = () => {
+  artifact.criteria.push({key: '', title: 'новый критерий', scale: '1-5',
+                          anchor_1: '', anchor_5: ''});
+  drawCriteria();
+};
+
+for (const [id, path] of [['aTitle', 'title'], ['aType', 'type'],
+                          ['pRole', 'persona.role'], ['pTone', 'persona.tone'],
+                          ['pStrict', 'persona.strictness'],
+                          ['pPressure', 'persona.pressure'],
+                          ['pEmotion', 'persona.start_emotion']]) {
+  $(id).oninput = $(id).onchange = () => { collectMeta(); touched.add(path); };
+}
+
+function collectMeta() {
+  if (!artifact) return;
+  artifact.title = $('aTitle').value;
+  artifact.type = $('aType').value;
+  artifact.persona = {
+    role: $('pRole').value, tone: $('pTone').value,
+    strictness: $('pStrict').value, pressure: $('pPressure').value,
+    start_emotion: $('pEmotion').value,
+  };
+}
+
+/* ------------------------------------------------------------- approve */
+
+async function doApprove() {
+  collectMeta();
+  const r = await (await fetch('/api/approve', {method: 'POST',
+    body: JSON.stringify({scenario: artifact})})).json();
+  if (r.error) {
+    $('approveNote').textContent = r.error;
+    $('approveNote').className = 'bad';
+    return null;
+  }
+  frozen = r.scenario;
+  sessionId = r.session;
+  $('approveNote').textContent = 'версия заморожена';
+  $('approveNote').className = 'ok';
+  $('approveCard').classList.add('frozen');
+  const url = location.origin + r.trainee_url;
+  $('link').innerHTML = `ссылка сотруднику: <a href="${url}" target="_blank">${url}</a>`;
+  // Артефакт остаётся редактируемым, но идущий диалог этого уже не увидит:
+  // сессия работает с замороженной копией. Иначе поедет метрика завершения.
+  $('approveHint').textContent =
+    'Версия заморожена. Правки ниже применятся только к следующему approve — ' +
+    'идущий диалог работает с копией, снятой в момент утверждения.';
+  return r;
+}
+
+$('approve').onclick = doApprove;
 
 $('start').onclick = async () => {
-  $('status').textContent = 'запускаю…';
-  await fetch('/api/start', {method:'POST', body: JSON.stringify({
-    scenario: $('scenario').value, criteria: $('criteria').value })});
-  $('status').textContent = 'идёт диалог — откройте экран сотрудника';
-  $('report').style.display = 'none';
+  const r = await doApprove();
+  if (!r) return;
+  const s = await (await fetch('/api/start', {method: 'POST',
+    body: JSON.stringify({session: r.session})})).json();
+  sessionId = s.session || r.session;
+  $('approveNote').textContent = 'диалог идёт — откройте экран сотрудника';
   poll();
 };
 
-// Отчёт готов заранее, поэтому опрос дешёвый: просто ждём, когда диалог
-// закончится, и показываем то, что уже собрано.
+/* --------------------------------------------------------------- чат */
+
+$('chatSend').onclick = async () => {
+  const msg = $('chatMsg').value.trim();
+  if (!msg || !artifact) return;
+  collectMeta();
+  $('chatMsg').value = '';
+  log('you', msg);
+  $('chatNote').textContent = 'перегенерирую…';
+  try {
+    const r = await (await fetch('/api/refine', {method: 'POST',
+      body: JSON.stringify({scenario: artifact, message: msg,
+                            protect: $('chatOverride').checked
+                              ? [] : [...touched]})})).json();
+    if (r.error) throw new Error(r.error);
+    artifact = r.scenario;
+    fill();
+    log('bot', r.summary || 'готово');
+    $('chatNote').textContent = r.kept && r.kept.length
+      ? `сохранены ваши правки: ${r.kept.join(', ')}`
+      : '';
+  } catch (e) {
+    log('bot', 'не получилось: ' + e.message);
+    $('chatNote').textContent = '';
+  }
+};
+$('chatMsg').onkeydown = e => { if (e.key === 'Enter') $('chatSend').click(); };
+
+function log(who, text) {
+  const d = document.createElement('div');
+  d.className = 'm ' + (who === 'you' ? 'you' : '');
+  d.innerHTML = `<b>${who === 'you' ? 'вы' : 'артефакт'}:</b> `;
+  d.append(text);
+  $('chatLog').appendChild(d);
+  $('chatLog').scrollTop = $('chatLog').scrollHeight;
+}
+
+/* ------------------------------------------------------------- отчёт */
+
 async function poll() {
+  if (polling) return;
+  polling = true;
   for (;;) {
-    await new Promise(r => setTimeout(r, 2000));
     try {
-      const rep = await (await fetch('/api/report')).json();
-      if (rep.error) continue;
-      render(rep);
-      if (rep.completed) { $('status').textContent = 'диалог завершён'; return; }
+      const q = sessionId ? `?session=${sessionId}` : '';
+      const rep = await (await fetch('/api/report' + q)).json();
+      if (!rep.error) {
+        show(rep);
+        if (rep.completed) break;
+      }
     } catch (e) { /* сервер занят — не страшно */ }
+    await new Promise(r => setTimeout(r, 2000));
   }
+  polling = false;
 }
 
-function render(rep) {
+function show(rep) {
   lastReport = rep;
-  $('report').style.display = 'block';
-  const fa = (rep.marks || []).map(m => m.t_first_audio_ms).filter(Boolean);
-  const med = a => a.length ? [...a].sort((x,y)=>x-y)[a.length>>1] : '—';
-  $('summary').innerHTML =
-    `<span>этапов ${rep.stages_reached}/${rep.stages_total}</span>` +
-    `<span>реплик пользователя ${rep.user_turns}</span>` +
-    `<span>итог <span class="score">${rep.overall ?? '—'}</span></span>` +
-    `<span>покрытие критериев ${Math.round((rep.coverage||0)*100)}%</span>` +
-    `<span>первый звук, медиана ${med(fa)} мс</span>` +
-    `<span>${rep.completed ? 'завершён' : 'идёт'}</span>`;
-  const tb = $('criteriaTable').querySelector('tbody');
-  tb.innerHTML = '';
-  for (const c of rep.criteria) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${c.title}<br><span class="hint">${c.key}</span></td>` +
-      `<td class="score">${c.score ?? '—'}</td>` +
-      `<td>${c.rationale || (c.observations||[]).join('; ') || '—'}</td>`;
-    tb.appendChild(tr);
-  }
-  const tp = rep.typing;
-  $('typing').innerHTML = tp
-    ? `<span>ответов ${tp.answers}</span>` +
-      Object.entries(tp.confidence)
-        .map(([k, n]) => `<span>${k}: <span class="score">${n}</span></span>`).join('') +
-      `<span>до первого нажатия ${tp.median_first_key_ms ?? '—'} мс</span>` +
-      `<span>самая долгая пауза ${tp.median_longest_pause_ms} мс</span>` +
-      `<span>переписано ${Math.round(tp.median_rewrite_ratio * 100)}%</span>`
-    : '<span class="hint">нет данных: диалог шёл не из браузера</span>';
-
-  // Метка уверенности идёт рядом со своей репликой: сводка говорит, что было
-  // трудно, а строка — что именно.
-  $('transcript').textContent = (rep.transcript||[])
-    .map(t => {
-      const who = t.role === 'agent' ? 'Агент' : 'Сотрудник';
-      const c = t.typing && t.typing.confidence !== 'нет данных'
-        ? ` (${t.typing.confidence})` : '';
-      return `${who}${c} [${t.stage}]: ${t.text}`;
-    })
-    .join('\n');
-  $('marks').textContent = JSON.stringify(
-    {marks: rep.marks, evaluator: rep.evaluator}, null, 1);
+  $('reportBox').style.display = 'block';
+  renderReport($('rep'), rep, {ns: 'm'});
+  $('saved').textContent = rep.saved_to
+    ? 'JSON дописан: ' + rep.saved_to : '';
 }
 
+$('print').onclick = () => window.print();
+$('refresh').onclick = () => poll();
 $('download').onclick = () => {
-  const blob = new Blob([JSON.stringify(lastReport, null, 2)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify(lastReport, null, 2)],
+                        {type: 'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `report_${lastReport.scenario_id}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
 };
-$('refresh').onclick = async () => render(await (await fetch('/api/report')).json());
 
-loadScenarios();
+boot();
 </script>

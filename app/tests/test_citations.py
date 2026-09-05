@@ -1,0 +1,176 @@
+"""Цитаты в отчёте: оценка со ссылкой на реплику, которая её обосновала.
+
+Разница принципиальная. «Коммуникация 3 из 5» — мнение модели, спорить с ним
+можно только на уровне «а мне кажется, четыре». «3 из 5, вот реплика» — разбор.
+Поэтому хранится НОМЕР реплики, а не её копия: по номеру интерфейс
+прокручивает транскрипт, копия рассинхронизировалась бы с ним.
+"""
+import pathlib
+import sys
+import unittest
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app import report as report_mod                      # noqa: E402
+from app.dialogue import DialogueState                    # noqa: E402
+from app.evaluator import (Assessment, EvaluationLog,      # noqa: E402
+                           build_eval_prompt, build_summary_prompt,
+                           fallback_conclusion, parse_scores)
+from app.scenario import Criterion, Persona, Scenario, Stage   # noqa: E402
+
+CRITERIA = [
+    Criterion("structure", "Структурность", "1-5", "рассыпается", "построен"),
+    Criterion("numbers", "Конкретность", "1-5", "общие слова", "числа"),
+]
+
+
+def scenario():
+    return Scenario(
+        id="t", title="Тест", type="interview",
+        persona=Persona(role="интервьюер", start_emotion="skeptical"),
+        stages=[Stage("a", "первый"), Stage("b", "второй")],
+        criteria=list(CRITERIA))
+
+
+def state_with_talk():
+    st = DialogueState(scenario())
+    st.add_agent("Расскажите о себе.")
+    st.add_user("Я делал сервис выдачи.")
+    st.add_agent("А какая была нагрузка?")
+    st.add_user("Ну, много.")
+    return st
+
+
+class PromptNumbersTurns(unittest.TestCase):
+    def test_turns_are_numbered_through_the_whole_history(self):
+        """Номера сквозные: окно скользит, а транскрипт нумеруется от нуля."""
+        st = state_with_talk()
+        p = build_eval_prompt(st, window=2)
+        self.assertIn("[2] Агент:", p)
+        self.assertIn("[3] Собеседник:", p)
+        self.assertNotIn("[0]", p, "окно короче истории — ранних номеров быть не может")
+
+    def test_prompt_asks_for_the_turn(self):
+        self.assertIn("turn", build_eval_prompt(state_with_talk()))
+
+
+class ParseCitations(unittest.TestCase):
+    def test_turn_is_parsed(self):
+        out = parse_scores('{"scores":[{"criterion":"numbers","score":2,'
+                           '"turn":3,"rationale":"«много» — не число"}]}',
+                           CRITERIA, turns=4)
+        self.assertEqual(out[0].quote_turn, 3)
+
+    def test_turn_out_of_range_is_dropped(self):
+        """Клик по цитате, ведущий в пустоту, хуже отсутствующей цитаты."""
+        out = parse_scores('{"scores":[{"criterion":"numbers","score":2,'
+                           '"turn":99,"rationale":"x"}]}', CRITERIA, turns=4)
+        self.assertEqual(out[0].quote_turn, -1)
+
+    def test_missing_turn_does_not_drop_the_score(self):
+        out = parse_scores('{"scores":[{"criterion":"numbers","score":2,'
+                           '"rationale":"x"}]}', CRITERIA, turns=4)
+        self.assertEqual(len(out), 1)
+        self.assertEqual(out[0].quote_turn, -1)
+
+    def test_garbage_turn_does_not_raise(self):
+        out = parse_scores('{"scores":[{"criterion":"numbers","score":2,'
+                           '"turn":"третья","rationale":"x"}]}', CRITERIA, turns=4)
+        self.assertEqual(out[0].quote_turn, -1)
+
+
+class ReportCitations(unittest.TestCase):
+    def setUp(self):
+        self.state = state_with_talk()
+        self.log = EvaluationLog()
+        self.log.add(Assessment("numbers", 2.0, "«много» — не число",
+                                turn_index=3, quote_turn=3, stage_id="a"))
+        self.log.add(Assessment("structure", 4.0, "ответ построен",
+                                turn_index=3, quote_turn=1, stage_id="a"))
+
+    def test_each_criterion_carries_its_citation(self):
+        rep = report_mod.build(self.state, self.log).to_dict()
+        by_key = {c["key"]: c for c in rep["criteria"]}
+        self.assertEqual(by_key["numbers"]["citations"][0]["turn"], 3)
+        self.assertEqual(by_key["structure"]["citations"][0]["turn"], 1)
+
+    def test_citation_points_at_a_real_turn(self):
+        rep = report_mod.build(self.state, self.log).to_dict()
+        for c in rep["criteria"]:
+            for q in c["citations"]:
+                if q["turn"] >= 0:
+                    self.assertLess(q["turn"], len(rep["transcript"]))
+                    self.assertTrue(rep["transcript"][q["turn"]]["text"])
+
+    def test_citation_stores_index_not_a_copy_of_the_text(self):
+        rep = report_mod.build(self.state, self.log).to_dict()
+        blob = str(rep["criteria"])
+        self.assertNotIn("Ну, много.", blob,
+                         "копия текста разъедется с транскриптом при первой правке")
+
+    def test_cited_counts_criteria_with_a_live_link(self):
+        rep = report_mod.build(self.state, self.log).to_dict()
+        self.assertEqual(rep["cited"], 2)
+
+    def test_agent_observations_become_citations_too(self):
+        self.state.observe("structure", "замечание агента", 3)
+        rep = report_mod.build(self.state, self.log).to_dict()
+        by_key = {c["key"]: c for c in rep["criteria"]}
+        sources = {q["source"] for q in by_key["structure"]["citations"]}
+        self.assertEqual(sources, {"agent", "background"})
+
+    def test_transcript_is_indexed_for_scrolling(self):
+        rep = report_mod.build(self.state, self.log).to_dict()
+        self.assertEqual([t["i"] for t in rep["transcript"]], [0, 1, 2, 3])
+
+    def test_header_carries_persona_and_duration(self):
+        """Шапка одна на все тренировки — меняется её содержимое, не шаблон."""
+        rep = report_mod.build(self.state, self.log).to_dict()
+        self.assertEqual(rep["persona"]["role"], "интервьюер")
+        self.assertEqual(rep["scenario_type"], "interview")
+        self.assertIsNotNone(rep["duration_s"])
+
+
+class Conclusion(unittest.TestCase):
+    def test_fallback_conclusion_names_best_and_worst(self):
+        log = EvaluationLog()
+        log.add(Assessment("numbers", 1.0, "", quote_turn=3))
+        log.add(Assessment("structure", 5.0, "", quote_turn=1))
+        text = fallback_conclusion(state_with_talk(), log)
+        self.assertIn("Структурность", text)
+        self.assertIn("Конкретность", text)
+
+    def test_fallback_conclusion_without_scores_says_so(self):
+        text = fallback_conclusion(state_with_talk(), EvaluationLog())
+        self.assertIn("не накопилось", text)
+
+    def test_summary_prompt_carries_scores_and_talk(self):
+        log = EvaluationLog()
+        log.add(Assessment("numbers", 2.0, "", quote_turn=3))
+        p = build_summary_prompt(state_with_talk(), log)
+        self.assertIn("Ну, много.", p)
+        self.assertIn("Конкретность", p)
+        self.assertIn("интервьюер", p)
+
+
+class Persistence(unittest.TestCase):
+    def test_report_is_appended_as_one_line(self):
+        import json
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            path = pathlib.Path(d) / "history.jsonl"
+            report_mod.save({"scenario_id": "a", "text": "строка\nс переводом"}, path)
+            report_mod.save({"scenario_id": "b"}, path)
+            lines = path.read_text(encoding="utf-8").strip().split("\n")
+            self.assertEqual(len(lines), 2, "один прогон — одна строка")
+            self.assertEqual(json.loads(lines[0])["scenario_id"], "a")
+
+    def test_broken_path_does_not_raise(self):
+        """Диалог уже состоялся — падать из-за журнала после него нельзя."""
+        out = report_mod.save({"x": 1}, pathlib.Path("/нет/такого/пути/h.jsonl"))
+        self.assertIn("не записан", out)
+
+
+if __name__ == "__main__":
+    unittest.main()

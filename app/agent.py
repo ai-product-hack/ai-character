@@ -39,7 +39,7 @@ def build_prompt(state: DialogueState, user_text: str | None = None) -> str:
     sc = state.scenario
     stage = state.stage
     lines = [
-        f"РОЛЬ: {sc.persona}",
+        f"РОЛЬ: {sc.persona.prompt_block()}",
         f"СЦЕНАРИЙ: {sc.title}",
         "",
         f"ЭТАП {state.stage_index + 1} из {len(sc.stages)}: {stage.goal if stage else '—'}",
@@ -52,7 +52,7 @@ def build_prompt(state: DialogueState, user_text: str | None = None) -> str:
         lines.append("Это последний этап сценария: закончив его, заверши диалог.")
     spent = state.turns_on_stage
     if spent:
-        left = max(0, state.max_turns_per_stage - spent)
+        left = max(0, state.stage_max_turns - spent)
         lines.append(f"На этом этапе уже {spent} обмен(ов) репликами; "
                      f"осталось {left} до принудительного перехода.")
 

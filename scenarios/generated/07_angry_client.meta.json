@@ -1,0 +1,19 @@
+{
+  "mechanic": "старт на пике эмоции, задача снизить градус",
+  "kind": "support",
+  "fallback": false,
+  "message": "",
+  "attempts": [
+    {
+      "n": 1,
+      "ok": true,
+      "problems": [],
+      "error": "",
+      "ms": 36731
+    }
+  ],
+  "total_ms": 36731,
+  "wall_s": 37.3,
+  "problems": [],
+  "notes": []
+}

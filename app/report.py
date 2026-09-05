@@ -1,18 +1,39 @@
 """Отчёт по диалогу.
 
 Собирается инкрементально: замечания копятся по ходу разговора, а к моменту
-`finish` остаётся только сложить их в структуру. Фоновая оценка моделью
-(отдельная сессия, вне критического пути) появится следующим шагом и будет
-дописывать сюда обоснования; здесь — каркас и сведение того, что уже есть.
+`finish` остаётся только сложить их в структуру. Дорогое уже сделано фоновой
+сессией, поэтому отчёт показывается мгновенно.
+
+Главное здесь — цитаты. «Коммуникация 3 из 5» — мнение модели, и спорить с ним
+можно только на уровне «а мне кажется, четыре». «3 из 5, вот ответ, где
+кандидат поплыл» — разбор: методист открывает реплику и видит, о чём речь.
+Поэтому оценка хранит НОМЕР реплики, а не её копию: по номеру интерфейс
+прокручивает транскрипт к нужному месту, а копия рассинхронизировалась бы с
+ним при первой же правке.
+
+Шаблон один на все виды тренировок. Отдельные формы под собеседование и под
+продажи выглядели бы разными продуктами, а механика везде одна: критерии,
+цитаты, вывод — меняется только шапка.
 """
 from __future__ import annotations
 
 import json
+import pathlib
 import statistics
 import time
 from dataclasses import asdict, dataclass, field
 
 from .dialogue import DialogueState
+
+
+@dataclass
+class Citation:
+    """Оценка со ссылкой на реплику, которая её обосновала."""
+    turn: int                 # индекс в `transcript`; -1 — ссылки нет
+    score: float | None
+    rationale: str
+    stage: str = ""
+    source: str = "background"        # background | agent
 
 
 @dataclass
@@ -23,6 +44,7 @@ class CriterionResult:
     score: float | None = None
     rationale: str = ""
     observations: list[str] = field(default_factory=list)
+    citations: list[Citation] = field(default_factory=list)
 
     @property
     def evaluated(self) -> bool:
@@ -33,6 +55,8 @@ class CriterionResult:
 class Report:
     scenario_id: str
     scenario_title: str
+    scenario_type: str
+    persona: dict
     completed: bool
     finish_reason: str
     stages_reached: int
@@ -41,7 +65,17 @@ class Report:
     criteria: list[CriterionResult] = field(default_factory=list)
     transcript: list[dict] = field(default_factory=list)
     typing: dict | None = None
+    conclusion: str = ""
     created_at: float = field(default_factory=time.time)
+    started_at: float | None = None
+    session_id: str = ""
+
+    @property
+    def duration_s(self) -> float | None:
+        """Длительность разговора: от первой реплики до последней."""
+        if self.started_at is None:
+            return None
+        return round(max(0.0, self.created_at - self.started_at), 1)
 
     @property
     def overall(self) -> float | None:
@@ -54,17 +88,26 @@ class Report:
         return len([c for c in self.criteria if c.evaluated]) / len(self.criteria) \
             if self.criteria else 0.0
 
+    @property
+    def cited(self) -> int:
+        """Сколько критериев подкреплено ссылкой на реплику."""
+        return len([c for c in self.criteria
+                    if any(q.turn >= 0 for q in c.citations)])
+
     def to_dict(self) -> dict:
         d = asdict(self)
         d["overall"] = self.overall
         d["coverage"] = round(self.coverage, 3)
+        d["duration_s"] = self.duration_s
+        d["cited"] = self.cited
         return d
 
     def to_json(self, indent=2) -> str:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)
 
 
-def build(state: DialogueState, evaluation=None) -> Report:
+def build(state: DialogueState, evaluation=None, session_id: str = "",
+          conclusion: str = "") -> Report:
     """Свести состояние в отчёт.
 
     Дешёвая операция без обращений к модели — поэтому её можно звать хоть после
@@ -81,11 +124,17 @@ def build(state: DialogueState, evaluation=None) -> Report:
         obs = state.observations_for(c.key)
         scores = [o.score for o in obs if o.score is not None]
         notes = [o.note for o in obs if o.note]
+        citations = [Citation(turn=o.turn_index, score=o.score, rationale=o.note,
+                              stage=o.stage_id, source="agent")
+                     for o in obs if o.note]
         rationale = ""
         if evaluation is not None:
             bg = evaluation.for_criterion(c.key)
             scores += [a.score for a in bg]
             notes += [a.rationale for a in bg if a.rationale]
+            citations += [Citation(turn=a.quote_turn, score=a.score,
+                                   rationale=a.rationale, stage=a.stage_id)
+                          for a in bg]
             if bg:
                 # Обоснование берём последнее: оно опирается на самый полный
                 # контекст разговора.
@@ -95,20 +144,27 @@ def build(state: DialogueState, evaluation=None) -> Report:
             score=round(statistics.mean(scores), 2) if scores else None,
             rationale=rationale,
             observations=notes,
+            citations=citations,
         ))
     return Report(
         scenario_id=sc.id,
         scenario_title=sc.title,
+        scenario_type=sc.type,
+        persona=sc.persona.to_dict(),
         completed=state.finished,
         finish_reason=state.finish_reason,
         stages_reached=state.stage_index + 1,
         stages_total=len(sc.stages),
         user_turns=state.user_turns,
         criteria=criteria,
-        transcript=[{"role": t.role, "text": t.text, "stage": t.stage_id,
+        transcript=[{"i": i, "role": t.role, "text": t.text, "stage": t.stage_id,
+                     "at": t.at, "interrupted": t.interrupted,
                      **({"typing": t.typing} if t.typing else {})}
-                    for t in state.turns],
+                    for i, t in enumerate(state.turns)],
         typing=_typing_summary(state),
+        conclusion=conclusion,
+        started_at=state.turns[0].at if state.turns else None,
+        session_id=session_id,
     )
 
 
@@ -135,3 +191,25 @@ def _typing_summary(state: DialogueState) -> dict | None:
         "confidence": {k: labels.count(k) for k in dict.fromkeys(labels)},
         "hesitant_answers": sum(1 for x in labels if x != "уверенно"),
     }
+
+
+# ------------------------------------------------------------------ на диск
+
+HISTORY = pathlib.Path(__file__).resolve().parents[1] / "data" / "reports" / "history.jsonl"
+
+
+def save(report: dict, path=None) -> str:
+    """Дописать отчёт одной строкой. История прогонов без базы данных.
+
+    Одна строка на прогон: файл читается `jq`, растёт линейно и не требует ни
+    миграций, ни сервера. Сбой записи гасится — отчёт уже на экране, и падать
+    из-за журнала после успешного диалога незачем.
+    """
+    p = pathlib.Path(path or HISTORY)
+    try:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(report, ensure_ascii=False) + "\n")
+        return str(p)
+    except OSError as e:
+        return f"не записан: {e}"

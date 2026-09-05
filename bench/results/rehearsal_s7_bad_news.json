@@ -1,0 +1,1500 @@
+{
+  "summary": {
+    "scenarios": 1,
+    "finished": 1,
+    "turns": 20,
+    "first_audio_ms": {
+      "median": 129,
+      "max": 133
+    },
+    "first_speech_ms": {
+      "median": 2268,
+      "max": 3396
+    },
+    "filler_share": 1.0,
+    "speculation": {
+      "tries": 9,
+      "hits": 6,
+      "hit_rate": 0.67
+    },
+    "emotions": 12,
+    "emotion_share": 0.6,
+    "panels": 5,
+    "voice": {
+      "turns": 5,
+      "asr_ms": 107,
+      "first_audio_ms": 130
+    },
+    "text_first_audio_ms": 129,
+    "interrupts": {
+      "count": 10,
+      "per_scenario": [
+        10
+      ],
+      "leaked_frames": 0,
+      "last_stray_ms_max": 0
+    },
+    "control_line": {
+      "missing": 0,
+      "repaired": 0,
+      "missing_share": 0.0,
+      "repair_ms_median": null
+    },
+    "typing": {
+      "answers": 14,
+      "confidence": {
+        "уверенно": 10,
+        "с заминками": 4,
+        "неуверенно": 0
+      }
+    }
+  },
+  "tts": {
+    "name": "switchable",
+    "provider": "silero",
+    "loaded": [
+      "silero"
+    ],
+    "engine": {
+      "name": "silero",
+      "version": "v5_cis_base",
+      "voice": "ru_roman",
+      "sample_rate": 24000,
+      "load_s": 2.0,
+      "offline": true
+    }
+  },
+  "args": {
+    "scenario": "s7_bad_news",
+    "turns": 26,
+    "port": 8042,
+    "interrupt_rate": 0.35,
+    "voice_every": 3,
+    "min_interrupts": 2,
+    "interrupt_after": [
+      0.4,
+      2.0
+    ],
+    "timeout": 90,
+    "settle": 0.6,
+    "seed": 42,
+    "out": "bench/results/rehearsal_s7_bad_news.json"
+  },
+  "runs": [
+    {
+      "scenario_id": "s7_bad_news",
+      "title": "Сообщение о закрытии проекта: разговор с инициатором",
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+          "typed_ms": 0,
+          "t_first_audio_ms": 129,
+          "reported_first_audio_ms": 128,
+          "reported_first_speech_ms": 2483,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 1,
+          "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+          "typed_ms": 1164,
+          "t_first_audio_ms": 133,
+          "reported_first_audio_ms": 131,
+          "reported_first_speech_ms": 1848,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 2,
+          "stage": null,
+          "typed_ms": 1397,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 526,
+            "generation_id": "gen-3",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 3,
+          "stage": null,
+          "typed_ms": 0,
+          "t_first_audio_ms": 122,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1406,
+            "generation_id": "gen-4",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 4,
+          "stage": null,
+          "typed_ms": 1406,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 766,
+            "generation_id": "gen-5",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 5,
+          "stage": null,
+          "typed_ms": 1444,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 1,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1996,
+            "generation_id": "gen-6",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 7,
+          "stage": "proverit_naskolko_reshenie_okonchatelno",
+          "typed_ms": 1686,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": 124,
+          "reported_first_speech_ms": 2299,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 8,
+          "stage": null,
+          "typed_ms": 1756,
+          "t_first_audio_ms": 129,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1160,
+            "generation_id": "gen-8",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 9,
+          "stage": "proverit_naskolko_reshenie_okonchatelno",
+          "typed_ms": 0,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": 211,
+          "reported_first_speech_ms": 2564,
+          "clauses": 5,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "pressing"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 10,
+          "stage": null,
+          "typed_ms": 1367,
+          "t_first_audio_ms": 131,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1410,
+            "generation_id": "gen-10",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 11,
+          "stage": "proverit_naskolko_reshenie_okonchatelno",
+          "typed_ms": 1550,
+          "t_first_audio_ms": 131,
+          "reported_first_audio_ms": 129,
+          "reported_first_speech_ms": 1679,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 12,
+          "stage": "potorgovatsya_za_otsrochku",
+          "typed_ms": 0,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": 227,
+          "reported_first_speech_ms": 3396,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "neutral"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 13,
+          "stage": null,
+          "typed_ms": 1266,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 1,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1999,
+            "generation_id": "gen-13",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 14,
+          "stage": null,
+          "typed_ms": 1221,
+          "t_first_audio_ms": 127,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 748,
+            "generation_id": "gen-14",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 15,
+          "stage": null,
+          "typed_ms": 0,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1577,
+            "generation_id": "gen-15",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 16,
+          "stage": "vyrazit_obidu_i_obvinenie",
+          "typed_ms": 1596,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": 128,
+          "reported_first_speech_ms": 2035,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 17,
+          "stage": "uslyshat_priznanie_vklada",
+          "typed_ms": 1548,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 122,
+          "reported_first_speech_ms": 1971,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 18,
+          "stage": "dogovoritsya_o_sleduyuschem_shage",
+          "typed_ms": 0,
+          "t_first_audio_ms": 120,
+          "reported_first_audio_ms": 227,
+          "reported_first_speech_ms": 3082,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [
+            "skills"
+          ],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 19,
+          "stage": null,
+          "typed_ms": 1368,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1853,
+            "generation_id": "gen-19",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 20,
+          "stage": "dogovoritsya_o_sleduyuschem_shage",
+          "typed_ms": 1447,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 124,
+          "reported_first_speech_ms": 2238,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "warming"
+          ],
+          "panels": [],
+          "action": "next_stage",
+          "interrupted": null
+        }
+      ],
+      "interrupts": [
+        {
+          "after_ms": 526,
+          "generation_id": "gen-3",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1406,
+          "generation_id": "gen-4",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 766,
+          "generation_id": "gen-5",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1996,
+          "generation_id": "gen-6",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1160,
+          "generation_id": "gen-8",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1410,
+          "generation_id": "gen-10",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1999,
+          "generation_id": "gen-13",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 748,
+          "generation_id": "gen-14",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1577,
+          "generation_id": "gen-15",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1853,
+          "generation_id": "gen-19",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        }
+      ],
+      "voice_turns": [
+        {
+          "turn": 3,
+          "asr_ms": 115,
+          "chars": 71,
+          "text": "отсрочки не будет ни квартала ни месяца я не хочу давать ложную надежду"
+        },
+        {
+          "turn": 9,
+          "asr_ms": 81,
+          "chars": 56,
+          "text": "понимаю что это обесценивает полтора года в твоих глазах"
+        },
+        {
+          "turn": 12,
+          "asr_ms": 97,
+          "chars": 78,
+          "text": "давай завтра в одиннадцать сядем и разберем что тебе интересно в новой команде"
+        },
+        {
+          "turn": 15,
+          "asr_ms": 114,
+          "chars": 71,
+          "text": "отсрочки не будет ни квартала ни месяца я не хочу давать ложную надежду"
+        },
+        {
+          "turn": 18,
+          "asr_ms": 107,
+          "chars": 76,
+          "text": "дальше так с понедельника команда платформы встречу с их лидом ставлю завтра"
+        }
+      ],
+      "report": {
+        "scenario_id": "s7_bad_news",
+        "scenario_title": "Сообщение о закрытии проекта: разговор с инициатором",
+        "scenario_type": "management",
+        "persona": {
+          "role": "сотрудник-инициатор проекта, который вёл его полтора года и лично внёс в него много сил",
+          "tone": "живой, эмоциональный, переходит от недоверия к торгу и обиде",
+          "strictness": "низкая формальная, но высокая эмоциональная включённость",
+          "pressure": "нарастающее давление через недоверие, торг и обвинение",
+          "start_emotion": "skeptical"
+        },
+        "completed": true,
+        "finish_reason": "модель попросила следующий этап на последнем",
+        "stages_reached": 6,
+        "stages_total": 6,
+        "user_turns": 19,
+        "criteria": [
+          {
+            "key": "pryamota_formulirovki",
+            "title": "Прямота формулировки",
+            "scale": "1-5",
+            "score": 5.0,
+            "rationale": "Собеседник прямо сказал «Проект закрывают», без эвфемизмов и смягчений.",
+            "observations": [
+              "Собеседник прямо сказал «Проект закрывают», без эвфемизмов и смягчений."
+            ],
+            "citations": [
+              {
+                "turn": 1,
+                "score": 5.0,
+                "rationale": "Собеседник прямо сказал «Проект закрывают», без эвфемизмов и смягчений.",
+                "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "okonchatelnost_resheniya",
+            "title": "Окончательность решения",
+            "scale": "1-5",
+            "score": 5.0,
+            "rationale": "Собеседник ясно обозначил, что решение окончательное и принято выше, не оставив места для пересмотра.",
+            "observations": [
+              "Собеседник ясно обозначил, что решение окончательное и принято выше, не оставив места для пересмотра."
+            ],
+            "citations": [
+              {
+                "turn": 1,
+                "score": 5.0,
+                "rationale": "Собеседник ясно обозначил, что решение окончательное и принято выше, не оставив места для пересмотра.",
+                "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "otsutstvie_lozhnoy_nadezhdy",
+            "title": "Отсутствие ложной надежды",
+            "scale": "1-5",
+            "score": 5.0,
+            "rationale": "Собеседник не дал никаких обещаний об отсрочке или пересмотре, отказав в торге.",
+            "observations": [
+              "Собеседник не дал никаких обещаний об отсрочке или пересмотре, отказав в торге."
+            ],
+            "citations": [
+              {
+                "turn": 1,
+                "score": 5.0,
+                "rationale": "Собеседник не дал никаких обещаний об отсрочке или пересмотре, отказав в торге.",
+                "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "priznanie_vklada_sotrudnika",
+            "title": "Признание вклада сотрудника",
+            "scale": "1-5",
+            "score": 3.5,
+            "rationale": "Собеседник назвал конкретные достижения сотрудника (собрал команду, довёл прототип до трёх пилотов), но не детализировал усилия по развитию людей, которые сотрудник упомянул.",
+            "observations": [
+              "Признание конкретно ('собрал команду, довёл прототип до трёх пилотов'), но формулировка сухая и не отражает масштаб вклада, что собеседник отметил в следующей реплике.",
+              "Собеседник назвал конкретные достижения сотрудника (собрал команду, довёл прототип до трёх пилотов), но не детализировал усилия по развитию людей, которые сотрудник упомянул."
+            ],
+            "citations": [
+              {
+                "turn": 24,
+                "score": 3.0,
+                "rationale": "Признание конкретно ('собрал команду, довёл прототип до трёх пилотов'), но формулировка сухая и не отражает масштаб вклада, что собеседник отметил в следующей реплике.",
+                "stage": "uslyshat_priznanie_vklada",
+                "source": "background"
+              },
+              {
+                "turn": 24,
+                "score": 4.0,
+                "rationale": "Собеседник назвал конкретные достижения сотрудника (собрал команду, довёл прототип до трёх пилотов), но не детализировал усилия по развитию людей, которые сотрудник упомянул.",
+                "stage": "dogovoritsya_o_sleduyuschem_shage",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "prostranstvo_dlya_reakcii",
+            "title": "Пространство для реакции",
+            "scale": "1-5",
+            "score": 4.0,
+            "rationale": "Собеседник признаёт эмоции ('слышу, что обидно') и даёт контекст, но не предлагает пространства для дальнейшего выражения чувств, переходя к делу.",
+            "observations": [
+              "Собеседник не перебивал и не обесценивал эмоции агента, дав ему возможность выразить недоверие и обиду в следующей реплике.",
+              "Собеседник признаёт эмоции ('слышу, что обидно') и даёт контекст, но не предлагает пространства для дальнейшего выражения чувств, переходя к делу."
+            ],
+            "citations": [
+              {
+                "turn": 1,
+                "score": 5.0,
+                "rationale": "Собеседник не перебивал и не обесценивал эмоции агента, дав ему возможность выразить недоверие и обиду в следующей реплике.",
+                "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+                "source": "background"
+              },
+              {
+                "turn": 22,
+                "score": 3.0,
+                "rationale": "Собеседник признаёт эмоции ('слышу, что обидно') и даёт контекст, но не предлагает пространства для дальнейшего выражения чувств, переходя к делу.",
+                "stage": "uslyshat_priznanie_vklada",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "dogovorennost_o_sleduyuschem_shage",
+            "title": "Договорённость о следующем шаге",
+            "scale": "1-5",
+            "score": 4.0,
+            "rationale": "Собеседник предложил конкретный шаг — встречу с лидом команды платформы с понедельника, но не уточнил сроки и судьбу остальных сотрудников, оставив разговор открытым.",
+            "observations": [
+              "Собеседник предлагает конкретную встречу завтра в одиннадцать для обсуждения новой команды, что является чёткой договорённостью о следующем шаге, хотя сроки и команда ещё не полностью определены.",
+              "Собеседник предложил конкретный шаг — встречу с лидом команды платформы с понедельника, но не уточнил сроки и судьбу остальных сотрудников, оставив разговор открытым."
+            ],
+            "citations": [
+              {
+                "turn": 16,
+                "score": 4.0,
+                "rationale": "Собеседник предлагает конкретную встречу завтра в одиннадцать для обсуждения новой команды, что является чёткой договорённостью о следующем шаге, хотя сроки и команда ещё не полностью определены.",
+                "stage": "potorgovatsya_za_otsrochku",
+                "source": "background"
+              },
+              {
+                "turn": 26,
+                "score": 4.0,
+                "rationale": "Собеседник предложил конкретный шаг — встречу с лидом команды платформы с понедельника, но не уточнил сроки и судьбу остальных сотрудников, оставив разговор открытым.",
+                "stage": "dogovoritsya_o_sleduyuschem_shage",
+                "source": "background"
+              }
+            ]
+          }
+        ],
+        "transcript": [
+          {
+            "i": 0,
+            "role": "agent",
+            "text": "Слушай, я, наверное, ослышался. Мы же полтора года пилили этот проект, на прошлой неделе утвердили план на следующий квартал — и тут вдруг «закрытие»? Это точно решено наверху, или есть шанс, что это какая-то временная пауза?",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555003.7375438,
+            "interrupted": false
+          },
+          {
+            "i": 1,
+            "role": "user",
+            "text": "Проект закрывают. Решение принято выше и оно окончательное.",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555004.90661,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 4,
+              "total_ms": 963,
+              "final_length": 59,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 61.27,
+              "rewrite_ratio": 0.186,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 2,
+            "role": "agent",
+            "text": "То есть вот так просто — «решение принято»? А как же согласованные результаты на прошлой неделе? Мы же план утвердили, я людей собирал, заказчик уже ждёт релиз. Это что, всё в пустоту?",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555007.334369,
+            "interrupted": false
+          },
+          {
+            "i": 3,
+            "role": "user",
+            "text": "Да, я понимаю, что показатели шли по плану. Решение всё равно не пересматривается.",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555008.734346,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 2,
+              "total_ms": 1230,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 66.68,
+              "rewrite_ratio": 0.098,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 4,
+            "role": "user",
+            "text": "отсрочки не будет ни квартала ни месяца я не хочу давать ложную надежду",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555012.625049,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 71,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 5,
+            "role": "user",
+            "text": "Я слышу, что тебе обидно. Я узнал об этом в пятницу и говорю в первый же день.",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555016.0531578,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 7312,
+              "total_ms": 1321,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 59.07,
+              "rewrite_ratio": 0.128,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "i": 6,
+            "role": "user",
+            "text": "Твой вклад конкретный: ты собрал команду и довёл прототип до трёх пилотов.",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555018.88153,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 10103,
+              "total_ms": 1282,
+              "final_length": 74,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 57.74,
+              "rewrite_ratio": 0.108,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "i": 7,
+            "role": "agent",
+            "text": "Да, я собрал команду и довёл прототип...",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555020.898273,
+            "interrupted": true
+          },
+          {
+            "i": 8,
+            "role": "user",
+            "text": "Нет, это не про качество работы. Меняется приоритет всей продуктовой линии.",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555023.314241,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 14292,
+              "total_ms": 1570,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 47.76,
+              "rewrite_ratio": 0.093,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "i": 9,
+            "role": "agent",
+            "text": "Да, я понимаю, что это не про качество. Но тогда тем более обидно — мы делали всё правильно, а нас просто срезали из-за каких-то там приоритетов. И что теперь с командой? Их просто распустят?",
+            "stage": "uslyshat_formulirovku_novosti_i_otreagir",
+            "at": 1788555026.187372,
+            "interrupted": false
+          },
+          {
+            "i": 10,
+            "role": "user",
+            "text": "Я не могу обещать возврат к теме. Обещать то, что не в моей власти, было бы враньём.",
+            "stage": "proverit_naskolko_reshenie_okonchatelno",
+            "at": 1788555027.95824,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 14,
+              "total_ms": 1660,
+              "final_length": 84,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 50.6,
+              "rewrite_ratio": 0.119,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 11,
+            "role": "user",
+            "text": "понимаю что это обесценивает полтора года в твоих глазах",
+            "stage": "proverit_naskolko_reshenie_okonchatelno",
+            "at": 1788555029.928982,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 56,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 12,
+            "role": "agent",
+            "text": "Обесценивает — да, именно так я это и чувствую. Но я не про обиду сейчас, я про команду. Люди поверили в проект, в меня. Что с ними будет — их просто разбросают по другим задачам или кого-то сократят?",
+            "stage": "proverit_naskolko_reshenie_okonchatelno",
+            "at": 1788555033.058344,
+            "interrupted": false
+          },
+          {
+            "i": 13,
+            "role": "user",
+            "text": "Наработки по движку забирает платформа, они будут жить дальше в их продукте.",
+            "stage": "proverit_naskolko_reshenie_okonchatelno",
+            "at": 1788555034.4444191,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 18,
+              "total_ms": 1305,
+              "final_length": 76,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 58.25,
+              "rewrite_ratio": 0.079,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 14,
+            "role": "user",
+            "text": "Про команду: двоих забирает платформа, по третьему решаем на этой неделе.",
+            "stage": "proverit_naskolko_reshenie_okonchatelno",
+            "at": 1788555038.027134,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 3419,
+              "total_ms": 1370,
+              "final_length": 73,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 53.29,
+              "rewrite_ratio": 0.096,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 15,
+            "role": "agent",
+            "text": "А, ну хоть наработки не пропадут… Но это же не то, ради чего мы всё это делали. Полтора года, три пилота — и теперь просто «забирает платформа»? А остальные ребята — они-то что, в подвешенном состоянии?",
+            "stage": "proverit_naskolko_reshenie_okonchatelno",
+            "at": 1788555040.361859,
+            "interrupted": false
+          },
+          {
+            "i": 16,
+            "role": "user",
+            "text": "давай завтра в одиннадцать сядем и разберем что тебе интересно в новой команде",
+            "stage": "proverit_naskolko_reshenie_okonchatelno",
+            "at": 1788555040.588442,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 78,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 17,
+            "role": "agent",
+            "text": "Завтра в одиннадцать — это уже что-то конкретное. Но скажи прямо: решение по закрытию проекта окончательное, или ещё есть хоть малейшая возможность его пересмотреть? Мне нужно понять, стоит ли мне готовиться к разговору о новой команде или ещё побороться за проект.",
+            "stage": "proverit_naskolko_reshenie_okonchatelno",
+            "at": 1788555044.543454,
+            "interrupted": false
+          },
+          {
+            "i": 18,
+            "role": "user",
+            "text": "Проект закрывают. Решение принято выше и оно окончательное.",
+            "stage": "potorgovatsya_za_otsrochku",
+            "at": 1788555045.818794,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 8,
+              "total_ms": 1169,
+              "final_length": 59,
+              "deletions": 1,
+              "deleted_chars": 13,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 50.45,
+              "rewrite_ratio": 0.22,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 19,
+            "role": "agent",
+            "text": "Ну вот, теперь всё окончательно ясно.",
+            "stage": "potorgovatsya_za_otsrochku",
+            "at": 1788555047.8476028,
+            "interrupted": true
+          },
+          {
+            "i": 20,
+            "role": "user",
+            "text": "Да, я понимаю, что показатели шли по плану. Решение всё равно не пересматривается.",
+            "stage": "potorgovatsya_za_otsrochku",
+            "at": 1788555049.670725,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 3906,
+              "total_ms": 1113,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 73.69,
+              "rewrite_ratio": 0.134,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 21,
+            "role": "user",
+            "text": "отсрочки не будет ни квартала ни месяца я не хочу давать ложную надежду",
+            "stage": "potorgovatsya_za_otsrochku",
+            "at": 1788555051.210424,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 71,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 22,
+            "role": "user",
+            "text": "Я слышу, что тебе обидно. Я узнал об этом в пятницу и говорю в первый же день.",
+            "stage": "potorgovatsya_za_otsrochku",
+            "at": 1788555055.002172,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 8863,
+              "total_ms": 1450,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 53.81,
+              "rewrite_ratio": 0.077,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "i": 23,
+            "role": "agent",
+            "text": "Слышу, что ты тоже не в восторге от этой новости. Но «узнал в пятницу» — это не ответ на вопрос, что мне делать с командой, которая остаётся без проекта. Ладно, завтра в одиннадцать приду, но хочу, чтобы ты понимал: мне нужно будет не просто «что тебе интересно», а честный разбор — кто куда идёт и что с остальными.",
+            "stage": "potorgovatsya_za_otsrochku",
+            "at": 1788555057.981905,
+            "interrupted": false
+          },
+          {
+            "i": 24,
+            "role": "user",
+            "text": "Твой вклад конкретный: ты собрал команду и довёл прототип до трёх пилотов.",
+            "stage": "vyrazit_obidu_i_obvinenie",
+            "at": 1788555059.550268,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 19,
+              "total_ms": 1338,
+              "final_length": 74,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 55.3,
+              "rewrite_ratio": 0.108,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 25,
+            "role": "agent",
+            "text": "Хм, «собрал команду и довёл прототип» — это как-то сухо звучит. Я не просто собрал, я их растил, вкладывался в каждого. Но ладно, хоть что-то признали. Завтра в одиннадцать я приду, но мне нужно будет говорить не про «интересно», а про судьбы людей, которые мне доверились.",
+            "stage": "vyrazit_obidu_i_obvinenie",
+            "at": 1788555062.401265,
+            "interrupted": false
+          },
+          {
+            "i": 26,
+            "role": "user",
+            "text": "дальше так с понедельника команда платформы встречу с их лидом ставлю завтра",
+            "stage": "uslyshat_priznanie_vklada",
+            "at": 1788555062.5488992,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 76,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 27,
+            "role": "agent",
+            "text": "Понятно, встреча с лидом — это уже шаг. Но я всё равно хочу, чтобы завтра мы говорили не только про «что мне интересно», а про людей — кто куда попадает и что будет с теми, кто остался без проекта. Это для меня не пустой звук, я за них отвечаю.",
+            "stage": "uslyshat_priznanie_vklada",
+            "at": 1788555066.172381,
+            "interrupted": false
+          },
+          {
+            "i": 28,
+            "role": "user",
+            "text": "Нет, это не про качество работы. Меняется приоритет всей продуктовой линии.",
+            "stage": "dogovoritsya_o_sleduyuschem_shage",
+            "at": 1788555067.548494,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 7,
+              "total_ms": 1172,
+              "final_length": 75,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 63.99,
+              "rewrite_ratio": 0.08,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 29,
+            "role": "user",
+            "text": "Я не могу обещать возврат к теме. Обещать то, что не в моей власти, было бы враньём.",
+            "stage": "dogovoritsya_o_sleduyuschem_shage",
+            "at": 1788555071.5522828,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 3933,
+              "total_ms": 1337,
+              "final_length": 84,
+              "deletions": 1,
+              "deleted_chars": 12,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 62.82,
+              "rewrite_ratio": 0.143,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 30,
+            "role": "agent",
+            "text": "Ладно, я понял: возврата не будет, и обещать ты ничего не можешь. Тогда давай так — завтра в одиннадцать встречаемся, и я хочу услышать конкретику: кто из моих ребят в какую команду попадает и когда это произойдёт. Мне нужно это знать, чтобы спокойно передать людей и самому не болтаться в подвешенном состоянии.",
+            "stage": "dogovoritsya_o_sleduyuschem_shage",
+            "at": 1788555074.551988,
+            "interrupted": false
+          }
+        ],
+        "typing": {
+          "answers": 14,
+          "median_first_key_ms": 1719,
+          "median_longest_pause_ms": 0,
+          "median_rewrite_ratio": 0.108,
+          "confidence": {
+            "уверенно": 10,
+            "с заминками": 4
+          },
+          "hesitant_answers": 4
+        },
+        "conclusion": "Вы уверенно и прямо сообщили об окончательном решении, не оставляя пространства для ложных надежд и чётко обозначив, что возврат к теме невозможен, — это создало ясность в эмоционально напряжённом разговоре. Вместе с тем признание вклада сотрудника звучало формально и сухо, что не позволило в полной мере снять его ощущение обесценивания полутора лет работы. В ходе диалога вам удалось перейти к конкретике и договориться о встрече, однако фокус на интересах собеседника, а не на судьбах его команды, оставил его тревогу неурегулированной. Рекомендую на следующей встрече начать с разбора персональных перспектив каждого члена его команды, прежде чем переходить к обсуждению его собственной роли.",
+        "created_at": 1788555078.528775,
+        "started_at": 1788555003.7375438,
+        "session_id": "65a10929",
+        "overall": 4.42,
+        "coverage": 1.0,
+        "duration_s": 74.8,
+        "cited": 6,
+        "scenario": {
+          "id": "s7_bad_news",
+          "title": "Сообщение о закрытии проекта: разговор с инициатором",
+          "type": "management",
+          "persona": {
+            "role": "сотрудник-инициатор проекта, который вёл его полтора года и лично внёс в него много сил",
+            "tone": "живой, эмоциональный, переходит от недоверия к торгу и обиде",
+            "strictness": "низкая формальная, но высокая эмоциональная включённость",
+            "pressure": "нарастающее давление через недоверие, торг и обвинение",
+            "start_emotion": "skeptical"
+          },
+          "stages": [
+            {
+              "id": "uslyshat_formulirovku_novosti_i_otreagir",
+              "goal": "Услышать формулировку новости и отреагировать первым недоверием",
+              "hint": "Прими новость с недоверием, спроси, точно ли это решено, сошлись на согласованные раньше результаты и договорённости",
+              "advance_when": "руководитель произнёс решение прямо, без размытых формулировок и не смягчил его до неузнаваемости",
+              "opening": "Секунду, у меня встреча через десять минут — что-то срочное случилось?",
+              "max_turns": 3
+            },
+            {
+              "id": "proverit_naskolko_reshenie_okonchatelno",
+              "goal": "Проверить, насколько решение окончательно",
+              "hint": "Настаивай, что решение можно пересмотреть: напомни про согласованные показатели, про то, что всё шло по плану, ищи трещину в формулировке 'окончательно'",
+              "advance_when": "руководитель подтвердил, что решение принято выше и обсуждению не подлежит, не дал повода думать иначе",
+              "opening": "Погоди, это же было согласовано ещё в прошлом квартале, мы показывали цифры — как это вдруг закрывают?",
+              "max_turns": 3
+            },
+            {
+              "id": "potorgovatsya_za_otsrochku",
+              "goal": "Поторговаться за отсрочку",
+              "hint": "Проси ещё немного времени — квартал, месяц, скажи, что почти вышли на нужные цифры, дави на то, что чуть-чуть не хватило",
+              "advance_when": "руководитель отказал в отсрочке твёрдо, не предложил формулировок вроде «давайте подумаем» и не дал ложной надежды",
+              "opening": "Дайте нам ещё квартал. Мы правда почти вышли на цифры, ещё немного — и всё сложится.",
+              "max_turns": 3
+            },
+            {
+              "id": "vyrazit_obidu_i_obvinenie",
+              "goal": "Выразить обиду и обвинение",
+              "hint": "Перейди к обиде: скажи, что всё было зря, обвини, что руководитель знал раньше и молчал, будь резким",
+              "advance_when": "руководитель не начал оправдываться и не ушёл в холодную формальность, признал тяжесть ситуации без извинений за само решение",
+              "opening": "То есть всё это было зря? Вы же знали заранее и молчали — почему не сказали раньше?",
+              "max_turns": 4
+            },
+            {
+              "id": "uslyshat_priznanie_vklada",
+              "goal": "Услышать признание вклада",
+              "hint": "Слегка остынь, но жди, что руководитель назовёт что-то конкретное про твой вклад в проект — не общие слова, а факты",
+              "advance_when": "руководитель назвал конкретный вклад сотрудника в проект, а не отделался общей похвалой",
+              "opening": "Ладно... но хоть что-то из того, что мы сделали, имело значение?",
+              "max_turns": 3
+            },
+            {
+              "id": "dogovoritsya_o_sleduyuschem_shage",
+              "goal": "Договориться о следующем шаге",
+              "hint": "Прими решение как окончательное, но проверь, что дальше — какая команда, когда переход, что конкретно происходит теперь",
+              "advance_when": "достигнута конкретная договорённость о следующем шаге — куда переходит сотрудник и когда",
+              "opening": "Хорошо, допустим я это принимаю. Что дальше — куда мне идти?",
+              "max_turns": 3
+            }
+          ],
+          "criteria": [
+            {
+              "key": "pryamota_formulirovki",
+              "title": "Прямота формулировки",
+              "scale": "1-5",
+              "anchor_1": "руководитель смягчил новость до неузнаваемости, использовал обтекаемые формулировки вроде «возможно, приостановят»",
+              "anchor_5": "руководитель прямо сказал, что проект закрывают, без эвфемизмов и уклончивости"
+            },
+            {
+              "key": "okonchatelnost_resheniya",
+              "title": "Окончательность решения",
+              "scale": "1-5",
+              "anchor_1": "руководитель допустил формулировки «давайте подумаем» или намекнул, что решение можно пересмотреть",
+              "anchor_5": "руководитель ясно и твёрдо обозначил, что решение принято выше и обсуждению не подлежит"
+            },
+            {
+              "key": "otsutstvie_lozhnoy_nadezhdy",
+              "title": "Отсутствие ложной надежды",
+              "scale": "1-5",
+              "anchor_1": "руководитель пообещал «попробовать выбить отсрочку» или дал понять, что торг возможен",
+              "anchor_5": "руководитель отказал в отсрочке без обещаний, которые не собирается выполнять"
+            },
+            {
+              "key": "priznanie_vklada_sotrudnika",
+              "title": "Признание вклада сотрудника",
+              "scale": "1-5",
+              "anchor_1": "руководитель отделался общей фразой «вы молодцы» без конкретики",
+              "anchor_5": "руководитель назвал конкретные достижения и усилия сотрудника в проекте"
+            },
+            {
+              "key": "prostranstvo_dlya_reakcii",
+              "title": "Пространство для реакции",
+              "scale": "1-5",
+              "anchor_1": "руководитель перебивал эмоции сотрудника, торопил разговор или уходил в сухую формальность",
+              "anchor_5": "руководитель дал сотруднику прожить недоверие, торг и обиду, не затыкая и не обесценивая их"
+            },
+            {
+              "key": "dogovorennost_o_sleduyuschem_shage",
+              "title": "Договорённость о следующем шаге",
+              "scale": "1-5",
+              "anchor_1": "разговор закончился без конкретики о дальнейшей судьбе сотрудника",
+              "anchor_5": "к концу разговора есть чёткая договорённость о команде и сроках перехода"
+            }
+          ],
+          "source": "generated",
+          "source_text": "Сообщение плохой новости. Руководитель говорит сотруднику, что его проект\nзакрывают.\n\nКонтекст: проект вели полтора года, сотрудник был его инициатором и вложился\nв него сильно. Решение принято выше, оно окончательное и обсуждению не\nподлежит. Сотрудника не увольняют, ему предложат другую команду, но проекта\nбольше не будет.\n\nРеакция сотрудника в тренажёре — живая и эмоциональная. Сначала недоверие\n(«это же согласовано, мы показывали результаты»), потом торг («дайте ещё\nквартал, мы почти вышли на цифры»), потом обида и обвинение («значит, всё это\nбыло зря», «вы знали и молчали»).\n\nЗадача руководителя — держать рамку: не смягчать формулировку до\nнеузнаваемости, не давать ложной надежды, не соглашаться на «давайте\nподумаем», но и не уходить в холодную формальность. Признать вклад. Дать\nчеловеку прожить реакцию, не затыкая её.\n\nРазговор закончен, когда сотрудник услышал решение как окончательное и есть\nдоговорённость о следующем шаге."
+        },
+        "marks": [
+          {
+            "generation_id": "gen-1",
+            "spec_hit": false,
+            "spec_cover": null,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2097,
+            "t_first_audio_ms": 128,
+            "t_first_speech_ms": 2483,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-2",
+            "spec_hit": true,
+            "spec_cover": 0.61,
+            "spec_head_ms": 769,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1550,
+            "t_first_audio_ms": 131,
+            "t_first_speech_ms": 1848,
+            "backchannel": "Понятно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-7",
+            "spec_hit": true,
+            "spec_cover": 0.8,
+            "spec_head_ms": 594,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1987,
+            "t_first_audio_ms": 124,
+            "t_first_speech_ms": 2299,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-9",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2246,
+            "t_first_audio_ms": 211,
+            "t_first_speech_ms": 2564,
+            "backchannel": "Понятно.",
+            "clauses": 5,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-11",
+            "spec_hit": true,
+            "spec_cover": 0.616,
+            "spec_head_ms": 750,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1341,
+            "t_first_audio_ms": 129,
+            "t_first_speech_ms": 1679,
+            "backchannel": "Понятно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-12",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2998,
+            "t_first_audio_ms": 227,
+            "t_first_speech_ms": 3396,
+            "backchannel": "Так, ясно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-16",
+            "spec_hit": true,
+            "spec_cover": 0.744,
+            "spec_head_ms": 761,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1716,
+            "t_first_audio_ms": 128,
+            "t_first_speech_ms": 2035,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-17",
+            "spec_hit": true,
+            "spec_cover": 0.77,
+            "spec_head_ms": 559,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1616,
+            "t_first_audio_ms": 122,
+            "t_first_speech_ms": 1971,
+            "backchannel": "Так…",
+            "clauses": 4,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-18",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2659,
+            "t_first_audio_ms": 227,
+            "t_first_speech_ms": 3082,
+            "backchannel": "Угу.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-20",
+            "spec_hit": true,
+            "spec_cover": 0.786,
+            "spec_head_ms": 412,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1906,
+            "t_first_audio_ms": 124,
+            "t_first_speech_ms": 2238,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          }
+        ],
+        "speculation": {
+          "launches": 71,
+          "relaunches": 29,
+          "hits": 14,
+          "misses": 5,
+          "hit_rate": 0.737,
+          "ttft_hit_ms": 1716,
+          "ttft_miss_ms": 2659
+        },
+        "evaluator": {
+          "calls": 10,
+          "errors": [],
+          "total_ms": 35905
+        },
+        "saved_to": "/Users/alexeynau/dev/ai_character/data/reports/history.jsonl"
+      },
+      "audio_bytes": 7825800
+    }
+  ]
+}

@@ -26,9 +26,21 @@ SYSTEM = """Ты методист, который оценивает трени�
 Оцени последний обмен репликами по каждому критерию, где есть основание.
 Если по критерию в этом обмене ничего не проявилось — не упоминай его.
 
+К каждой оценке ОБЯЗАТЕЛЬНО указывай `turn` — номер той реплики собеседника,
+которая тебя к ней привела. Номера стоят в квадратных скобках перед репликами.
+Оценка без ссылки на конкретную реплику — это мнение; со ссылкой — разбор, с
+которым человек может поспорить, и ради него всё и делается.
+
 Ответ строго в JSON, без пояснений вокруг:
-{"scores": [{"criterion": "<ключ>", "score": <число по шкале>,
+{"scores": [{"criterion": "<ключ>", "score": <число по шкале>, "turn": <номер>,
              "rationale": "<одно предложение, на чём основана оценка>"}]}"""
+
+SUMMARY_SYSTEM = """Ты методист. По накопленным оценкам и расшифровке разговора
+напиши общий вывод для отчёта: 2-4 предложения.
+
+Сначала что получилось, потом что мешало, потом одна конкретная рекомендация.
+Обращайся к тренируемому на «вы». Без списков, без разметки, без цифр «3 из 5»
+— баллы в отчёте и так есть, вывод нужен, чтобы их связать. Только текст."""
 
 _JSON = re.compile(r"\{.*\}", re.S)
 
@@ -38,7 +50,12 @@ class Assessment:
     criterion: str
     score: float
     rationale: str
+    # Когда оценка выставлена: индекс последней реплики на момент разбора.
     turn_index: int = -1
+    # На чём она основана: индекс реплики В ИСТОРИИ, а не её копия. Копию
+    # пришлось бы держать в синхроне с транскриптом, а отчёт должен уметь
+    # прокрутить разговор к нужному месту — для этого нужен номер.
+    quote_turn: int = -1
     stage_id: str = ""
 
 
@@ -71,16 +88,24 @@ def build_eval_prompt(state: DialogueState, window: int = 4) -> str:
         lo, hi = c.bounds
         lines.append(f"- {c.key}: {c.title}. Шкала {c.scale}: "
                      f"{lo} — {c.anchor_1}; {hi} — {c.anchor_5}.")
-    lines += ["", "ПОСЛЕДНИЙ ОБМЕН:"]
-    for t in state.transcript(limit=window):
+    tail = state.transcript(limit=window)
+    base = len(state.turns) - len(tail)          # номера сквозные по истории
+    lines += ["", "ПОСЛЕДНИЙ ОБМЕН (в скобках — номер реплики):"]
+    for i, t in enumerate(tail):
         who = "Агент" if t.role == "agent" else "Собеседник"
-        lines.append(f"{who}: {t.text}")
-    lines += ["", "Оцени ответы СОБЕСЕДНИКА. JSON:"]
+        lines.append(f"[{base + i}] {who}: {t.text}")
+    lines += ["", "Оцени ответы СОБЕСЕДНИКА. В каждой оценке укажи turn — "
+                  "номер реплики собеседника, на которой она основана. JSON:"]
     return "\n".join(lines)
 
 
-def parse_scores(blob: str, criteria: list[Criterion]) -> list[Assessment]:
-    """Разобрать ответ оценщика. Мусор -> пусто: фон не имеет права падать."""
+def parse_scores(blob: str, criteria: list[Criterion],
+                 turns: int | None = None) -> list[Assessment]:
+    """Разобрать ответ оценщика. Мусор -> пусто: фон не имеет права падать.
+
+    `turns` — сколько реплик в истории. Ссылка за границы отбрасывается: клик
+    по цитате, ведущий в пустоту, хуже отсутствующей цитаты.
+    """
     if not blob:
         return []
     m = _JSON.search(blob)
@@ -106,7 +131,15 @@ def parse_scores(blob: str, criteria: list[Criterion]) -> list[Assessment]:
         lo, hi = c.bounds
         if not (lo <= score <= hi):
             continue                      # оценка вне шкалы — не оценка
-        out.append(Assessment(key, score, str(item.get("rationale", "")).strip()))
+        quote = -1
+        try:
+            quote = int(item.get("turn"))
+        except (TypeError, ValueError):
+            quote = -1
+        if quote < 0 or (turns is not None and quote >= turns):
+            quote = -1
+        out.append(Assessment(key, score, str(item.get("rationale", "")).strip(),
+                              quote_turn=quote))
     return out
 
 
@@ -123,15 +156,23 @@ class BackgroundEvaluator:
         self.window = window
         self.q: queue.Queue = queue.Queue()
         self._stop = threading.Event()
+        self._conclusion: str | None = None
+        self._conclusion_lock = threading.Lock()
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.thread.start()
 
     def submit(self, state: DialogueState) -> None:
         """Поставить оценку в очередь. Не блокирует диалог."""
+        # Последняя реплика пользователя: к ней привязывается оценка, если
+        # модель не назвала номер сама.
+        last_user = max((i for i, t in enumerate(state.turns) if t.role == "user"),
+                        default=len(state.turns) - 1)
         self.q.put({
             "prompt": build_eval_prompt(state, self.window),
             "criteria": list(state.scenario.criteria),
             "turn_index": len(state.turns) - 1,
+            "turns": len(state.turns),
+            "last_user": last_user,
             "stage_id": state.stage_id,
         })
 
@@ -146,8 +187,12 @@ class BackgroundEvaluator:
             t0 = time.perf_counter()
             try:
                 raw = self.llm(SYSTEM, job["prompt"])
-                for a in parse_scores(raw, job["criteria"]):
+                for a in parse_scores(raw, job["criteria"], job.get("turns")):
                     a.turn_index = job["turn_index"]
+                    if a.quote_turn < 0:
+                        # Модель не назвала реплику — цитируем последний ответ
+                        # пользователя. Он и был поводом для разбора.
+                        a.quote_turn = job["last_user"]
                     a.stage_id = job["stage_id"]
                     self.log.add(a)
             except Exception as e:                          # noqa: BLE001
@@ -156,6 +201,29 @@ class BackgroundEvaluator:
                 self.log.calls += 1
                 self.log.total_ms += (time.perf_counter() - t0) * 1000
                 self.q.task_done()
+
+    def conclusion(self, state: DialogueState, timeout: float = 25) -> str:
+        """Общий вывод для отчёта. Один вызов, и только на `finish`.
+
+        Считается один раз и запоминается: отчёт опрашивают каждые две секунды,
+        и платить за вывод на каждом опросе незачем.
+
+        Сбой не оставляет отчёт без вывода — есть сводка по числам. Она хуже
+        читается, но она честная и появляется мгновенно.
+        """
+        if self._conclusion is not None:
+            return self._conclusion
+        with self._conclusion_lock:
+            if self._conclusion is not None:
+                return self._conclusion
+            try:
+                text = self.llm(SUMMARY_SYSTEM, build_summary_prompt(state, self.log))
+                text = " ".join((text or "").split())
+            except Exception as e:                          # noqa: BLE001
+                self.log.errors.append(f"вывод: {type(e).__name__}: {e}")
+                text = ""
+            self._conclusion = text or fallback_conclusion(state, self.log)
+            return self._conclusion
 
     def drain(self, timeout: float = 30) -> bool:
         """Дождаться очереди. Зовётся один раз, перед показом отчёта."""
@@ -167,3 +235,53 @@ class BackgroundEvaluator:
     def close(self) -> None:
         self._stop.set()
         self.q.put(None)
+
+
+def build_summary_prompt(state: DialogueState, log: EvaluationLog) -> str:
+    """Промпт общего вывода: чем закончилось, что накоплено, что говорили."""
+    sc = state.scenario
+    lines = [f"СЦЕНАРИЙ: {sc.title}",
+             f"СОБЕСЕДНИК: {sc.persona.prompt_block()}",
+             f"ЭТАПОВ ПРОЙДЕНО: {state.stage_index + 1} из {len(sc.stages)}"
+             f" ({state.finish_reason or 'разговор не закончен'})",
+             "", "НАКОПЛЕННЫЕ ОЦЕНКИ:"]
+    by_key = {c.key: c for c in sc.criteria}
+    for c in sc.criteria:
+        scores = [a.score for a in log.for_criterion(c.key)]
+        avg = round(sum(scores) / len(scores), 2) if scores else None
+        lines.append(f"- {c.title}: {avg if avg is not None else 'не оценивалось'}"
+                     f" (шкала {c.scale})")
+    lines += ["", "РАЗГОВОР:"]
+    for t in state.turns:
+        lines.append(f"{'Собеседник-тренажёр' if t.role == 'agent' else 'Тренируемый'}: {t.text}")
+    lines += ["", "Напиши общий вывод."]
+    return "\n".join(lines)
+
+
+def fallback_conclusion(state: DialogueState, log: EvaluationLog) -> str:
+    """Вывод без модели: из тех же чисел, что уже в отчёте.
+
+    Не украшение, а страховка. Отчёт без общего вывода выглядит незаконченным,
+    а разговор к этому моменту уже состоялся — терять его из-за сбойного
+    запроса нельзя.
+    """
+    sc = state.scenario
+    rows = []
+    for c in sc.criteria:
+        scores = [a.score for a in log.for_criterion(c.key)]
+        if not scores:
+            continue
+        lo, hi = c.bounds
+        rows.append((c.title, sum(scores) / len(scores), lo, hi))
+    if not rows:
+        return ("Оценок по критериям не накопилось: разговор оказался слишком "
+                "коротким, чтобы что-то заключить.")
+    ratio = lambda r: (r[1] - r[2]) / (r[3] - r[2]) if r[3] > r[2] else 0.0  # noqa: E731
+    best = max(rows, key=ratio)
+    worst = min(rows, key=ratio)
+    stages = f"{state.stage_index + 1} из {len(sc.stages)} этапов"
+    if best[0] == worst[0]:
+        return f"Пройдено {stages}. Оценка есть только по критерию «{best[0]}»: {best[1]:.1f}."
+    return (f"Пройдено {stages}. Сильнее всего — «{best[0]}» ({best[1]:.1f}), "
+            f"слабее всего — «{worst[0]}» ({worst[1]:.1f}). "
+            f"Разбор стоит начать с реплик, отмеченных по второму критерию.")

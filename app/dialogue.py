@@ -101,18 +101,27 @@ class DialogueState:
         return sum(1 for t in self.turns[self._stage_started_at:]
                    if t.role == "user" and t.counted)
 
-    @property
-    def stage_max_turns(self) -> int:
-        """Бюджет текущего этапа.
+    def budget_of(self, index: int) -> int:
+        """Бюджет этапа по номеру.
 
-        У последнего он больше: это этап, на котором разговор сворачивают, и
-        обрубать его тем же лимитом, что и промежуточный, значит заканчивать
-        на полуслове.
+        Приоритет у бюджета, заданного самим этапом: знакомство закрывается
+        одним ответом, разбор инцидента — нет, и генератор это различает.
+        Дальше — общий лимит, а у последнего этапа он на ход больше: это этап,
+        на котором разговор сворачивают, и обрубать его тем же лимитом, что и
+        промежуточный, значит заканчивать на полуслове.
         """
-        if not self.is_last_stage:
+        st = self.scenario.stage(index)
+        if st is not None and st.max_turns:
+            return st.max_turns
+        if index < len(self.scenario.stages) - 1:
             return self.max_turns_per_stage
         return (self.last_stage_max_turns if self.last_stage_max_turns is not None
                 else self.max_turns_per_stage + 1)
+
+    @property
+    def stage_max_turns(self) -> int:
+        """Бюджет текущего этапа."""
+        return self.budget_of(self.stage_index)
 
     @property
     def stage_budget_spent(self) -> bool:
@@ -128,9 +137,11 @@ class DialogueState:
         """
         if self.max_user_turns is not None:
             return self.max_user_turns
-        stages = len(self.scenario.stages)
-        return (stages - 1) * self.max_turns_per_stage + \
-            (self.max_turns_per_stage + 1) + 6
+        # Сумма бюджетов этапов, а не формула от их числа: у сгенерированных
+        # сценариев бюджеты разные. Для сценария без собственных бюджетов сумма
+        # совпадает со старой формулой ровно, поэтому метрика завершения на
+        # существующих пяти сценариях не меняется.
+        return sum(self.budget_of(i) for i in range(len(self.scenario.stages))) + 6
 
     @property
     def dialogue_budget_spent(self) -> bool:
