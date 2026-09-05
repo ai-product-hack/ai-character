@@ -266,6 +266,7 @@ function handle(h, payload) {
   if (h.kind === 'cancel') { onCancel(h.generation_id); return; }
   if (h.kind === 'finished') {
     addTurn('agent', '— диалог завершён —');
+    finishSession();
     showFinishReport();
     return;
   }
@@ -565,7 +566,30 @@ function addTurn(role, text) {
   $('history').scrollTop = 1e9;
 }
 
+// Диалог кончился — значит кончился. Раньше `finished` только рисовал строчку
+// в истории: микрофон продолжал слушать, поле принимало текст, сервер отвечал.
+// Человек говорил дальше в разговор, итог которого уже подведён и показан.
+let sessionOver = false;
+
+function finishSession() {
+  if (sessionOver) return;
+  sessionOver = true;
+  micStop();
+  $('micOn').checked = false;
+  $('micOn').disabled = true;
+  $('ptt').disabled = true;
+  micSay('диалог завершён');
+  $('msg').disabled = true;
+  $('msg').value = '';
+  $('msg').placeholder = 'Диалог завершён — отчёт готов';
+  $('send').disabled = true;
+  // Сервер тоже откажет (409), но ждать отказа, чтобы узнать очевидное, незачем.
+  fetch(api('/api/voice'), {method: 'POST', body: JSON.stringify({on: false})})
+    .catch(() => {});
+}
+
 async function send() {
+  if (sessionOver) return;
   const text = $('msg').value.trim();
   if (!text) return;
   $('msg').value = '';
@@ -621,6 +645,7 @@ $('msg').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 // сети, чтобы не торопить человека, значит торопить его лишние 250 мс.
 let typingTimer = null;
 $('msg').addEventListener('input', () => {
+  if (sessionOver) return;
   if (avatar) avatar.noteActivity();
   clearTimeout(typingTimer);
   const text = $('msg').value;
@@ -677,7 +702,7 @@ function micStop() {
 }
 
 async function sendChunk(f32) {
-  if (!micSending) return;
+  if (!micSending || sessionOver) return;
   const i16 = new Int16Array(f32.length);
   for (let i = 0; i < f32.length; i++) {
     const v = Math.max(-1, Math.min(1, f32[i]));
@@ -695,6 +720,7 @@ async function sendChunk(f32) {
 }
 
 $('micOn').onchange = async () => {
+  if (sessionOver) { $('micOn').checked = false; return; }
   const on = $('micOn').checked;
   if (!on) {
     micStop();
@@ -728,7 +754,10 @@ async function pttUp() {
                                               body: JSON.stringify({ptt: 'up'})})).json();
   if (d.text) micSay(`распознано за ${d.asr_ms} мс`, 'hot');
 }
-$('ptt').onpointerdown = () => { $('ptt').classList.add('live'); micSay('говорите…', 'hot'); };
+$('ptt').onpointerdown = () => {
+  if (sessionOver) return;
+  $('ptt').classList.add('live'); micSay('говорите…', 'hot');
+};
 $('ptt').onpointerup = pttUp;
 $('ptt').onpointerleave = () => { if ($('ptt').classList.contains('live')) pttUp(); };
 

@@ -174,3 +174,53 @@ class Persistence(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ScaleReachesTheScreen(unittest.TestCase):
+    """«3» — число без единиц. Шкала есть в данных и до отчёта не доходила.
+
+    Замечание с живого прогона: «набрал два с половиной балла и не знаю, что
+    это значит; если максимум три — круто, если десять — плохо».
+    """
+
+    def _report(self, *criteria):
+        sc = scenario()
+        sc.criteria = list(criteria)
+        st = DialogueState(sc)
+        st.add_agent("Вопрос.")
+        st.add_user("Ответ.")
+        log = EvaluationLog()
+        for i, c in enumerate(criteria):
+            log.add(Assessment(c.key, 2.0 + i, "потому что", quote_turn=1))
+        return report_mod.build(st, log).to_dict()
+
+    def test_bounds_and_anchors_travel_with_the_score(self):
+        rep = self._report(*CRITERIA)
+        c = rep["criteria"][0]
+        self.assertEqual((c["lo"], c["hi"]), (1, 5))
+        self.assertEqual(c["anchor_1"], "рассыпается")
+        self.assertEqual(c["anchor_5"], "построен")
+
+    def test_uniform_scale_is_reported(self):
+        rep = self._report(*CRITERIA)
+        self.assertEqual(rep["scale_max"], 5)
+        self.assertEqual(rep["scale_min"], 1)
+
+    def test_mixed_scales_give_no_common_maximum(self):
+        """Средний балл по шкалам 1-5 и 1-10 — число без смысла."""
+        rep = self._report(CRITERIA[0],
+                           Criterion("wide", "Широкий", "1-10", "низ", "верх"))
+        self.assertIsNone(rep["scale_max"])
+        self.assertIsNotNone(rep["overall_ratio"])
+
+    def test_ratio_normalises_each_criterion_to_its_own_scale(self):
+        """2 из 5 и 3 из 10 — это 0.25 и 0.22, а не 2 и 3."""
+        rep = self._report(CRITERIA[0],
+                           Criterion("wide", "Широкий", "1-10", "низ", "верх"))
+        self.assertAlmostEqual(rep["overall_ratio"], (0.25 + 2 / 9) / 2, places=2)
+
+    def test_bottom_of_the_scale_is_zero_not_a_fifth(self):
+        rep = self._report(Criterion("k", "К", "1-5", "низ", "верх"))
+        rep["criteria"][0]["score"] = 1.0
+        self.assertEqual(report_mod.CriterionResult(
+            key="k", title="К", scale="1-5", lo=1, hi=5, score=1.0).ratio, 0.0)

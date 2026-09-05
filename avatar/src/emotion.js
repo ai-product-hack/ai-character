@@ -43,6 +43,10 @@ export class EmotionLayer {
     this.clipTimeMs = 0;
     this.clipMotionEnabled = true;
     this._emotionFrame = new Map();
+    // Цель кадра до кроссфейда. Живёт полем, а не локальной переменной: кадр
+    // считается 60 раз в секунду, и бюджет «update() не аллоцирует» проверяется
+    // тестом.
+    this._wantFrame = new Map();
     this._crossfadeFrom = new Map();
     this._crossfadeMs = Infinity;
     this._phaseMs = 0;
@@ -226,22 +230,63 @@ export class EmotionLayer {
     if (this.clipMotionEnabled) this.clipTimeMs += dt * 1000;
     const sample = sampleFacialClip(clip, this.clipTimeMs + this._phaseMs, C.seamMs ?? 400);
     const amplitude = (emotion.clipAmplitude ?? C.amplitude ?? 0.4) * this.emotion.intensity;
+    const blend = C.blend !== false;
+    const motion = (C.motion ?? C.amplitude ?? 0.4) * this.emotion.intensity;
     const duration = C.crossfadeMs ?? 400;
     this._crossfadeMs += dt * 1000;
     const x = duration > 0 ? Math.min(1, this._crossfadeMs / duration) : 1;
     const mix = x * x * (3 - 2 * x);
 
-    // First fade channels that only existed in the previous emotion to zero.
+    // Цель кадра считается ЦЕЛИКОМ до кроссфейда, иначе поза, которой нет
+    // среди каналов клипа, встала бы в кадр мимо смешивания и переключалась
+    // рывком.
+    //
+    // Поза задаёт ФОРМУ, запись добавляет ДВИЖЕНИЕ вокруг неё.
+    //
+    // Раньше клип позу заменял целиком: при наличии записи `emotion.pose` не
+    // применялась вовсе. Из-за этого вся продуманная статика для пяти
+    // записанных эмоций не работала, а работала запись — со своей формой,
+    // которая местами противоположна задуманной (в снятом `pressing` брови
+    // идут ВВЕРХ, и давление читалось как лёгкое удивление). Вдобавок половину
+    // записи выбрасывает таблица зон, так что до лица доезжала пятая часть
+    // снятого.
+    //
+    // Вычитая среднее канала, берём от записи ровно то, чем она ценна, —
+    // живое движение, — и не тащим её абсолютную форму. `clips.blend: false`
+    // возвращает прежнее поведение без правки кода.
+    const want = this._wantFrame;
+    want.clear();
+    if (blend) {
+      for (const [morph, w] of Object.entries(emotion.pose || {})) {
+        if (morph.startsWith('_') || !Number.isFinite(w)) continue;
+        want.set(morph, w * this.emotion.intensity);
+      }
+    }
+    // Вниз движение ограничено долей позы, вверх — свободно. Без этого запись
+    // с большим размахом (у снятого `warming` улыбка гуляет почти на всю
+    // шкалу) в нижней точке обнуляла заданную форму: улыбка на теплеющем лице
+    // периодически пропадала совсем. Морфы, которых в позе нет, начинаются с
+    // нуля и ограничения не получают — им двигаться неоткуда и некуда падать.
+    const floor = C.motionFloor ?? 0.5;
+    for (let i = 0; i < clip.channels.length; i++) {
+      const morph = clip.channels[i].name;
+      if (!blend) { want.set(morph, sample[i] * amplitude); continue; }
+      const base = want.get(morph) || 0;
+      const moved = base + (sample[i] - clip.means[i]) * motion;
+      want.set(morph, Math.max(base * floor, Math.max(0, moved)));
+    }
+
+    // Кроссфейд: гасим то, что было только в прошлой эмоции, и подводим
+    // остальное к цели.
     this._emotionFrame.clear();
     for (const [morph, from] of this._crossfadeFrom) {
+      if (want.has(morph)) continue;
       const value = from * (1 - mix);
       if (value > 1e-5) this._emotionFrame.set(morph, value);
     }
-    for (let i = 0; i < clip.channels.length; i++) {
-      const morph = clip.channels[i].name;
-      const want = sample[i] * amplitude;
+    for (const [morph, value] of want) {
       const from = this._crossfadeFrom.get(morph) || 0;
-      this._emotionFrame.set(morph, from + (want - from) * mix);
+      this._emotionFrame.set(morph, from + (value - from) * mix);
     }
     for (const [morph, value] of this._emotionFrame) target.set(morph, value);
     if (mix >= 1 && this._crossfadeFrom.size) this._crossfadeFrom.clear();

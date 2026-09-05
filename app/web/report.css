@@ -96,3 +96,20 @@
   .line.hit { animation: none; }
   .rep-transcript { break-inside: auto; }
 }
+
+/* Шкала рядом с баллом. «3» — число без единиц: непонятно, из скольких и что
+   считается хорошим ответом. Полоса показывает то же самое, но с одного
+   взгляда — по ней видно провал среди ровных оценок, не читая цифр. */
+.rep .score .of { font-size: 12px; color: #6f7c93; font-weight: 400; }
+.rep .meter { height: 4px; background: #1c2230; border-radius: 2px;
+              margin-top: 6px; overflow: hidden; }
+.rep .meter i { display: block; height: 100%; background: #4a7f9e;
+                border-radius: 2px; }
+.rep .anchors b { color: #8b96a8; font-weight: 600; }
+
+@media print {
+  .rep .score .of { color: #555; }
+  .rep .meter { background: #e4e4e4; }
+  .rep .meter i { background: #777; }
+  .rep .anchors b { color: #333; }
+}

@@ -161,3 +161,40 @@ class CapHoldsWhenTheLastTurnsAreInterrupted(unittest.TestCase):
             s.state.add_user("Ответ.")
         self.assertFalse(s._finish_if_out_of_budget())
         self.assertFalse(s.state.finished)
+
+
+class FinishedSessionStopsAcceptingTurns(unittest.TestCase):
+    """Завершение обязано быть настоящим конечным состоянием.
+
+    Замечание с живого прогона: «вылезло окно с отчётом, а дальше бот
+    продолжал быть активным, я мог ему что-то сказать; тренажёр по факту не
+    завершился». Так и было: `finished` ставился, кадр уходил, и на этом всё —
+    ни один обработчик на него не смотрел.
+    """
+
+    def _handler(self, finished: bool):
+        """Обработчик без сети: нужны только маршрутизация и ответ."""
+        import types
+        from app.server import Handler
+        h = Handler.__new__(Handler)
+        sess = types.SimpleNamespace(
+            state=types.SimpleNamespace(finished=finished,
+                                        finish_reason="сценарий пройден"))
+        h._sid = lambda u, data=None: None
+        h._need_session = lambda u, data=None: sess
+        replies = []
+        h._json = lambda obj, code=200: replies.append((code, obj))
+        return h, sess, replies
+
+    def test_live_session_passes_through(self):
+        h, sess, replies = self._handler(finished=False)
+        self.assertIs(h._need_live_session(None), sess)
+        self.assertEqual(replies, [], "живой сессии отказывать не за что")
+
+    def test_finished_session_is_refused(self):
+        h, _, replies = self._handler(finished=True)
+        self.assertIsNone(h._need_live_session(None))
+        code, body = replies[0]
+        self.assertEqual(code, 409)
+        self.assertTrue(body["finished"])
+        self.assertIn("reason", body, "клиенту нужно, ЧЕМ именно кончилось")

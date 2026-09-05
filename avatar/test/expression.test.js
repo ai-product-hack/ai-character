@@ -415,8 +415,109 @@ describe('эмоции', () => {
     // The clip crossfade is followed by the existing 200 ms output smoother;
     // by 0.8 s both stages must have settled completely.
     run(ctx, 0.8);
-    assert.ok(ctx.morphs.get('mouthSmileLeft') > 0.25, 'новое выражение должно войти');
+    // Цель — поза эмоции: клип теперь добавляет движение вокруг неё, а не
+    // подменяет её собой. У синтетического клипа движения нет (обе рамки
+    // одинаковы), поэтому итог обязан сойтись именно к позе.
+    const want = expr.emotions.warming.pose.mouthSmileLeft;
+    assert.ok(ctx.morphs.get('mouthSmileLeft') > want * 0.9,
+      `новое выражение должно войти: ${ctx.morphs.get('mouthSmileLeft')} против ${want}`);
     assert.ok(ctx.morphs.get('browDownLeft') < 0.04, 'старое выражение должно уйти');
+  });
+
+  test('клип добавляет движение к позе, а не заменяет её', () => {
+    // Главная правка после живого прогона. Раньше при наличии записи поза не
+    // применялась вовсе, и вся продуманная статика для пяти записанных эмоций
+    // не работала — работала запись, форма которой местами противоположна
+    // задуманной: в снятом `pressing` брови идут ВВЕРХ, и давление читалось
+    // как лёгкое удивление.
+    const pose = expr.emotions.pressing.pose.browDownLeft;
+
+    // Запись, в которой нужного морфа нет вовсе: поза обязана уцелеть.
+    const noBrow = setup();
+    noBrow.emotion.registerClip('pressing', {
+      version: 1, kind: 'face-mocap', name: 'pressing', durationMs: 1000,
+      channels: ['mouthFrownLeft'],
+      frames: [{ tMs: 0, weights: [0.1] }, { tMs: 1000, weights: [0.1] }],
+    });
+    noBrow.emotion.setEmotion('pressing', 1);
+    run(noBrow, 1.5);
+    assert.ok(noBrow.morphs.get('browDownLeft') > pose * 0.9,
+      `поза должна дожить до лица: ${noBrow.morphs.get('browDownLeft')} против ${pose}`);
+
+    // Запись, которая тянет тот же морф в противоположную сторону: форму
+    // задаёт поза, запись даёт лишь колебание вокруг своего среднего.
+    const against = setup();
+    against.emotion.registerClip('pressing', {
+      version: 1, kind: 'face-mocap', name: 'pressing', durationMs: 1000,
+      channels: ['browDownLeft'],
+      frames: [{ tMs: 0, weights: [0] }, { tMs: 500, weights: [0] },
+               { tMs: 1000, weights: [0] }],
+    });
+    against.emotion.setEmotion('pressing', 1);
+    run(against, 1.5);
+    assert.ok(against.morphs.get('browDownLeft') > pose * 0.9,
+      'нулевая запись не должна обнулять позу');
+  });
+
+  test('движение записи доезжает до лица', () => {
+    // Обратная сторона: если запись живая, её колебание обязано быть видно —
+    // иначе смешивание превратило бы mocap в статичную позу.
+    const ctx = setup();
+    ctx.emotion.registerClip('warming', {
+      version: 1, kind: 'face-mocap', name: 'warming', durationMs: 1000,
+      channels: ['mouthSmileLeft'],
+      frames: [{ tMs: 0, weights: [0] }, { tMs: 500, weights: [1] },
+               { tMs: 1000, weights: [0] }],
+    });
+    ctx.emotion.setEmotion('warming', 1);
+    let lo = Infinity, hi = -Infinity;
+    run(ctx, 3, () => {
+      const v = ctx.morphs.get('mouthSmileLeft');
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    });
+    assert.ok(hi - lo > 0.05, `запись должна двигать лицо: размах ${hi - lo}`);
+  });
+
+  test('движение не стирает форму: пол в долях позы', () => {
+    // У снятого `warming` улыбка гуляет почти на всю шкалу, и без пола она в
+    // нижней точке колебания пропадала с лица совсем.
+    const ctx = setup();
+    const pose = expr.emotions.warming.pose.mouthSmileLeft;
+    ctx.emotion.registerClip('warming', {
+      version: 1, kind: 'face-mocap', name: 'warming', durationMs: 1000,
+      channels: ['mouthSmileLeft'],
+      // Размах на всю шкалу вокруг среднего 0.5 — худший случай из снятых.
+      frames: [{ tMs: 0, weights: [1] }, { tMs: 500, weights: [0] },
+               { tMs: 1000, weights: [1] }],
+    });
+    ctx.emotion.setEmotion('warming', 1);
+    let lo = Infinity, hi = -Infinity;
+    run(ctx, 4, (t) => {
+      if (t < 1) return;                       // пропускаем вход
+      const v = ctx.morphs.get('mouthSmileLeft');
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    });
+    const floor = expr.clips.motionFloor ?? 0.5;
+    assert.ok(lo > pose * floor * 0.9,
+      `форма не должна стираться: минимум ${lo} при позе ${pose}`);
+    assert.ok(hi - lo > 0.03, `движение должно остаться заметным: размах ${hi - lo}`);
+  });
+
+  test('clips.blend=false возвращает прежнее поведение', () => {
+    // Откат без правки кода — тем же способом, что и clips.enabled.
+    const ctx = setup();
+    ctx.emotion.cfg.clips.blend = false;
+    ctx.emotion.registerClip('pressing', {
+      version: 1, kind: 'face-mocap', name: 'pressing', durationMs: 1000,
+      channels: ['browDownLeft'],
+      frames: [{ tMs: 0, weights: [0] }, { tMs: 1000, weights: [0] }],
+    });
+    ctx.emotion.setEmotion('pressing', 1);
+    run(ctx, 1.5);
+    assert.ok(ctx.morphs.get('browDownLeft') < 0.05,
+      'при blend=false запись снова подменяет позу целиком');
   });
 
   test('заморозка клипа останавливает фазу, но оставляет вклад на лице', () => {

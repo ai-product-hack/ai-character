@@ -41,6 +41,13 @@ class CriterionResult:
     key: str
     title: str
     scale: str
+    # Якоря шкалы едут в отчёт вместе с оценкой. Без них «3» — число без
+    # единиц: непонятно ни из скольких, ни что считается хорошим ответом.
+    # Методист их уже написал, они лежат в сценарии и до экрана не доходили.
+    anchor_1: str = ""
+    anchor_5: str = ""
+    lo: int = 1
+    hi: int = 5
     score: float | None = None
     rationale: str = ""
     observations: list[str] = field(default_factory=list)
@@ -49,6 +56,17 @@ class CriterionResult:
     @property
     def evaluated(self) -> bool:
         return self.score is not None
+
+    @property
+    def ratio(self) -> float | None:
+        """Оценка долей от своей шкалы, 0..1. Низ шкалы — дно, а не доля.
+
+        Нужно, чтобы сводить критерии с РАЗНЫМИ шкалами. Средний балл по
+        критериям с потолками 5 и 10 — число без смысла.
+        """
+        if self.score is None or self.hi <= self.lo:
+            return None
+        return max(0.0, min(1.0, (self.score - self.lo) / (self.hi - self.lo)))
 
 
 @dataclass
@@ -89,6 +107,30 @@ class Report:
             if self.criteria else 0.0
 
     @property
+    def scale_max(self) -> int | None:
+        """Общий потолок шкалы, если он у всех критериев один.
+
+        Только тогда «2.5 из 5» — правда. Разные потолки сводятся долей.
+        """
+        tops = {c.hi for c in self.criteria}
+        return tops.pop() if len(tops) == 1 else None
+
+    @property
+    def scale_min(self) -> int | None:
+        bottoms = {c.lo for c in self.criteria}
+        return bottoms.pop() if len(bottoms) == 1 else None
+
+    @property
+    def overall_ratio(self) -> float | None:
+        """Итог долей от шкалы, 0..1 — единственная честная сводка.
+
+        Средний балл считается по критериям с разными потолками одинаково
+        охотно и одинаково бессмысленно; доля сводит их корректно.
+        """
+        vals = [c.ratio for c in self.criteria if c.ratio is not None]
+        return round(sum(vals) / len(vals), 3) if vals else None
+
+    @property
     def cited(self) -> int:
         """Сколько критериев подкреплено ссылкой на реплику."""
         return len([c for c in self.criteria
@@ -100,6 +142,9 @@ class Report:
         d["coverage"] = round(self.coverage, 3)
         d["duration_s"] = self.duration_s
         d["cited"] = self.cited
+        d["scale_max"] = self.scale_max
+        d["scale_min"] = self.scale_min
+        d["overall_ratio"] = self.overall_ratio
         return d
 
     def to_json(self, indent=2) -> str:
@@ -139,8 +184,10 @@ def build(state: DialogueState, evaluation=None, session_id: str = "",
                 # Обоснование берём последнее: оно опирается на самый полный
                 # контекст разговора.
                 rationale = bg[-1].rationale
+        lo, hi = c.bounds
         criteria.append(CriterionResult(
             key=c.key, title=c.title, scale=c.scale,
+            anchor_1=c.anchor_1, anchor_5=c.anchor_5, lo=lo, hi=hi,
             score=round(statistics.mean(scores), 2) if scores else None,
             rationale=rationale,
             observations=notes,

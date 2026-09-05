@@ -39,11 +39,23 @@ export function compileFacialClip(raw, morphs) {
   });
   const durationMs = Number(raw.durationMs) || times.at(-1);
   if (!(durationMs > 0)) throw new Error('FacialClip: нулевая длительность');
+  // Среднее по каждому каналу. Нужно, чтобы использовать запись как ДВИЖЕНИЕ
+  // вокруг заданной позы, а не как саму позу: вычитая среднее, мы оставляем от
+  // записи только то, чем она живая, и не тащим её абсолютную форму. Форма у
+  // записи бывает попросту чужой — в снятом `pressing` брови идут вверх, тогда
+  // как давление это брови вниз.
+  const means = new Float32Array(kept.length);
+  for (let frameIndex = 0; frameIndex < times.length; frameIndex++) {
+    const base = frameIndex * kept.length;
+    for (let c = 0; c < kept.length; c++) means[c] += values[base + c];
+  }
+  for (let c = 0; c < kept.length; c++) means[c] /= times.length || 1;
   return {
     name: raw.name,
     durationMs,
     times,
     values,
+    means,
     channels: kept,
     filtered,
     sample: new Float32Array(kept.length),

@@ -798,6 +798,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json({"error": "сессия не начата"}, 400)
         return sess
 
+    def _need_live_session(self, u, data=None):
+        """Сессия, которая ещё принимает реплики.
+
+        Завершение обязано быть настоящим конечным состоянием. Раньше
+        `finished` только ставился и уходил кадром — и на этом всё: сессия
+        принимала реплики дальше, микрофон жил, тренажёр по факту не
+        заканчивался. Отчёт при этом уже показан, то есть человек продолжает
+        разговор, итог которого подведён.
+        """
+        sess = self._need_session(u, data)
+        if sess is not None and sess.state.finished:
+            self._json({"error": "диалог завершён", "finished": True,
+                        "reason": sess.state.finish_reason}, 409)
+            return None
+        return sess
+
     def do_GET(self):
         u = urllib.parse.urlparse(self.path)
         if u.path == "/api/scenarios":
@@ -897,7 +913,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Звук приходит сырым PCM16, а не JSON: разбирать его как текст нельзя,
         # поэтому ветка стоит до общего разбора тела.
         if u.path == "/api/audio":
-            sess = self._need_session(u)
+            sess = self._need_live_session(u)
             if sess is None:
                 return None
             pcm = np.frombuffer(body, dtype="<i2").astype(np.float32) / 32768
@@ -946,7 +962,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._json({"ok": True, "session": sess.id,
                                "scenario": sess.scenario.to_dict()})
         if u.path == "/api/message":
-            sess = self._need_session(u, data)
+            sess = self._need_live_session(u, data)
             if sess is None:
                 return None
             # Enter во время речи агента = перебивание. Одно движение гасит всё.
@@ -956,7 +972,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return self._json({"ok": True, "cancelled": gid})
         if u.path == "/api/typing":
             sess = APP.session_for(self._sid(u, data))
-            if sess is None:
+            if sess is None or sess.state.finished:
+                # Спекуляция в законченной сессии — потраченные токены на
+                # реплику, которую никто не примет.
                 return self._json({"ok": False})
             sess.note_typing(data.get("text", ""))
             launched = sess.spec.on_typing(data.get("text", ""))
@@ -969,7 +987,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:             # noqa: BLE001 — сеть, API, что угодно
                 return self._json({"error": f"{type(e).__name__}: {e}"}, 400)
         if u.path == "/api/voice":
-            sess = self._need_session(u, data)
+            # Выключить микрофон в законченной сессии можно всегда: это уборка,
+            # а не реплика. Включить — уже нет.
+            sess = (self._need_session(u, data) if data.get("on") is False
+                    else self._need_live_session(u, data))
             if sess is None:
                 return None
             v = sess.voice

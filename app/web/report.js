@@ -52,6 +52,16 @@ export function renderReport(root, rep, opts = {}) {
   const cited = citationIndex(rep);
   const scored = (rep.criteria || []).filter(c => c.score !== null);
 
+  // Итог со шкалой, а не голое число. «2.5» не значит ничего: непонятно, из
+  // скольких и что считается хорошим. Если у критериев разные потолки, средний
+  // балл вообще не считаем — только долю.
+  const top = rep.scale_max, bottom = rep.scale_min ?? 1;
+  const overall = rep.overall === null || rep.overall === undefined
+    ? '—'
+    : (top ? `${rep.overall} / ${top}` : `${Math.round(rep.overall_ratio * 100)}%`);
+  const share = rep.overall_ratio === null || rep.overall_ratio === undefined
+    ? null : Math.round(rep.overall_ratio * 100);
+
   const facts = [
     ['этапов', `${rep.stages_reached}/${rep.stages_total}`],
     ['реплик', rep.user_turns],
@@ -68,7 +78,8 @@ export function renderReport(root, rep, opts = {}) {
         ${rep.completed ? 'диалог завершён' : 'диалог идёт'}
         ${rep.finish_reason ? '(' + esc(rep.finish_reason) + ')' : ''}</div>
       <div class="rep-facts">
-        <span>итог <b class="rep-overall">${rep.overall ?? '—'}</b></span>
+        <span>итог <b class="rep-overall">${overall}</b></span>
+        ${share === null ? '' : `<span>это <b>${share}%</b> от максимума</span>`}
         ${facts.map(([k, v]) => `<span>${k} <b>${esc(v)}</b></span>`).join('')}
       </div>
       ${personaLine(rep.persona)}
@@ -91,9 +102,21 @@ export function renderReport(root, rep, opts = {}) {
                ? ` · <b>${q.score}</b>` : '') + `</span>`;
     }).join('') + `</div>` : '';
     const why = c.rationale || (c.observations || []).join('; ');
+    // Якоря показываем всегда: без них шкала — просто диапазон чисел, а с
+    // ними видно, за что ставится единица и за что пятёрка.
+    const anchors = (c.anchor_1 || c.anchor_5)
+      ? `<div class="anchors"><b>${c.lo}</b> — ${esc(c.anchor_1)}<br>` +
+        `<b>${c.hi}</b> — ${esc(c.anchor_5)}</div>`
+      : `<div class="anchors">${esc(c.key)}</div>`;
+    const bar = c.score === null || c.score === undefined ? '' :
+      `<div class="meter"><i style="width:${Math.round(
+        Math.max(0, Math.min(1, (c.score - c.lo) / (c.hi - c.lo))) * 100)}%"></i></div>`;
     return `<tr>
-      <td>${esc(c.title)}<div class="anchors">${esc(c.key)}</div></td>
-      <td class="score${c.score === null ? ' none' : ''}">${c.score ?? 'нет оценки'}</td>
+      <td>${esc(c.title)}${anchors}</td>
+      <td class="score${c.score === null ? ' none' : ''}">${
+        c.score === null || c.score === undefined
+          ? 'нет оценки'
+          : `${c.score}<span class="of"> / ${c.hi}</span>`}${bar}</td>
       <td>${esc(why) || '<span class="rep-empty">по этому критерию ' +
                         'в разговоре ничего не проявилось</span>'}${chips}</td>
     </tr>`;
@@ -101,7 +124,7 @@ export function renderReport(root, rep, opts = {}) {
 
   const table = `<h2>Оценка по критериям</h2>
     <table><thead><tr>
-      <th style="width:26%">критерий</th><th style="width:10%">оценка</th>
+      <th style="width:30%">критерий и шкала</th><th style="width:12%">оценка</th>
       <th>обоснование и цитаты</th></tr></thead>
     <tbody>${rows || '<tr><td colspan="3" class="rep-empty">критериев нет</td></tr>'}</tbody></table>
     ${scored.length ? '' : '<p class="rep-note">Фоновая оценка ещё не ' +
