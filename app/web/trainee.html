@@ -17,6 +17,7 @@
  #history{flex:1;overflow:auto;padding:12px 14px}
  .turn{margin-bottom:10px} .who{font-size:11px;color:#7c8697;letter-spacing:.04em}
  .agent .txt{color:#dde3ec} .user .txt{color:#7fd1ff}
+ .turn.cut .txt{color:#9aa6b8}   /* оборванная реплика — глуше и с многоточием */
  #inputRow{border-top:1px solid #232a38;padding:10px 12px;display:flex;gap:8px}
  #msg{flex:1;font:inherit;background:#151a23;color:#dde3ec;border:1px solid #2c3547;
    border-radius:5px;padding:8px 10px}
@@ -60,6 +61,13 @@
  .bar{height:4px;background:#1c2230;border-radius:2px;margin-top:4px;overflow:hidden}
  .bar i{display:block;height:100%;background:#4a7f5a;border-radius:2px}
  .skillWhy{color:#8b96a8;font-size:12px;margin-top:3px}
+ /* Материал этапа: то, о чём агент спрашивает. */
+ .matTitle{font-weight:600;margin-bottom:8px}
+ .matRow{display:grid;grid-template-columns:64px 1fr 42px;gap:8px;
+         align-items:center;margin-bottom:5px;font-size:12px}
+ .matLabel{color:#8b96a8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .matValue{text-align:right;font-variant-numeric:tabular-nums;color:#9ad7a0}
+ .matText{white-space:pre-wrap;font-size:13px;line-height:1.5}
  .stageRow{display:flex;gap:8px;padding:2px 0;color:#8b96a8}
  .stageRow.now{color:#dde3ec}
  .stageRow b{font-weight:600;color:#6f7c93;font-variant-numeric:tabular-nums}
@@ -124,7 +132,7 @@
   <div id="gateTitle">Тренажёр готов</div>
   <p id="gateText">Собеседник начнёт разговор, как только вы нажмёте. Браузер не
   включает звук без этого — иначе первая реплика уйдёт в тишину.</p>
-  <button id="gateGo">начать разговор</button>
+  <button id="gateGo" disabled>загружаю аватара…</button>
 </div></div>
 
 <div id="finish"><div id="finishInner">
@@ -206,6 +214,10 @@ async function boot() {
     send,
   };
   requestAnimationFrame(loop);
+  // Кнопка ворот оживает только теперь: до этого `avatar` ещё не существует, и
+  // нажатие упало бы внутри ensureAudio() на attachClock.
+  $('gateGo').disabled = false;
+  $('gateGo').textContent = 'начать разговор';
   // К потоку подключаемся ТОЛЬКО после жеста — см. ворота ниже. Кадры на
   // сервере копятся с самого старта сессии и отдаются с нулевого индекса,
   // так что ничего не теряется: первая реплика доиграет целиком, просто
@@ -217,10 +229,14 @@ async function boot() {
 // аудиоконтекст в suspended до жеста. Человек видел молчащего аватара и не
 // понимал, сломано ли. Побочно это же ломало часы аудио — таймлайн якорился
 // в спящем контексте и после resume() разъезжался на десятки секунд.
-$('gateGo').onclick = async () => {
+$('gateGo').onclick = () => {
   $('gateGo').disabled = true;
+  // resume() НЕ ждём. Он возвращает промис, который в некоторых окружениях
+  // (нет устройства вывода, политика автовоспроизведения) не разрешается
+  // никогда — и ворота, ждущие его, остаются закрытыми навсегда. Экран
+  // мёртвый, и это хуже исходной беды. Жест — сам клик; он уже случился, и
+  // разрешение браузер даёт по нему, а не по нашему ожиданию.
   ensureAudio();
-  try { await ctx.resume(); } catch (e) { fail(e); }
   $('gate').classList.add('off');
   $('msg').focus();
   // Ошибка в цикле чтения раньше терялась молча, и выглядело это как «агент
@@ -296,12 +312,26 @@ function handle(h, payload) {
     addTurn('user', h.text);
     return;
   }
-  if (h.kind === 'agent') { addTurn('agent', h.text); return; }
+  if (h.kind === 'agent') {
+    // Текст уже в истории — он накапливался по словам вместе с речью. Здесь
+    // только закрываем пузырь, чтобы следующая реплика начала новый.
+    closeLiveTurn(false);
+    return;
+  }
   if (h.kind === 'cancel') { onCancel(h.generation_id); return; }
   if (h.kind === 'finished') {
-    addTurn('agent', '— диалог завершён —');
-    finishSession();
-    showFinishReport();
+    // Отчёт ждёт, пока собеседник договорит. `finished` приходит, когда все
+    // клаузы ОТПРАВЛЕНЫ, а колонки в этот момент играют вторую: раньше окно
+    // выскакивало поверх говорящего аватара, и прощание уходило в него же.
+    // Держим ту же лестницу, что и финальное состояние лица.
+    const src = lastContentSource;
+    const done = () => {
+      addTurn('agent', '— диалог завершён —');
+      finishSession();
+      showFinishReport();
+    };
+    if (!src || endedSources.has(src)) done();
+    else src.addEventListener('ended', () => setTimeout(done, 400), {once: true});
     return;
   }
   if (h.kind === 'state') {
@@ -356,7 +386,11 @@ function handle(h, payload) {
     return;
   }
   if (h.kind === 'subtitles') {
-    cues = cues.concat(shiftTimeline(h.cues, clauseSlipMs.get(clauseKey(h)) || 0));
+    // Признак заполнителя приходит на КАДРЕ, а в общий список едут отдельные
+    // слова — переносим его на них, иначе «угу» попало бы в историю репликой.
+    const marked = shiftTimeline(h.cues, clauseSlipMs.get(clauseKey(h)) || 0)
+      .map(c => h.backchannel ? {...c, backchannel: true} : c);
+    cues = cues.concat(marked);
     return;
   }
   if (h.kind === 'emotions') {
@@ -443,6 +477,7 @@ function heardNow() {
 
 function onCancel(gid) {
   // Перебивание гасит звук, лицо, субтитры и эмоцию одним движением.
+  closeLiveTurn(true);
   for (const s of live) { try { s.stop(); } catch (_) {} }
   live = [];
   avatar.cancel(gid);
@@ -492,7 +527,7 @@ function applyEmotions() {
 
 // Панель едет по тому же PTS, что висемы, субтитры и эмоции: своего таймера у
 // неё нет, и гасится она той же отменой.
-const PANEL_TITLES = {skills: 'карта навыков', scenario: 'этапы разговора',
+const PANEL_TITLES = {material: 'материал', scenario: 'этапы разговора',
                       code: 'код'};
 
 function hidePanel() {
@@ -522,22 +557,27 @@ const esc = t => String(t == null ? '' : t)
 
 function renderPanel(mark) {
   const d = mark.data || {};
-  if (mark.panel === 'skills') {
-    if (!(d.rows || []).length) return '<div class="skillWhy">оценок пока нет</div>';
-    // Данные уже посчитаны фоновой сессией — рисуем накопленное, не запрашиваем.
-    return (d.rows || []).map(r => {
-      const scale = r.scale || 5;
-      const has = r.score !== null && r.score !== undefined;
-      const pct = has ? Math.max(0, Math.min(100, r.score / scale * 100)) : 0;
-      return `<div class="skill">
-        <div class="skillTop">
-          <span class="skillTitle">${esc(r.title || r.key)}</span>
-          <span class="skillScore${has ? '' : ' none'}">${has ? r.score : '—'}</span>
-        </div>
-        <div class="bar"><i style="width:${pct}%"></i></div>
-        ${r.rationale ? `<div class="skillWhy">${esc(r.rationale)}</div>` : ''}
-      </div>`;
-    }).join('');
+  if (mark.panel === 'material') {
+    // Материал — то, О ЧЁМ спрашивает агент: график, документ, код. Данные
+    // лежат в сценарии и приходят вместе с меткой, поэтому рисуем сразу.
+    if (!d.kind) return '<div class="skillWhy">у этого этапа материала нет</div>';
+    const head = d.title ? `<div class="matTitle">${esc(d.title)}</div>` : '';
+    if (d.kind === 'chart') {
+      const rows = d.series || [];
+      const max = Math.max(1, ...rows.map(r => Math.abs(+r.value || 0)));
+      return head + rows.map(r => {
+        const v = +r.value || 0;
+        return `<div class="matRow">
+          <span class="matLabel">${esc(r.label)}</span>
+          <span class="bar"><i style="width:${Math.abs(v) / max * 100}%"></i></span>
+          <span class="matValue">${esc(r.value)}</span>
+        </div>`;
+      }).join('');
+    }
+    if (d.kind === 'code') {
+      return head + `<pre>${esc(d.body)}</pre>`;
+    }
+    return head + `<div class="matText">${esc(d.body)}</div>`;
   }
   if (mark.panel === 'scenario') {
     return (d.stages || []).map((st, i) =>
@@ -557,6 +597,9 @@ function drawSubs() {
   // Субтитры едут по тому же PTS, что и висемы: отдельного таймера нет.
   const shown = cues.filter(c => c.pts_ms <= ms + 60);
   $('subs').textContent = shown.slice(-14).map(c => c.text).join(' ');
+  // История наполняется теми же словами и в тот же момент. Заполнитель
+  // («угу», «так…») в историю не идёт: это не реплика, а звук ожидания.
+  streamAgentWords(shown.filter(c => !c.backchannel).map(c => c.text));
 }
 
 function drawHud() {
@@ -605,6 +648,34 @@ function addTurn(role, text) {
   d.querySelector('.txt').textContent = text;
   $('history').appendChild(d);
   $('history').scrollTop = 1e9;
+  return d;
+}
+
+// Реплика агента копится в истории ПО СЛОВАМ, вместе с речью, а не падает
+// целиком в конце. Слова и их таймкоды уже есть — это те же метки, по которым
+// едут субтитры, — поэтому отдельного таймера и второго источника правды не
+// появляется. Заодно история перестаёт расходиться с услышанным: при
+// перебивании в ней остаётся ровно то, что успело прозвучать.
+let liveTurn = null, liveWords = 0;
+
+function streamAgentWords(words) {
+  if (!words.length) return;
+  if (!liveTurn) { liveTurn = addTurn('agent', ''); liveWords = 0; }
+  if (words.length === liveWords) return;
+  liveWords = words.length;
+  liveTurn.querySelector('.txt').textContent = words.join(' ');
+  $('history').scrollTop = 1e9;
+}
+
+/** Реплика закончилась или оборвана: следующая начнёт новый пузырь. */
+function closeLiveTurn(interrupted) {
+  if (liveTurn && interrupted && liveWords) {
+    const txt = liveTurn.querySelector('.txt');
+    txt.textContent = txt.textContent.replace(/[…]*$/, '') + '…';
+    liveTurn.classList.add('cut');
+  }
+  liveTurn = null;
+  liveWords = 0;
 }
 
 // Диалог кончился — значит кончился. Раньше `finished` только рисовал строчку

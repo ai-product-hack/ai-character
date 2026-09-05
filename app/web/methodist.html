@@ -522,7 +522,7 @@ async function poll() {
 function show(rep) {
   lastReport = rep;
   $('reportBox').style.display = 'block';
-  renderReport($('rep'), rep, {ns: 'm'});
+  renderReport($('rep'), rep, {ns: 'm', audience: 'methodist'});
   $('saved').textContent = rep.saved_to
     ? 'JSON дописан: ' + rep.saved_to : '';
 }

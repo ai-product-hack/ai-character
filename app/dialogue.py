@@ -147,6 +147,22 @@ class DialogueState:
     def dialogue_budget_spent(self) -> bool:
         return self.user_turns >= self.dialogue_max_turns
 
+    @property
+    def closing_turn(self) -> bool:
+        """Следующая реплика агента будет последней — движок закроет диалог.
+
+        Нужно, чтобы агент успел попрощаться. Раньше принудительное завершение
+        приходило молча: бюджет кончался, диалог закрывался, и человек видел
+        обрыв на полуслове и сразу окно отчёта. Модель об этом не знала и знать
+        не могла — а сказать «спасибо, на этом закончим» должна она, и в той же
+        реплике, без второго запроса и без лишней паузы на показе.
+        """
+        if self.finished:
+            return True
+        if self.dialogue_budget_spent:
+            return True
+        return self.is_last_stage and self.stage_budget_spent
+
     def advance(self, forced: bool = False) -> bool:
         """Следующий этап. Возвращает False, если этапы кончились."""
         if self.is_last_stage:

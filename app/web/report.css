@@ -19,6 +19,9 @@
             background: #141922; }
 .rep-title { font-size: 19px; font-weight: 600; margin: 0 0 3px; color: #fff; }
 .rep-sub { color: #8b96a8; font-size: 13px; }
+.rep-for { display: inline-block; margin: 2px 0 4px; padding: 1px 7px;
+           border: 1px solid #2b3a50; border-radius: 4px;
+           font: 11px ui-monospace, monospace; color: #7f9dbd; }
 .rep-facts { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px;
              font-size: 13px; }
 .rep-facts b { font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
@@ -116,5 +119,6 @@
   .rep .meter { background: #e4e4e4; }
   .rep .meter i { background: #777; }
   .rep .anchors b { color: #333; }
+  .rep-for { color: #444; border-color: #bbb; }
   .rep a, .rep a:visited { color: #111; text-decoration: none; }
 }

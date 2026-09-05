@@ -48,6 +48,11 @@ function citationIndex(rep) {
 
 export function renderReport(root, rep, opts = {}) {
   const ns = opts.ns || 'rep';
+  // Читателя двое, и им нужно разное. Сотруднику — обратная связь на «вы»,
+  // методисту — заключение о нём в третьем лице: где справился, где просел, на
+  // какую реплику взглянуть. Механика отчёта (критерии, цитаты, транскрипт)
+  // общая, поэтому это не второй шаблон, а один с переменной шапкой и выводом.
+  const forMethodist = opts.audience === 'methodist';
   const turnId = i => `${ns}-turn-${i}`;
   const cited = citationIndex(rep);
   const scored = (rep.criteria || []).filter(c => c.score !== null);
@@ -73,6 +78,7 @@ export function renderReport(root, rep, opts = {}) {
   const head = `
     <div class="rep-head">
       <div class="rep-title">${esc(rep.scenario_title || 'Тренировка')}</div>
+      ${forMethodist ? '<div class="rep-for">отчёт для методиста</div>' : ''}
       <div class="rep-sub">${esc(rep.scenario_type || '')} ·
         ${esc(clock(rep.created_at))} ·
         ${rep.completed ? 'диалог завершён' : 'диалог идёт'}
@@ -85,8 +91,12 @@ export function renderReport(root, rep, opts = {}) {
       ${personaLine(rep.persona)}
     </div>`;
 
-  const conclusion = rep.conclusion
-    ? `<h2>Вывод</h2><div class="rep-conclusion">${esc(rep.conclusion)}</div>`
+  const text = forMethodist
+    ? (rep.conclusion_methodist || rep.conclusion)
+    : rep.conclusion;
+  const conclusion = text
+    ? `<h2>${forMethodist ? 'Заключение' : 'Вывод'}</h2>` +
+      `<div class="rep-conclusion">${esc(text)}</div>`
     : (rep.completed ? '' : '<p class="rep-note">Общий вывод появится, ' +
                             'когда диалог завершится.</p>');
 
@@ -131,7 +141,8 @@ export function renderReport(root, rep, opts = {}) {
       'накопила баллов — она дописывает их после каждой реплики.</p>'}`;
 
   const line = (t, i) => {
-    const who = t.role === 'agent' ? 'Собеседник' : 'Сотрудник';
+    const who = t.role === 'agent' ? 'Собеседник'
+                                   : (forMethodist ? 'Тренируемый' : 'Вы');
     const marks = cited.get(i) || [];
     const conf = t.typing && t.typing.confidence &&
                  t.typing.confidence !== 'нет данных' ? t.typing.confidence : '';

@@ -36,11 +36,23 @@ SYSTEM = """Ты методист, который оценивает трени�
              "rationale": "<одно предложение, на чём основана оценка>"}]}"""
 
 SUMMARY_SYSTEM = """Ты методист. По накопленным оценкам и расшифровке разговора
-напиши общий вывод для отчёта: 2-4 предложения.
+напиши общий вывод для отчёта — ДВА РАЗНЫХ ТЕКСТА, у них разные читатели.
 
-Сначала что получилось, потом что мешало, потом одна конкретная рекомендация.
-Обращайся к тренируемому на «вы». Без списков, без разметки, без цифр «3 из 5»
-— баллы в отчёте и так есть, вывод нужен, чтобы их связать. Только текст."""
+Первый читает сам тренируемый. Обращайся к нему на «вы», говори о его работе:
+сначала что получилось, потом что мешало, потом одна конкретная рекомендация,
+что делать в следующий раз.
+
+Второй читает методист или нанимающий — тот, кто принимает решение и в
+разговоре не участвовал. О тренируемом в третьем лице. Ему нужно не
+напутствие, а на что смотреть: где человек справился, где просел, и на какую
+реплику стоит взглянуть самому. Не пересказывай первый текст другими словами —
+это разный жанр: там обратная связь, здесь заключение для решения.
+
+Оба по 2-4 предложения, без списков, без разметки, без цифр «3 из 5» — баллы в
+отчёте и так есть, вывод нужен, чтобы их связать.
+
+Ответ строго в JSON, без пояснений вокруг:
+{"for_trainee": "<текст тренируемому>", "for_methodist": "<текст методисту>"}"""
 
 _JSON = re.compile(r"\{.*\}", re.S)
 
@@ -150,8 +162,14 @@ class BackgroundEvaluator:
     диалог, ни задержать его.
     """
 
-    def __init__(self, llm, log: EvaluationLog | None = None, window: int = 4):
+    def __init__(self, llm, log: EvaluationLog | None = None, window: int = 4,
+                 summary_llm=None):
         self.llm = llm
+        # Отдельный клиент под общий вывод: у оценки бюджет 300 токенов, и его
+        # хватает — там одно предложение обоснования. Два вывода по 2-4
+        # предложения в него не влезают, ответ обрывается на середине JSON, и
+        # на экран уезжает сырая фигурная скобка. Поймано на живом прогоне.
+        self.summary_llm = summary_llm or llm
         self.log = log or EvaluationLog()
         self.window = window
         self.q: queue.Queue = queue.Queue()
@@ -202,13 +220,15 @@ class BackgroundEvaluator:
                 self.log.total_ms += (time.perf_counter() - t0) * 1000
                 self.q.task_done()
 
-    def conclusion(self, state: DialogueState, timeout: float = 25) -> str:
-        """Общий вывод для отчёта. Один вызов, и только на `finish`.
+    def conclusion(self, state: DialogueState, timeout: float = 25) -> dict:
+        """Общие выводы для отчёта: тренируемому и методисту.
 
-        Считается один раз и запоминается: отчёт опрашивают каждые две секунды,
-        и платить за вывод на каждом опросе незачем.
+        Один вызов на оба текста, и только на `finish`. Считается один раз и
+        запоминается: отчёт опрашивают каждые две секунды, и платить за вывод
+        на каждом опросе незачем. Два вызова вместо одного тоже незачем —
+        контекст у них общий, отличается только адресат.
 
-        Сбой не оставляет отчёт без вывода — есть сводка по числам. Она хуже
+        Сбой не оставляет отчёт без вывода: есть сводка по числам. Она хуже
         читается, но она честная и появляется мгновенно.
         """
         if self._conclusion is not None:
@@ -216,13 +236,20 @@ class BackgroundEvaluator:
         with self._conclusion_lock:
             if self._conclusion is not None:
                 return self._conclusion
+            texts = {}
             try:
-                text = self.llm(SUMMARY_SYSTEM, build_summary_prompt(state, self.log))
-                text = " ".join((text or "").split())
+                raw = self.summary_llm(SUMMARY_SYSTEM,
+                                       build_summary_prompt(state, self.log))
+                texts = parse_conclusions(raw)
             except Exception as e:                          # noqa: BLE001
                 self.log.errors.append(f"вывод: {type(e).__name__}: {e}")
-                text = ""
-            self._conclusion = text or fallback_conclusion(state, self.log)
+            spare = fallback_conclusion(state, self.log)
+            self._conclusion = {
+                "trainee": texts.get("trainee") or spare,
+                # Методисту при сбое достаётся тот же запасной текст: он про
+                # числа, а числа одинаковы для обоих читателей.
+                "methodist": texts.get("methodist") or texts.get("trainee") or spare,
+            }
             return self._conclusion
 
     def drain(self, timeout: float = 30) -> bool:
@@ -256,6 +283,53 @@ def build_summary_prompt(state: DialogueState, log: EvaluationLog) -> str:
         lines.append(f"{'Собеседник-тренажёр' if t.role == 'agent' else 'Тренируемый'}: {t.text}")
     lines += ["", "Напиши общий вывод."]
     return "\n".join(lines)
+
+
+_FIELD = re.compile(r'"(for_trainee|for_methodist)"\s*:\s*"((?:[^"\\]|\\.)*)',
+                    re.S)
+
+
+def parse_conclusions(blob: str) -> dict:
+    """Разобрать ответ с двумя выводами. Мусор -> пусто, как и у оценок."""
+    if not blob:
+        return {}
+    m = _JSON.search(blob)
+    if not m:
+        # Модель ответила простым текстом — считаем его выводом тренируемому:
+        # лучше один вывод не тому читателю, чем пустой отчёт. Но если это
+        # обрезанный JSON, спасаем из него строки: показать человеку сырую
+        # фигурную скобку хуже, чем не показать вывод вовсе.
+        return _salvage(blob)
+    try:
+        d = json.loads(m.group(0))
+    except (json.JSONDecodeError, ValueError):
+        return _salvage(blob)
+    out = {}
+    for key, field in (("trainee", "for_trainee"), ("methodist", "for_methodist")):
+        text = " ".join(str(d.get(field, "") or "").split())
+        if text:
+            out[key] = text
+    return out
+
+
+def _salvage(blob: str) -> dict:
+    """Достать выводы из ответа, который не разобрался целиком.
+
+    Обычная причина — обрыв по лимиту токенов: первый текст на месте, второй
+    оборван, закрывающей скобки нет. Терять из-за этого весь вывод незачем.
+    """
+    out = {}
+    for name, value in _FIELD.findall(blob):
+        text = " ".join(value.replace('\\n', ' ').replace('\\"', '"').split())
+        if text:
+            out["trainee" if name == "for_trainee" else "methodist"] = text
+    if out:
+        return out
+    text = " ".join(blob.split())
+    # Похоже на JSON и не разобралось — прозой это не покажешь.
+    if not text or text.lstrip().startswith("{"):
+        return {}
+    return {"trainee": text}
 
 
 def fallback_conclusion(state: DialogueState, log: EvaluationLog) -> str:

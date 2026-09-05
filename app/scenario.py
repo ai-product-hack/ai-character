@@ -94,6 +94,11 @@ class Stage:
     # Бюджет ходов ЭТОГО этапа. None — общий бюджет диалога. Задаётся
     # генератором: знакомство закрывается одним ответом, разбор инцидента — нет.
     max_turns: int | None = None
+    # Материал, о котором агент спрашивает на этом этапе: график с числами,
+    # фрагмент кода, пункт регламента. Показывается тегом `[panel:material]` и
+    # ничего не генерирует по ходу разговора — лежит здесь заранее.
+    #   {"kind": "chart"|"code"|"text", "title", "body", "lang", "series"}
+    material: dict | None = None
 
     @property
     def has_opening(self) -> bool:
@@ -187,6 +192,7 @@ class Scenario:
                 advance_when=s.get("advance_when", s.get("expect", "")),
                 opening=s.get("opening", s.get("agent", "")),
                 max_turns=s.get("max_turns"),
+                material=s.get("material") or None,
             ) for i, s in enumerate(d.get("stages", d.get("steps", [])))],
             criteria=[Criterion(
                 key=c["key"], title=c.get("title", c["key"]),
@@ -203,7 +209,8 @@ class Scenario:
             "persona": self.persona.to_dict(),
             "stages": [{"id": s.id, "goal": s.goal, "hint": s.hint,
                         "advance_when": s.advance_when, "opening": s.opening,
-                        **({"max_turns": s.max_turns} if s.max_turns else {})}
+                        **({"max_turns": s.max_turns} if s.max_turns else {}),
+                        **({"material": s.material} if s.material else {})}
                        for s in self.stages],
             "criteria": [{"key": c.key, "title": c.title, "scale": c.scale,
                           "anchor_1": c.anchor_1, "anchor_5": c.anchor_5}

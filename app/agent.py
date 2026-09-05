@@ -50,6 +50,11 @@ def build_prompt(state: DialogueState, user_text: str | None = None) -> str:
         lines.append(f"Переходить дальше, когда: {stage.advance_when}.")
     if state.is_last_stage:
         lines.append("Это последний этап сценария: закончив его, заверши диалог.")
+    if state.closing_turn:
+        lines.append("ЭТО ТВОЯ ПОСЛЕДНЯЯ РЕПЛИКА В РАЗГОВОРЕ. Заверши его сам: "
+                     "коротко подведи черту и попрощайся, одной-двумя фразами. "
+                     "Новых вопросов не задавай — отвечать на них будет уже "
+                     "некому.")
     spent = state.turns_on_stage
     if spent:
         left = max(0, state.stage_max_turns - spent)

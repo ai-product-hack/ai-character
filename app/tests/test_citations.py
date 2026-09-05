@@ -224,3 +224,61 @@ class ScaleReachesTheScreen(unittest.TestCase):
         rep["criteria"][0]["score"] = 1.0
         self.assertEqual(report_mod.CriterionResult(
             key="k", title="К", scale="1-5", lo=1, hi=5, score=1.0).ratio, 0.0)
+
+
+class TwoReadersTwoConclusions(unittest.TestCase):
+    """Один разговор, два читателя. Механика общая, адресат разный.
+
+    Замечание с живого прогона: «методисту приходит тот же отчёт, но он
+    персонализированный под того, кто проходил; а HR как будто нужно
+    по-другому — кандидат ответил так-то, обратите внимание».
+    """
+
+    def test_both_texts_are_parsed(self):
+        from app.evaluator import parse_conclusions
+        out = parse_conclusions('{"for_trainee": "Вы держали рамку.", '
+                                '"for_methodist": "Кандидат ушёл в общие слова."}')
+        self.assertEqual(out["trainee"], "Вы держали рамку.")
+        self.assertEqual(out["methodist"], "Кандидат ушёл в общие слова.")
+
+    def test_truncated_answer_is_salvaged(self):
+        """Обрыв по лимиту токенов не должен стоить всего вывода."""
+        from app.evaluator import parse_conclusions
+        out = parse_conclusions('{ "for_trainee": "Вы хорошо начали и признали '
+                                'вину, но дальше ушли в общие')
+        self.assertIn("Вы хорошо начали", out["trainee"])
+        self.assertNotIn("{", out["trainee"], "сырой JSON на экран не идёт")
+
+    def test_broken_json_never_reaches_the_screen_as_prose(self):
+        from app.evaluator import parse_conclusions
+        self.assertEqual(parse_conclusions('{ "нечто": '), {})
+
+    def test_plain_text_answer_goes_to_the_trainee(self):
+        from app.evaluator import parse_conclusions
+        out = parse_conclusions("Просто текст без JSON.")
+        self.assertEqual(out["trainee"], "Просто текст без JSON.")
+
+    def test_report_carries_both(self):
+        st = state_with_talk()
+        rep = report_mod.build(st, EvaluationLog(), conclusion="вам",
+                               conclusion_methodist="о нём").to_dict()
+        self.assertEqual(rep["conclusion"], "вам")
+        self.assertEqual(rep["conclusion_methodist"], "о нём")
+
+    def test_methodist_falls_back_to_the_shared_text(self):
+        """Если второго текста нет, методист читает первый, а не пустоту."""
+        st = state_with_talk()
+        rep = report_mod.build(st, EvaluationLog(), conclusion="общий").to_dict()
+        self.assertEqual(rep["conclusion_methodist"], "общий")
+
+    def test_summary_prompt_asks_for_both(self):
+        from app.evaluator import SUMMARY_SYSTEM
+        self.assertIn("for_trainee", SUMMARY_SYSTEM)
+        self.assertIn("for_methodist", SUMMARY_SYSTEM)
+
+    def test_summary_has_its_own_token_budget(self):
+        """Бюджет оценки — 300 токенов, двум выводам его не хватает."""
+        import pathlib
+        src = (pathlib.Path(__file__).resolve().parents[2] / "app" / "server.py"
+               ).read_text(encoding="utf-8")
+        self.assertIn("summary_llm", src)

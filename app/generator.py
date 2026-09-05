@@ -72,6 +72,18 @@ SYSTEM = """Ты методист-разработчик тренажёров о
 реплика, которой этап можно открыть. `max_turns` — сколько обменов репликами
 этап стоит: простой этап 2, требующий раскрытия 3-4.
 
+`material` — то, О ЧЁМ на этом этапе спрашивают, если такое вообще уместно:
+таблица чисел (`chart` со `series`), фрагмент кода (`code` с `lang` и `body`),
+пункт регламента или письмо (`text` с `body`). Материал превращает вопрос из
+абстрактного в предметный: «взгляните на эти цифры, что произошло в марте?»
+вместо «расскажите про динамику».
+
+Материал нужен НЕ КАЖДОМУ этапу. У «расскажите о себе» его нет и быть не
+может. Ставь `kind: ""` везде, где предметного материала нет, — пустой
+материал честнее выдуманного. Обычно материал уместен на одном-двух этапах из
+шести. Числа в `series` бери из текста методиста, если они там есть; выдумывать
+правдоподобные цифры там, где их не давали, не нужно.
+
 Стартовая эмоция персоны выбирается из семи. Пять — шкала отношения к
 тренируемому: neutral, skeptical, pressing, warming, impressed. Две отдельные:
 `angry` — открытый гнев, когда роль разозлена по существу (сорванный срок,
@@ -123,8 +135,36 @@ SCHEMA = {
                     "advance_when": {"type": "string"},
                     "opening": {"type": "string"},
                     "max_turns": {"type": "integer"},
+                    # Материал этапа. Пустой `kind` означает «материала нет» —
+                    # схема требует поле, но не требует содержимого: иначе
+                    # модель придумывала бы график к «расскажите о себе».
+                    "material": {
+                        "type": "object",
+                        "properties": {
+                            "kind": {"type": "string",
+                                     "enum": ["", "chart", "code", "text"]},
+                            "title": {"type": "string"},
+                            "body": {"type": "string"},
+                            "lang": {"type": "string"},
+                            "series": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "label": {"type": "string"},
+                                        "value": {"type": "number"},
+                                    },
+                                    "required": ["label", "value"],
+                                    "additionalProperties": False,
+                                },
+                            },
+                        },
+                        "required": ["kind", "title", "body", "lang", "series"],
+                        "additionalProperties": False,
+                    },
                 },
-                "required": ["goal", "hint", "advance_when", "opening", "max_turns"],
+                "required": ["goal", "hint", "advance_when", "opening",
+                             "max_turns", "material"],
                 "additionalProperties": False,
             },
         },
@@ -244,6 +284,7 @@ def to_scenario(raw: dict, source_text: str = "", source: str = "generated",
             "advance_when": (s.get("advance_when") or "").strip(),
             "opening": (s.get("opening") or "").strip(),
             "max_turns": budget,
+            "material": _material(s.get("material")),
         })
 
     criteria = [{
@@ -298,6 +339,37 @@ def fill_identifiers(raw: dict) -> dict:
             item[id_key] = key
             fixed.append(item)
         out[field] = fixed
+    return out
+
+
+def _material(raw) -> dict | None:
+    """Материал этапа или None. Пустой `kind` — «материала нет», это норма.
+
+    Схема требует поле у каждого этапа, потому что необязательных полей она не
+    любит, а «нет материала» надо чем-то выразить. Пустое значение честнее
+    выдуманного графика к вопросу «расскажите о себе».
+    """
+    if not isinstance(raw, dict):
+        return None
+    kind = str(raw.get("kind") or "").strip().lower()
+    if kind not in ("chart", "code", "text"):
+        return None
+    out = {"kind": kind, "title": str(raw.get("title") or "").strip()}
+    if kind == "chart":
+        series = [{"label": str(r.get("label") or "").strip(),
+                   "value": float(r.get("value"))}
+                  for r in (raw.get("series") or [])
+                  if isinstance(r, dict) and r.get("value") is not None]
+        if not series:
+            return None            # график без чисел — не график
+        out["series"] = series
+        return out
+    body = str(raw.get("body") or "").strip()
+    if not body:
+        return None                # код и документ без текста показывать нечего
+    out["body"] = body
+    if kind == "code":
+        out["lang"] = str(raw.get("lang") or "").strip().lower()
     return out
 
 

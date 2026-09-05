@@ -38,7 +38,8 @@ from app.backchannel import Backchannel                     # noqa: E402
 from app.dialogue import DialogueState                      # noqa: E402
 from app.emotion_drive import mood_from                     # noqa: E402
 from app.emotion_tags import EMOTIONS, SYSTEM_HINT as EMO_HINT   # noqa: E402
-from app.panels import SYSTEM_HINT as PANEL_HINT, skills_payload   # noqa: E402
+from app.panels import (SYSTEM_HINT as PANEL_HINT,          # noqa: E402
+                        material_payload)
 from app.evaluator import BackgroundEvaluator               # noqa: E402
 from app.generation import GenerationRegistry               # noqa: E402
 from app.media import (GigaAMAligner, PROVIDERS, SwitchableTTS,   # noqa: E402
@@ -87,7 +88,8 @@ class Session:
         # Ход пользователя, породивший генерацию. Нужен, чтобы перебитый обмен
         # не списывал бюджет этапа.
         self.gen_turn: dict[str, object] = {}
-        self.evaluator = BackgroundEvaluator(models["llm"])
+        self.evaluator = BackgroundEvaluator(
+            models["llm"], summary_llm=models.get("summary_llm"))
         self.backchannel = models.get("backchannel")
         self.repair_llm = models.get("repair_llm")
         self.bc_cfg = models.get("bc_cfg", {})
@@ -201,18 +203,26 @@ class Session:
         with self.lock:
             happened = apply_action(self.state, reply, gen.id)
             self.completed.add(gen.id)
-        # Переход на новый этап — законный повод подвести промежуточный итог.
-        # Модель вызывает панель сама, но делает это редко: на 91 реплике
-        # прогона ни разу, даже с явным поводом в подсказке. Как и с эмоциями,
-        # разметка модели главнее, а механика продукта заполняет молчание —
-        # иначе агентная фича на показе просто не появится.
-        if happened.get("advanced") and not em.get("panels") and gen.check():
+        # Переход на новый этап — законный повод показать его материал. Модель
+        # вызывает панель сама, но делает это редко: на 91 реплике прогона ни
+        # разу, даже с явным поводом в подсказке. Как и с эмоциями, разметка
+        # модели главнее, а механика продукта заполняет молчание.
+        #
+        # Раньше здесь показывалась карта накопленных оценок — и это была
+        # ошибка, замеченная на живом прогоне: «не вижу смысла показывать
+        # статистику, как человек отвечает». Своя оценка посреди разговора —
+        # подсказка на экзамене, а не материал. Теперь показывается то, О ЧЁМ
+        # спрашивают на новом этапе, и только если материал у него есть:
+        # пустая панель хуже отсутствующей.
+        material = self._panel_data("material")
+        if happened.get("advanced") and material and not em.get("panels") \
+                and gen.check():
             self._emit({"kind": "panels", "generation_id": gen.id,
                         "clause": len(results), "from_stage": True,
                         "marks": [{"pts_ms": self.pipe.last_timeline.total_ms
                                    + (em["offset_ms"] or 0),
-                                   "panel": "skills", "arg": "",
-                                   "data": self._panel_data("skills")}]})
+                                   "panel": "material", "arg": "",
+                                   "data": material}]})
 
         self._emit({"kind": "agent", "generation_id": gen.id,
                     "text": reply.speakable, "stage": self.state.stage_id})
@@ -468,9 +478,9 @@ class Session:
         Карта навыков — это оценки фоновой сессии, они считаются по ходу
         разговора независимо от панели. Ничего не генерируется.
         """
-        if panel == "skills":
-            return skills_payload(report_mod.build(self.state,
-                                                   self.evaluator.log).to_dict())
+        if panel == "material":
+            # Ничего не считаем и не запрашиваем: материал лежит в сценарии.
+            return material_payload(self.state.stage)
         if panel == "scenario":
             return {"stages": [{"id": st.id, "goal": st.goal}
                                for st in self.scenario.stages],
@@ -560,12 +570,14 @@ class Session:
 
     def report(self) -> dict:
         self.evaluator.drain(timeout=20)
-        # Общий вывод стоит одного запроса и потому считается только на
-        # `finish`: пока диалог идёт, отчёт опрашивают каждые две секунды.
-        conclusion = (self.evaluator.conclusion(self.state)
-                      if self.state.finished else "")
+        # Выводы стоят одного запроса и потому считаются только на `finish`:
+        # пока диалог идёт, отчёт опрашивают каждые две секунды.
+        texts = (self.evaluator.conclusion(self.state)
+                 if self.state.finished else {})
         rep = report_mod.build(self.state, self.evaluator.log,
-                               session_id=self.id, conclusion=conclusion)
+                               session_id=self.id,
+                               conclusion=texts.get("trainee", ""),
+                               conclusion_methodist=texts.get("methodist", ""))
         d = rep.to_dict()
         d["scenario"] = self.scenario.to_dict()
         d["marks"] = self.marks
@@ -696,6 +708,9 @@ class App:
             # Отдельный дешёвый клиент для второго разбора: ответ — одно слово,
             # и держать под него бюджет основной реплики незачем.
             "repair_llm": llm_mod.DeepSeekLLM(max_tokens=8, temperature=0),
+            # Общий вывод: два текста по 2-4 предложения. В бюджет оценки (300)
+            # они не влезают, ответ обрывался на середине JSON.
+            "summary_llm": llm_mod.DeepSeekLLM(max_tokens=1200),
         }
         # Заполнители готовятся здесь и лежат в памяти: по Enter не считается
         # ничего, иначе смысл теряется.

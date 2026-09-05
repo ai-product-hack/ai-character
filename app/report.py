@@ -83,7 +83,11 @@ class Report:
     criteria: list[CriterionResult] = field(default_factory=list)
     transcript: list[dict] = field(default_factory=list)
     typing: dict | None = None
+    # Два вывода на один разговор: тренируемому — обратная связь на «вы»,
+    # методисту — заключение о нём в третьем лице. Механика отчёта общая,
+    # различается только адресат, поэтому это поля, а не второй шаблон.
     conclusion: str = ""
+    conclusion_methodist: str = ""
     created_at: float = field(default_factory=time.time)
     started_at: float | None = None
     session_id: str = ""
@@ -152,7 +156,7 @@ class Report:
 
 
 def build(state: DialogueState, evaluation=None, session_id: str = "",
-          conclusion: str = "") -> Report:
+          conclusion: str = "", conclusion_methodist: str = "") -> Report:
     """Свести состояние в отчёт.
 
     Дешёвая операция без обращений к модели — поэтому её можно звать хоть после
@@ -210,6 +214,7 @@ def build(state: DialogueState, evaluation=None, session_id: str = "",
                     for i, t in enumerate(state.turns)],
         typing=_typing_summary(state),
         conclusion=conclusion,
+        conclusion_methodist=conclusion_methodist or conclusion,
         started_at=state.turns[0].at if state.turns else None,
         session_id=session_id,
     )
