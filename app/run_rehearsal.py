@@ -177,7 +177,7 @@ def type_like_a_human(port, text, rng, pause_ms=(60, 220)) -> float:
     return (time.perf_counter() - t0) * 1000
 
 
-def speak_aloud(port, text, rng) -> dict | None:
+def speak_aloud(port, text, rng, realtime: bool = True) -> dict | None:
     """Ход голосом: синтезируем реплику пользователя и шлём её как микрофон.
 
     Другого способа проверить голосовой путь без человека нет, и подмена
@@ -186,7 +186,19 @@ def speak_aloud(port, text, rng) -> dict | None:
     """
     pcm = _say(text)
     step = int(16000 * 0.1)                     # куски по 100 мс, как у браузера
+    # Звук идёт В РЕАЛЬНОМ ВРЕМЕНИ. Раньше куски слались подряд без пауз, и
+    # двадцатисекундная реплика доезжала за долю секунды — быстрее, чем её
+    # вообще можно произнести. Голосовые замеры от этого выходили красивее
+    # правды: репетиция показывала первый звук 125 мс, а живая сессия — 4584 мс
+    # медианы. Браузер быстрее реального времени слать не может, и стенд не
+    # должен.
+    next_at = time.perf_counter()
     for i in range(0, len(pcm), step):
+        if realtime:
+            next_at += 0.1
+            lag = next_at - time.perf_counter()
+            if lag > 0:
+                time.sleep(lag)
         chunk = (np.clip(pcm[i:i + step], -1, 1) * 32767).astype("<i2").tobytes()
         req = urllib.request.Request(f"{BASE.format(port=port)}/api/audio",
                                      data=chunk,
@@ -274,7 +286,7 @@ def run_scenario(port, sc, args, rng) -> dict:
         elif by_voice:
             print(f"\nпольз. ГОЛОСОМ: {user}")
             t_enter = time.perf_counter()
-            d = speak_aloud(port, user, rng)
+            d = speak_aloud(port, user, rng, realtime=not args.no_realtime)
             if d is not None and d.get("finished"):
                 print("  сценарий завершён (сервер больше не принимает реплики)")
                 break
@@ -488,6 +500,9 @@ def main():
     ap.add_argument("--port", type=int, default=8021)
     ap.add_argument("--interrupt-rate", type=float, default=0.35,
                     help="доля реплик, которые перебиваем")
+    ap.add_argument("--no-realtime", action="store_true",
+                    help="слать звук быстрее реального времени: быстрее прогон, "
+                         "но голосовые замеры перестают быть правдой")
     ap.add_argument("--voice-every", type=int, default=3,
                     help="каждый n-й ход идёт голосом; 0 — только текст")
     ap.add_argument("--min-interrupts", type=int, default=2,

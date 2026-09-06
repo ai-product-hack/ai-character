@@ -165,10 +165,18 @@ class Streaming(unittest.TestCase):
 
 
 class BuildFromConfig(unittest.TestCase):
-    def test_default_is_deepseek(self):
+    def test_config_names_a_known_provider(self):
+        """Что именно выбрано — дело конфига, а не теста: его меняют руками.
+
+        Проверяем только, что выбранное вообще существует: опечатка в
+        `provider` иначе выяснится первой репликой на показе.
+        """
         cfg = json.loads((ROOT / "app" / "config.json").read_text(encoding="utf-8"))
         self.assertIn("dialogue", cfg)
-        self.assertEqual(cfg["dialogue"]["provider"], "deepseek")
+        self.assertIn(cfg["dialogue"]["provider"], ("deepseek", "anthropic"))
+        model = cfg["dialogue"].get("model")
+        if cfg["dialogue"]["provider"] == "anthropic" and model:
+            self.assertIn(model, llm_mod.ANTHROPIC_MODELS)
 
     def test_three_clients_with_their_own_budgets(self):
         with fake_key():

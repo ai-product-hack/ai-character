@@ -50,7 +50,7 @@ from app.templates import TYPES                             # noqa: E402
 from app.speculation import Speculator                      # noqa: E402
 from app.typing_signal import TypingTracker                 # noqa: E402
 from app.visemes_bridge import VisemeBridge                 # noqa: E402
-from app.voice import VoiceInput, transcribe                # noqa: E402
+from app.voice import Utterance, VoiceInput, transcribe     # noqa: E402
 
 PORT = 8010
 
@@ -107,6 +107,12 @@ class Session:
         # ничего о голосе не знает: сюда приходит уже готовая реплика.
         self.voice = VoiceInput(models.get("endpointer"))
         self.voice_stats: list[dict] = []
+        # Распознавание на лету: пока человек говорит, разбираем уже сказанное.
+        # Даёт две вещи сразу — слова в интерфейсе (человек видит, что его
+        # слышат) и текст для спекуляции (запрос уходит до конца реплики).
+        self.partial_text = ""
+        self._partial_at = 0.0
+        self._partial_lock = threading.Lock()
         self.frames: list[tuple[dict, bytes]] = []
         self.frame_cv = threading.Condition()
         self.marks: list[dict] = []
@@ -174,8 +180,11 @@ class Session:
               "t_first_audio": None, "t_first_speech": None, "bc_text": None,
               "t_bc_emit": None, "panels": 0}
 
-        emitter = threading.Thread(target=self._emit_loop,
-                                   args=(gen, t0, pending, DONE, em), daemon=True)
+        emitter = threading.Thread(
+            target=self._emit_loop,
+            # Открывающая реплика — не ответ на вопрос, и заполнителю там
+            # нечего заполнять.
+            args=(gen, t0, pending, DONE, em, user_text is not None), daemon=True)
         emitter.start()
 
         results = self.pipe.run(
@@ -298,9 +307,55 @@ class Session:
             speech_after = endpointer.speech_ms if endpointer is not None else 0
             # Reuse VAD evidence for listening gestures; silence and the muted
             # microphone during agent speech must not look like user activity.
-            return {"ok": True, "endpoint": False,
-                    "user_speaking": speech_after > speech_before}
+            out = {"ok": True, "endpoint": False,
+                   "user_speaking": speech_after > speech_before}
+            partial = self._maybe_partial()
+            if partial is not None:
+                out["partial"] = partial
+            return out
         return self._on_utterance(utt)
+
+    def _maybe_partial(self) -> str | None:
+        """Разобрать сказанное на лету, если пора. Возвращает текст или None.
+
+        Дважды одновременно не запускается: пока идёт разбор, следующий кусок
+        просто проходит мимо. Опоздать здесь не страшно — это подсказка
+        человеку и корм для спекуляции, а не источник правды. Правду даёт
+        разбор целой реплики на конце хода.
+        """
+        # Без распознавателя разбирать нечем: голос в такой сборке не
+        # включается вовсе, и приём звука не должен об этом спотыкаться.
+        if self.models.get("aligner") is None or self.voice.endpointer is None:
+            return None
+        every = self.models.get("voice_cfg", {}).get("partial_every_ms", 500)
+        now = time.perf_counter() * 1000
+        if now - self._partial_at < every:
+            return None
+        if not self._partial_lock.acquire(blocking=False):
+            return None
+        try:
+            self._partial_at = now
+            audio = self.voice.snapshot()
+            if audio is None or len(audio) < 8000:      # меньше полусекунды
+                return None
+            text = transcribe(self.models["aligner"],
+                              Utterance(pcm=audio, sample_rate=16000,
+                                        speech_ms=0.0, t_endpoint=0.0))
+            if not text or text == self.partial_text:
+                return text or ""
+            self.partial_text = text
+            # Спекуляция на недосказанном — тот же механизм, что на
+            # недопечатанном. Растущий текст, порог по длине, перезапуск по
+            # приросту, проверка префикса на конце хода: всё уже написано,
+            # голосу оно просто не досталось, потому что висело на /api/typing.
+            self.spec.on_typing(text)
+            return text
+        except Exception as e:                          # noqa: BLE001
+            # Разбор на лету не имеет права ломать приём звука.
+            self.marks.append({"partial_error": f"{type(e).__name__}: {e}"})
+            return None
+        finally:
+            self._partial_lock.release()
 
     def end_utterance(self) -> dict:
         """Push-to-talk отпущена: ход кончился по воле человека."""
@@ -328,6 +383,7 @@ class Session:
         # Пока агент говорит, микрофон закрыт: на колонках VAD услышал бы его
         # самого и перебил бы его же репликой.
         self.voice.muted_by_agent = True
+        self.partial_text = ""
         self.cancel()
         threading.Thread(target=self.speak, args=(text, utt.t_endpoint),
                          daemon=True).start()
@@ -347,8 +403,13 @@ class Session:
 
     # ------------------------------------------------------------- отправка
 
-    def _emit_loop(self, gen, t0, pending, DONE, em) -> None:
-        """Отдаёт клаузы клиенту, вставляя заполнитель, если ответ задерживается."""
+    def _emit_loop(self, gen, t0, pending, DONE, em, answering: bool = True) -> None:
+        """Отдаёт клаузы клиенту, вставляя заполнитель, если ответ задерживается.
+
+        `answering` — отвечаем ли мы на реплику человека. У открывающей реплики
+        это False: заполнитель там звучит абсурдно («Понятно… Здравствуйте!»),
+        потому что понимать ещё нечего — никто ничего не сказал.
+        """
         after_s = (self.bc_cfg.get("after_ms", 600)) / 1000
 
         first = None
@@ -359,8 +420,17 @@ class Session:
 
         # Заполнитель нужен только когда ответа ещё нет. Если модель ответила
         # быстро, он звучит навязчиво.
-        if first is None and self.backchannel and self.backchannel.ready \
-                and self.bc_cfg.get("enabled", True) and gen.check():
+        use_bc = (first is None and answering and self.backchannel
+                  and self.backchannel.ready
+                  and self.bc_cfg.get("enabled", True) and gen.check())
+        if first is None and not use_bc and gen.check():
+            # Ответа нет, а заполнителя не будет: так бывает на открывающей
+            # реплике. Молчащее лицо в позе слушателя читается как «сломалось»,
+            # поэтому хотя бы уводим его думать — это ничего не стоит и
+            # закрывает паузу тем единственным, что у нас есть мгновенно.
+            self._emit({"kind": "state", "generation_id": gen.id,
+                        "face": "thinking"})
+        if use_bc:
             f = self.backchannel.pick()
             if f is not None:
                 self._emit_filler(gen, f)
@@ -728,9 +798,13 @@ class App:
         self.models["backchannel"] = bc
         # Эндпоинтер не обязателен: без него голосовой ввод просто не включится,
         # а текстовый путь — основной и его судят — не должен от этого страдать.
+        voice_cfg = {k: v for k, v in cfg.get("voice", {}).items()
+                     if not k.startswith("_")}
+        self.models["voice_cfg"] = voice_cfg
         try:
             from app.voice import SileroEndpointer
-            self.models["endpointer"] = SileroEndpointer()
+            self.models["endpointer"] = SileroEndpointer(
+                silence_ms=voice_cfg.get("silence_ms", 1000))
             print(f"  голосовой ввод: порог тишины "
                   f"{self.models['endpointer'].silence_ms} мс")
         except Exception as e:                                # noqa: BLE001

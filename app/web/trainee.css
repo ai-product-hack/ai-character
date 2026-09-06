@@ -620,3 +620,16 @@ canvas {
   border-radius:20px;
   font-size:10px
 }
+
+/* Живое распознавание: то, что сервер уже разобрал, пока человек ещё говорит.
+   Без этой строки человек говорит в тишину и не знает, слышат ли его вообще —
+   а при паузе VAD в полторы секунды тишина стала заметно длиннее. */
+#partialRow{display:none;padding:0 0 8px;font-size:13px;line-height:1.45;
+  color:var(--muted)}
+#partialRow.on{display:block}
+#partial{border-left:2px solid var(--accent);padding-left:9px;
+  display:inline-block}
+#partial::after{content:"▌";color:var(--accent);
+  animation:partial-caret 1s steps(2) infinite}
+@keyframes partial-caret{50%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#partial::after{animation:none}}
