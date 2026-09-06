@@ -1,155 +1,118 @@
 <!doctype html>
+<html lang="ru">
 <meta charset="utf-8">
-<title>Тренажёр</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тренажёр · Практика</title>
+<link rel="stylesheet" href="/app/web/design-system.css">
+<link rel="stylesheet" href="/app/web/trainee.css">
 <link rel="stylesheet" href="/app/web/report.css">
-<style>
- :root{color-scheme:dark}
- html,body{margin:0;height:100%;background:#05060a;color:#dde3ec;overflow:hidden;
-   font:14px/1.5 -apple-system,system-ui,sans-serif}
- #stage{position:fixed;inset:0}
- canvas{display:block;width:100%;height:100%}
- #subs{position:fixed;left:0;right:34%;bottom:96px;text-align:center;
-   font:500 22px/1.45 -apple-system,system-ui,sans-serif;color:#fff;
-   text-shadow:0 2px 14px #000,0 0 30px #000;padding:0 40px;pointer-events:none}
- #side{position:fixed;top:0;right:0;bottom:0;width:33%;min-width:320px;
-   background:#0b0e14e6;border-left:1px solid #232a38;display:flex;
-   flex-direction:column;backdrop-filter:blur(6px)}
- #history{flex:1;overflow:auto;padding:12px 14px}
- .turn{margin-bottom:10px} .who{font-size:11px;color:#7c8697;letter-spacing:.04em}
- .agent .txt{color:#dde3ec} .user .txt{color:#7fd1ff}
- .turn.cut .txt{color:#9aa6b8}   /* оборванная реплика — глуше и с многоточием */
- #inputRow{border-top:1px solid #232a38;padding:10px 12px;display:flex;gap:8px}
- #msg{flex:1;font:inherit;background:#151a23;color:#dde3ec;border:1px solid #2c3547;
-   border-radius:5px;padding:8px 10px}
- button{font:inherit;background:#1a1f28;color:#dde3ec;border:1px solid #2c3547;
-   border-radius:5px;padding:8px 12px;cursor:pointer}
- #hud{position:fixed;top:10px;left:10px;font:12px/1.5 ui-monospace,monospace;
-   color:#cfd6e4;background:#0b0e14cc;border:1px solid #232a38;border-radius:6px;
-   padding:8px 10px;white-space:pre}
- #hudBtn{position:fixed;top:10px;left:10px;z-index:4;display:none}
- #err{position:fixed;left:10px;bottom:10px;right:36%;font:12px ui-monospace,monospace;
-   color:#ff9a9a;background:#1a0d0dcc;border:1px solid #4a2222;border-radius:6px;
-   padding:8px;white-space:pre-wrap;display:none;max-height:26vh;overflow:auto}
- #voiceRow{display:flex;gap:8px;align-items:center;padding:0 0 8px;
-   font:12px ui-monospace,monospace;color:#8b96a8}
- #voice{font:inherit;background:#151a23;color:#dde3ec;border:1px solid #2c3547;
-   border-radius:5px;padding:4px 6px}
- #voiceNote{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- #micRow{display:flex;gap:8px;align-items:center;padding:0 0 8px;
-   font:12px ui-monospace,monospace;color:#8b96a8}
- #micRow label{display:flex;gap:5px;align-items:center;cursor:pointer}
- #ptt{font:inherit;padding:4px 10px}
- #ptt[disabled]{opacity:.4;cursor:default}
- #ptt.live{background:#2a3550;border-color:#4a5a80}
- #micNote{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- #micNote.bad{color:#ff9a9a}
- #micNote.hot{color:#9ad7a0}
- /* Панель — обычный HTML рядом с аватаром, к модулю лица отношения не имеет. */
- #panel{position:fixed;right:calc(36% + 18px);top:18px;width:300px;z-index:5;
-   background:#0d1119ee;border:1px solid #232a38;border-radius:8px;padding:12px 14px;
-   font:13px/1.5 system-ui,sans-serif;color:#dde3ec;
-   opacity:0;transform:translateY(-6px);pointer-events:none;
-   transition:opacity .22s ease,transform .22s ease}
- #panel.on{opacity:1;transform:none}
- #panelHead{font:12px ui-monospace,monospace;color:#8b96a8;letter-spacing:.04em;
-   text-transform:uppercase;margin-bottom:10px}
- .skill{margin-bottom:9px}
- .skillTop{display:flex;justify-content:space-between;gap:10px}
- .skillTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- .skillScore{font-variant-numeric:tabular-nums;color:#9ad7a0}
- .skillScore.none{color:#5c6678}
- .bar{height:4px;background:#1c2230;border-radius:2px;margin-top:4px;overflow:hidden}
- .bar i{display:block;height:100%;background:#4a7f5a;border-radius:2px}
- .skillWhy{color:#8b96a8;font-size:12px;margin-top:3px}
- /* Материал этапа: то, о чём агент спрашивает. */
- .matTitle{font-weight:600;margin-bottom:8px}
- .matRow{display:grid;grid-template-columns:64px 1fr 42px;gap:8px;
-         align-items:center;margin-bottom:5px;font-size:12px}
- .matLabel{color:#8b96a8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- .matValue{text-align:right;font-variant-numeric:tabular-nums;color:#9ad7a0}
- .matText{white-space:pre-wrap;font-size:13px;line-height:1.5}
- .stageRow{display:flex;gap:8px;padding:2px 0;color:#8b96a8}
- .stageRow.now{color:#dde3ec}
- .stageRow b{font-weight:600;color:#6f7c93;font-variant-numeric:tabular-nums}
- #panel pre{background:#0a0d13;border:1px solid #1c2230;border-radius:6px;
-   padding:9px;overflow:auto;max-height:40vh;font:12px/1.45 ui-monospace,monospace}
- #voiceNote.bad{color:#ff9a9a}
- /* Отчёт на экране в момент finish. Жюри должно увидеть его сразу, а не
-    скачивать файл, — поэтому он приходит поверх сцены, а не ссылкой. */
- #finish{position:fixed;inset:0;z-index:20;background:#0a0d12f2;overflow:auto;
-   padding:28px 0;display:none}
- #finish.on{display:block}
- #finishInner{max-width:900px;margin:0 auto;padding:0 20px}
- #finishBar{display:flex;gap:8px;align-items:center;margin-bottom:14px}
- #finishBar .grow{flex:1;color:#8b96a8;font-size:13px}
- /* Ворота: пока звук не разбужен, разговор не начинается. Браузер включает
-    аудиоконтекст только по жесту, и без этого первая реплика уходила в
-    тишину — человек видел молчащего аватара и не понимал, сломано ли. */
- #gate{position:fixed;inset:0;z-index:25;background:#05060af2;display:flex;
-   align-items:center;justify-content:center}
- #gate.off{display:none}
- #gateBox{max-width:420px;text-align:center;padding:24px}
- #gateTitle{font-size:19px;font-weight:600;margin-bottom:8px}
- #gateText{color:#8b96a8;font-size:13px;line-height:1.5;margin:0 0 18px}
- #gateGo{font-size:15px;padding:10px 20px;border-color:#7fd1ff;color:#7fd1ff}
- /* На печати оверлей перестаёт быть оверлеем. Фиксированный контейнер со
-    своей прокруткой браузер обрезает по первой странице: на экране отчёт
-    целый, а в PDF от него остаётся шапка. Правило живёт здесь, а не в
-    report.css: про #finish знает только этот экран. */
- @media print {
-   #finish{position:static;display:block;overflow:visible;padding:0;
-     background:#fff;inset:auto}
-   #finishInner{max-width:none;padding:0}
- }
-</style>
-
-<div id="stage"><canvas id="c"></canvas></div>
-<div id="panel"><div id="panelHead"></div><div id="panelBody"></div></div>
-<div id="subs"></div>
-<button id="hudBtn">цифры</button>
-<div id="hud"></div>
-
-<div id="side">
-  <div id="voiceRow">
-    <label for="voice">голос</label>
-    <select id="voice"></select>
-    <span id="voiceNote"></span>
-  </div>
-  <div id="micRow">
-    <label><input type="checkbox" id="micOn"> микрофон</label>
-    <button id="ptt" disabled title="Удерживайте, пока говорите">говорить</button>
-    <span id="micNote">выключен</span>
-  </div>
-  <div id="history"></div>
-  <div id="inputRow">
-    <input id="msg" placeholder="Ответьте агенту и нажмите Enter" autocomplete="off">
-    <button id="send">Enter</button>
-  </div>
+<body>
+<header class="practice-header" inert>
+<a class="brand" href="/app/web/trainee.html">
+<span class="brand-mark">п</span>Практика</a>
+<div class="header-center">
+<b>Тренировка диалога</b> &nbsp; / &nbsp; Пространство для вашего роста</div>
+<span class="badge">Учимся в диалоге</span>
+</header>
+<main class="practice-layout" inert>
+<section class="scene-wrap" aria-label="Виртуальный собеседник">
+<div id="stage">
+<canvas id="c" aria-label="3D аватар собеседника">
+</canvas>
 </div>
-<div id="err"></div>
-
-<div id="gate"><div id="gateBox">
-  <div id="gateTitle">Тренажёр готов</div>
-  <p id="gateText">Собеседник начнёт разговор, как только вы нажмёте. Браузер не
-  включает звук без этого — иначе первая реплика уйдёт в тишину.</p>
-  <button id="gateGo" disabled>загружаю аватара…</button>
-</div></div>
-
-<div id="finish"><div id="finishInner">
-  <div id="finishBar" class="noprint">
-    <button id="finishPrint">печать / PDF</button>
-    <button id="finishJson">скачать JSON</button>
-    <span class="grow" id="finishNote"></span>
-    <button id="finishClose">закрыть</button>
-  </div>
-  <div class="rep" id="finishRep"></div>
-</div></div>
-
+<div class="scene-heading">
+<span class="scene-label">Ваш собеседник</span>
+<span class="badge">
+<span class="dot"></span>Виртуальная студия</span>
+</div>
+<div id="panel">
+<div id="panelHead"></div>
+<div id="panelBody"></div>
+</div>
+<div id="subs"></div>
+<div class="scene-footer">
+<span>Можно пробовать. Можно ошибаться.</span>
+<span>В своём темпе</span>
+</div>
+</section>
+<section id="side" aria-label="Чат тренировки">
+<header class="chat-heading">
+<h1>Диалог с собеседником</h1>
+<p>Говорите голосом или отвечайте в чате</p>
+<details class="voice-settings">
+<summary>Настройки голоса</summary>
+<div id="voiceRow">
+<label for="voice">Голос</label>
+<select id="voice">
+</select>
+<span id="voiceNote"></span>
+</div>
+</details>
+</header>
+<div id="history" role="log" aria-label="История диалога">
+<div class="chat-empty" id="chatEmpty">
+<span class="empty-icon">↔</span>
+<b>Здесь будет ваш разговор</b>Реплики появятся вместе с речью собеседника.</div>
+</div>
+<div class="composer">
+<div id="micRow">
+<button id="micToggle" aria-pressed="false" aria-describedby="micNote">
+<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+<rect x="9" y="2" width="6" height="12" rx="3"/>
+<path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/>
+</svg>
+<span id="micLabel">Включить микрофон</span>
+</button>
+<span id="micNote" role="status">Включите и говорите — ответ отправится после паузы</span>
+<button id="ptt" disabled title="Отправить голосовой ответ сейчас">Завершить реплику ↵</button>
+</div>
+<div id="inputRow">
+<input id="msg" aria-label="Ваш ответ" placeholder="Или напишите ответ…" autocomplete="off">
+<button id="send" aria-label="Отправить сообщение" title="Отправить сообщение">
+<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+<path d="m5 12 7-7 7 7M12 5v15"/>
+</svg>
+</button>
+</div>
+<p class="input-hint">Enter — отправить сообщение</p>
+</div>
+</section>
+</main>
+<button id="hudBtn">Диагностика</button>
+<div id="hud" style="display:none"></div>
+<div id="err" role="alert"></div>
+<div id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle" aria-describedby="gateText">
+<div id="gateBox">
+<div class="gate-icon">
+<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+<rect x="9" y="2" width="6" height="12" rx="3"/>
+<path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/>
+</svg>
+</div>
+<div class="eyebrow">Время попробовать</div>
+<div id="gateTitle">Готовы к разговору?</div>
+<p id="gateText">Собеседник поможет отработать навыки в живом диалоге. Отвечайте голосом или текстом — как вам удобнее.</p>
+<button id="gateGo" class="primary" disabled>Загружаем собеседника…</button>
+<p class="gate-note">Звук включится после нажатия.<br>Микрофон можно включить в любой момент.</p>
+</div>
+</div>
+<div id="finish" role="dialog" aria-modal="true" aria-label="Результаты тренировки">
+<div id="finishInner">
+<div id="finishBar" class="noprint">
+<button id="finishPrint">Печать / PDF</button>
+<button id="finishJson">Скачать JSON</button>
+<span class="grow" id="finishNote"></span>
+<button id="finishClose">Вернуться к диалогу</button>
+</div>
+<div class="rep" id="finishRep"></div>
+</div>
+</div>
 <script type="importmap">
 {"imports":{"three":"/avatar/node_modules/three/build/three.module.js",
             "three/addons/":"/avatar/node_modules/three/examples/jsm/"}}
 </script>
 <script type="module">
+import { createPracticeRoom } from '/app/web/practice-room.js';
 import { createAvatar } from '/avatar/src/avatar.js';
 import { renderReport } from '/app/web/report.js';
 import { AudioClock, scheduleAudioClause, shiftTimeline } from '/avatar/src/clock.js';
@@ -197,9 +160,11 @@ async function boot() {
     visemes: '/avatar/visemes.json',
     expression: '/avatar/expression.config.json',
   });
-  avatar.setSize(innerWidth, innerHeight);
+  resizeAvatar();
+  avatar.look.cfg.camera.frameHeightM = 0.60;
+  createPracticeRoom(avatar.look);
   await avatar.load();
-  avatar.setSize(innerWidth, innerHeight);
+  resizeAvatar();
   avatar.setState('listening');
   // Отладочный хук: те же числа, что на оверлее, плюс доступ к аудиографу.
   // Нужен для замеров пункта 9 и пригождается на защите.
@@ -217,7 +182,8 @@ async function boot() {
   // Кнопка ворот оживает только теперь: до этого `avatar` ещё не существует, и
   // нажатие упало бы внутри ensureAudio() на attachClock.
   $('gateGo').disabled = false;
-  $('gateGo').textContent = 'начать разговор';
+  $('gateGo').textContent = 'Начать разговор →';
+  $('gateGo').focus();
   // К потоку подключаемся ТОЛЬКО после жеста — см. ворота ниже. Кадры на
   // сервере копятся с самого старта сессии и отдаются с нулевого индекса,
   // так что ничего не теряется: первая реплика доиграет целиком, просто
@@ -238,7 +204,10 @@ $('gateGo').onclick = () => {
   // разрешение браузер даёт по нему, а не по нашему ожиданию.
   ensureAudio();
   $('gate').classList.add('off');
-  $('msg').focus();
+  document.querySelector('.practice-header').inert = false;
+  document.querySelector('.practice-layout').inert = false;
+  if (matchMedia('(min-width: 721px)').matches) $('msg').focus({preventScroll:true});
+  else $('micToggle').focus({preventScroll:true});
   // Ошибка в цикле чтения раньше терялась молча, и выглядело это как «агент
   // замолчал»: кадры на сервере есть, клиент их не берёт. Теперь падение
   // видно, и поток переподключается.
@@ -246,6 +215,7 @@ $('gateGo').onclick = () => {
 };
 
 function ensureAudio() {
+  if (!avatar?.visemes) return;
   if (!ctx) {
     ctx = new AudioContext();
     clock = new AudioClock(ctx);
@@ -651,9 +621,10 @@ function drawHud() {
 // ------------------------------------------------------------------- ввод
 
 function addTurn(role, text) {
+  $('chatEmpty')?.remove();
   const d = document.createElement('div');
   d.className = 'turn ' + role;
-  d.innerHTML = `<div class="who">${role === 'agent' ? 'Агент' : 'Вы'}</div>` +
+  d.innerHTML = `<div class="who">${role === 'agent' ? 'Собеседник' : 'Вы'}</div>` +
                 `<div class="txt"></div>`;
   d.querySelector('.txt').textContent = text;
   $('history').appendChild(d);
@@ -713,8 +684,8 @@ function finishSession() {
   if (sessionOver) return;
   sessionOver = true;
   micStop();
-  $('micOn').checked = false;
-  $('micOn').disabled = true;
+  syncMicButton(false);
+  $('micToggle').disabled = true;
   $('ptt').disabled = true;
   micSay('диалог завершён');
   $('msg').disabled = true;
@@ -754,19 +725,27 @@ let finishReport = null;
 async function showFinishReport() {
   $('finishNote').textContent = 'собираю отчёт…';
   $('finish').classList.add('on');
+  document.querySelector('.practice-header').inert = true;
+  document.querySelector('.practice-layout').inert = true;
+  $('finishClose').focus();
   try {
     const rep = await (await fetch(api('/api/report'))).json();
     if (rep.error) throw new Error(rep.error);
     finishReport = rep;
     renderReport($('finishRep'), rep, {ns: 't'});
     $('finishNote').textContent = rep.saved_to
-      ? 'JSON дописан: ' + rep.saved_to : '';
+      ? 'Отчёт готов' : '';
   } catch (e) {
     $('finishNote').textContent = 'отчёт не забрался: ' + (e.message || e);
   }
 }
 
-$('finishClose').onclick = () => $('finish').classList.remove('on');
+$('finishClose').onclick = () => {
+  $('finish').classList.remove('on');
+  document.querySelector('.practice-header').inert = false;
+  document.querySelector('.practice-layout').inert = false;
+  document.querySelector('.voice-settings summary').focus();
+};
 $('finishPrint').onclick = () => window.print();
 $('finishJson').onclick = () => {
   if (!finishReport) return;
@@ -858,53 +837,65 @@ async function sendChunk(f32) {
     const d = await r.json();
     if (d.endpoint) {
       tAsk = performance.now();
-      if (d.text) micSay(`распознано за ${d.asr_ms} мс`, 'hot');
+      if (d.text) micSay('Ответ распознан. Микрофон остаётся включён.', 'hot');
       else micSay('тишина — говорите', '');
     }
   } catch (e) { /* пропущенный кусок не должен ломать поток */ }
 }
 
-$('micOn').onchange = async () => {
-  if (sessionOver) { $('micOn').checked = false; return; }
-  const on = $('micOn').checked;
-  if (!on) {
-    micStop();
-    $('ptt').disabled = true;
-    await fetch(api('/api/voice'), {method:'POST', body: JSON.stringify({on: false})});
-    micSay('выключен');
-    return;
-  }
-  micSay('включаю…');
+function syncMicButton(on) {
+  $('micToggle').setAttribute('aria-pressed', String(on));
+  $('micLabel').textContent = on ? 'Выключить микрофон' : 'Включить микрофон';
+}
+
+$('micToggle').onclick = async () => {
+  if (sessionOver) return;
+  const on = !micSending;
+  $('micToggle').disabled = true;
   try {
-    const r = await fetch(api('/api/voice'), {method:'POST',
-                                         body: JSON.stringify({on: true})});
+    if (!on) {
+      micStop();
+      syncMicButton(false);
+      $('ptt').disabled = true;
+      micSay('Микрофон выключен. Можно продолжить текстом.');
+      await fetch(api('/api/voice'), {method:'POST', body: JSON.stringify({on: false})});
+      return;
+    }
+    micSay('Подключаем микрофон…');
+    const r = await fetch(api('/api/voice'), {method:'POST', body: JSON.stringify({on: true})});
     const d = await r.json();
-    if (d.error) throw new Error(d.error);
+    if (!r.ok || d.error) throw new Error(d.error || 'Голосовой ввод недоступен');
     await micStart();
+    // The conversation can finish while the browser permission prompt is open.
+    if (sessionOver) { micStop(); return; }
+    syncMicButton(true);
     $('ptt').disabled = false;
-    micSay(`слушаю, порог тишины ${d.silence_ms ?? '—'} мс`, 'hot');
+    micSay('Микрофон включён. Говорите — ответ отправится после паузы.', 'hot');
   } catch (e) {
-    $('micOn').checked = false;
     micStop();
-    micSay(String(e.message || e), 'bad');
+    syncMicButton(false);
+    $('ptt').disabled = true;
+    fetch(api('/api/voice'), {method:'POST', body: JSON.stringify({on: false})}).catch(() => {});
+    const denied = e.name === 'NotAllowedError';
+    micSay(denied ? 'Доступ к микрофону закрыт. Разрешите его в настройках браузера или ответьте текстом.' : String(e.message || e), 'bad');
+  } finally {
+    $('micToggle').disabled = sessionOver;
   }
 };
 
-// Push-to-talk — аварийный режим: если VAD режет невпопад, конец хода можно
-// объявить рукой. Кнопка не отключает VAD, а добавляет ручной выход.
-async function pttUp() {
-  $('ptt').classList.remove('live');
-  if (!micSending) return;
-  const d = await (await fetch(api('/api/voice'), {method:'POST',
-                                              body: JSON.stringify({ptt: 'up'})})).json();
-  if (d.text) micSay(`распознано за ${d.asr_ms} мс`, 'hot');
-}
-$('ptt').onpointerdown = () => {
-  if (sessionOver) return;
-  $('ptt').classList.add('live'); micSay('говорите…', 'hot');
+// Manual endpoint is an ordinary button, accessible to keyboard and touch alike.
+$('ptt').onclick = async () => {
+  if (!micSending || sessionOver) return;
+  $('ptt').disabled = true;
+  try {
+    const r = await fetch(api('/api/voice'), {method:'POST', body: JSON.stringify({ptt: 'up'})});
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || 'Не удалось отправить ответ');
+    micSay(d.text ? 'Ответ отправлен. Микрофон остаётся включён.' : 'Пока не слышно речи. Попробуйте ещё раз.', d.text ? 'hot' : '');
+  } catch (e) { micSay(String(e.message || e), 'bad'); }
+  finally { $('ptt').disabled = !micSending || sessionOver; }
 };
-$('ptt').onpointerup = pttUp;
-$('ptt').onpointerleave = () => { if ($('ptt').classList.contains('live')) pttUp(); };
+window.addEventListener('pagehide', micStop);
 
 // ---------------------------------------------------------------- голос
 
@@ -970,11 +961,26 @@ $('hudBtn').onclick = () => {
   $('hudBtn').style.display = h.style.display === 'block' ? 'none' : 'block';
 };
 $('hud').onclick = () => { $('hud').style.display='none'; $('hudBtn').style.display='block'; };
-addEventListener('resize', () => avatar && avatar.setSize(innerWidth, innerHeight));
+function resizeAvatar() {
+  if (!avatar) return;
+  const {width, height} = $('stage').getBoundingClientRect();
+  avatar.setSize(width, height);
+}
+new ResizeObserver(resizeAvatar).observe($('stage'));
+if (new URLSearchParams(location.search).has('debug')) $('hudBtn').style.display = 'block';
 
 // Любой первый клик по странице разблокирует аудиограф.
 addEventListener('pointerdown', ensureAudio, {once: false});
 
-boot().catch(fail);
+boot().catch(e => {
+  fail(e);
+  $('gateTitle').textContent = 'Не удалось загрузить собеседника';
+  $('gateText').textContent = 'Проверьте подключение и попробуйте открыть тренировку ещё раз.';
+  $('gateGo').textContent = 'Попробовать снова';
+  $('gateGo').disabled = false;
+  $('gateGo').onclick = () => location.reload();
+});
 loadVoices();
 </script>
+
+</body></html>

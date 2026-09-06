@@ -1,0 +1,235 @@
+/* Shared visual language for authoring, practice and feedback. */
+:root {
+  color-scheme:light;
+  --bg:#f5f6f3;
+  --surface:#fff;
+  --ink:#243b36;
+  --muted:#6c7d76;
+  --line:#dfe6e0;
+  --accent:#28745d;
+  --accent-hover:#1d5d49;
+  --tint:#eaf3ed;
+  --soft:#f8faf7;
+  --danger:#aa3f3b;
+  --radius:18px;
+  --shadow:0 8px 32px #243b3606;
+  font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--ink)
+}
+[hidden] {
+  display:none!important
+}
+button,input,select,textarea {
+  font:inherit
+}
+button,a,input,textarea,select {
+  -webkit-tap-highlight-color:transparent
+}
+button {
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--surface);
+  color:var(--ink);
+  padding:10px 16px;
+  cursor:pointer;
+  font-weight:550;
+  transition:background .15s,border-color .15s
+}
+button:hover {
+  background:var(--soft);
+  border-color:#a9bdb1
+}
+button.primary {
+  background:var(--accent);
+  border-color:var(--accent);
+  color:white
+}
+button.primary:hover {
+  background:var(--accent-hover)
+}
+button:disabled {
+  opacity:.5;
+  cursor:not-allowed
+}
+button.ghost {
+  background:transparent;
+  color:var(--muted);
+  padding:6px 10px
+}
+input,textarea,select {
+  min-width:0;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 12px;
+  background:var(--soft);
+  color:var(--ink)
+}
+textarea {
+  resize:vertical;
+  width:100%
+}
+input::placeholder,textarea::placeholder {
+  color:#84928b
+}
+input[type=checkbox] {
+  accent-color:var(--accent)
+}
+:focus-visible {
+  outline:3px solid #6aaf9180;
+  outline-offset:3px
+}
+a,a:visited {
+  color:var(--accent)
+}
+a:hover {
+  color:var(--accent-hover)
+}
+h1,h2,h3,p {
+  margin-top:0
+}
+h1 {
+  font-size:32px;
+  line-height:1.2;
+  letter-spacing:-1px;
+  font-weight:650
+}
+h2 {
+  font-size:18px;
+  letter-spacing:-.3px;
+  margin:0 0 16px;
+  font-weight:650
+}
+h3 {
+  font-size:14px
+}
+.hint,.muted {
+  color:var(--muted);
+  font-size:13px
+}
+.hint {
+  margin:0 0 16px
+}
+.eyebrow {
+  font-size:11px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--accent);
+  font-weight:650;
+  margin-bottom:10px
+}
+.card {
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:24px;
+  box-shadow:var(--shadow)
+}
+.row {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap
+}
+.brand {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:18px;
+  font-weight:650;
+  letter-spacing:-.4px;
+  text-decoration:none;
+  color:var(--ink)!important
+}
+.brand-mark {
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  background:var(--accent);
+  color:white;
+  border-radius:11px;
+  font-size:23px;
+  font-weight:400
+}
+.badge {
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:5px 10px;
+  background:var(--tint);
+  color:var(--accent);
+  border-radius:20px;
+  font-size:11px;
+  font-weight:600
+}
+.dot {
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:currentColor
+}
+.ok {
+  color:var(--accent)
+}
+.bad {
+  color:var(--danger)
+}
+.warn {
+  background:#fff8e8;
+  border-color:#ead6a5;
+  color:#816326
+}
+.spin {
+  width:14px;
+  height:14px;
+  border:2px solid var(--line);
+  border-top-color:var(--accent);
+  border-radius:50%;
+  animation:spin .8s linear infinite
+}
+@keyframes spin {
+  to {
+    transform:rotate(360deg)
+  }
+}
+svg.icon {
+  width:20px;
+  height:20px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  flex:none
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    animation:none!important;
+    transition:none!important;
+    scroll-behavior:auto!important
+  }
+}
+.sr-only {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:-1px;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  white-space:nowrap;
+  border:0
+}
+.field-label {
+  display:block;
+  font-size:11px;
+  color:var(--muted);
+  margin-top:9px
+}

@@ -105,11 +105,11 @@ export function renderReport(root, rep, opts = {}) {
     const chips = quotes.length ? `<div class="cites">` + quotes.map(q => {
       const live = q.turn >= 0;
       const label = live ? `реплика ${q.turn + 1}` : 'без ссылки';
-      return `<span class="cite${live ? '' : ' dead'}"
-                    ${live ? `data-turn="${q.turn}"` : ''}
+      return `<button type="button" class="cite${live ? '' : ' dead'}"
+                    ${live ? `data-turn="${q.turn}"` : 'disabled'}
                     title="${esc(q.rationale)}">${label}` +
              (q.score !== null && q.score !== undefined
-               ? ` · <b>${q.score}</b>` : '') + `</span>`;
+               ? ` · <b>${q.score}</b>` : '') + `</button>`;
     }).join('') + `</div>` : '';
     const why = c.rationale || (c.observations || []).join('; ');
     // Якоря показываем всегда: без них шкала — просто диапазон чисел, а с
@@ -133,10 +133,10 @@ export function renderReport(root, rep, opts = {}) {
   }).join('');
 
   const table = `<h2>Оценка по критериям</h2>
-    <table><thead><tr>
+    <div class="rep-table-wrap"><table><thead><tr>
       <th style="width:30%">критерий и шкала</th><th style="width:12%">оценка</th>
       <th>обоснование и цитаты</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="3" class="rep-empty">критериев нет</td></tr>'}</tbody></table>
+    <tbody>${rows || '<tr><td colspan="3" class="rep-empty">критериев нет</td></tr>'}</tbody></table></div>
     ${scored.length ? '' : '<p class="rep-note">Фоновая оценка ещё не ' +
       'накопила баллов — она дописывает их после каждой реплики.</p>'}`;
 
@@ -147,8 +147,8 @@ export function renderReport(root, rep, opts = {}) {
     const conf = t.typing && t.typing.confidence &&
                  t.typing.confidence !== 'нет данных' ? t.typing.confidence : '';
     return `<div class="line ${t.role}" id="${turnId(i)}">
-      <div class="meta"><span class="who">${who}</span>${esc(clock(t.at))}</div>
-      <div>
+      <div class="meta"><span class="who">${who}</span><span>№ ${i + 1} · ${esc(clock(t.at))}</span></div>
+      <div class="bubble">
         <div class="text">${esc(t.text)}${t.interrupted
           ? '<span class="tag">перебит</span>' : ''}${conf
           ? `<span class="tag">${esc(conf)}</span>` : ''}</div>
@@ -162,7 +162,7 @@ export function renderReport(root, rep, opts = {}) {
   const lines = (rep.transcript || []).map(line).join('') ||
     '<div class="line"><div class="meta"></div>' +
     '<div class="rep-empty">разговор ещё не начался</div></div>';
-  const transcript = `<h2>Ход разговора</h2>
+  const transcript = `<div class="transcript-heading"><h2>Ход разговора</h2><span>Собеседник слева · ответы справа</span></div>
     <div class="rep-transcript">${lines}</div>`;
 
   root.innerHTML = head + conclusion + table + transcript;
