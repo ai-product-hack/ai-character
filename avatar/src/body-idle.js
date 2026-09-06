@@ -85,6 +85,7 @@ export class BodyIdle {
     this.motionEnabled = this.cfg.enabled !== false;
     this.layers = [];
     this.timeMs = 0;
+    this.gain = 1;
     this.bones = new Map();
     this.rest = new Map();
     for (const name of BONE_ZONES[BONE_LAYERS.BODY]) {
@@ -129,19 +130,28 @@ export class BodyIdle {
   /** Dev freeze: сохраняет текущую позу, но останавливает фазы клипов. */
   setMotionEnabled(on) { this.motionEnabled = !!on; }
 
-  update(dt) {
-    if (this.motionEnabled) this.timeMs += dt * 1000;
+  update(dt, state = 'listening', emotion = { name: 'neutral', intensity: 0 }) {
+    if (this.motionEnabled) {
+      this.timeMs += dt * 1000;
+      const moodGain = this.cfg.emotionGain?.[emotion.name] ?? 1;
+      const target = (this.cfg.stateGain?.[state] ?? 1) * (1 + (moodGain - 1) * emotion.intensity);
+      const k = 1 - Math.exp(-dt * 1000 / (this.cfg.transitionMs || 700));
+      this.gain += (target - this.gain) * k;
+    }
     for (const sum of this._sum.values()) sum.fill(0);
 
     for (const layer of this.layers) {
       const clipTime = this.timeMs + layer.phaseMs;
+      // Each clip waxes and wanes slowly, instead of three equally strong loops.
+      const envelope = 0.78 + 0.22 * Math.sin(clipTime / 7300);
+      const weight = layer.weight * this.gain * envelope;
       for (const track of layer.clip.tracks) {
         const sum = this._sum.get(track.bone);
         if (!sum) continue;
         sampleBodyTrack(track, clipTime, layer.clip.durationMs, this._sample);
-        sum[0] += this._sample[0] * layer.weight;
-        sum[1] += this._sample[1] * layer.weight;
-        sum[2] += this._sample[2] * layer.weight;
+        sum[0] += this._sample[0] * weight;
+        sum[1] += this._sample[1] * weight;
+        sum[2] += this._sample[2] * weight;
       }
     }
 
@@ -156,6 +166,7 @@ export class BodyIdle {
     return {
       clips: this.layers.map((layer) => layer.clip.name),
       enabled: this.motionEnabled,
+      gain: this.gain,
       ownedBones: [...this.bones.keys()],
     };
   }

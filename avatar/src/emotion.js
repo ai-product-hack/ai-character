@@ -27,6 +27,7 @@ export class EmotionLayer {
     this.setConfig(cfg);
 
     this.emotion = { name: 'neutral', intensity: 0 };
+    this.statePoseScale = 1;
     /** Поза от автомата состояний. Складывается с эмоцией. */
     this.statePose = {};
 
@@ -136,8 +137,9 @@ export class EmotionLayer {
   }
 
   /** Поза от автомата состояний. Складывается с позой эмоции. */
-  setStatePose(pose) {
+  setStatePose(pose, scale = 1) {
     this.statePose = pose || {};
+    this.statePoseScale = scale;
   }
 
   /** Множитель интервала моргания от эмоции — читает автомат состояний. */
@@ -175,7 +177,7 @@ export class EmotionLayer {
     this._applyEmotion(target, e, dt);
     for (const [morph, w] of Object.entries(this.statePose)) {
       if (morph.startsWith('_') || !Number.isFinite(w)) continue;
-      target.set(morph, (target.get(morph) || 0) + w);
+      target.set(morph, (target.get(morph) || 0) + w * this.statePoseScale);
     }
 
     // Речь двигает не только челюсть: мягко подключаем щёки, нос и брови к
@@ -213,13 +215,15 @@ export class EmotionLayer {
 
   _applyEmotion(target, emotion, dt) {
     const C = this.cfg.clips || {};
+    // Neutral is a resting face, even when the mood intensity is zero.
+    const strength = this.emotion.name === 'neutral' ? 1 : this.emotion.intensity;
     const clip = C.enabled ? this.clips.get(this.emotion.name) : null;
     if (!clip) {
       this._emotionFrame.clear();
       if (emotion?.pose) {
         for (const [morph, w] of Object.entries(emotion.pose)) {
           if (morph.startsWith('_') || !Number.isFinite(w)) continue;
-          const value = w * this.emotion.intensity;
+          const value = w * strength;
           this._emotionFrame.set(morph, value);
           target.set(morph, value);
         }
@@ -229,9 +233,9 @@ export class EmotionLayer {
 
     if (this.clipMotionEnabled) this.clipTimeMs += dt * 1000;
     const sample = sampleFacialClip(clip, this.clipTimeMs + this._phaseMs, C.seamMs ?? 400);
-    const amplitude = (emotion.clipAmplitude ?? C.amplitude ?? 0.4) * this.emotion.intensity;
+    const amplitude = (emotion.clipAmplitude ?? C.amplitude ?? 0.4) * strength;
     const blend = C.blend !== false;
-    const motion = (C.motion ?? C.amplitude ?? 0.4) * this.emotion.intensity;
+    const motion = (C.motion ?? C.amplitude ?? 0.4) * strength;
     const duration = C.crossfadeMs ?? 400;
     this._crossfadeMs += dt * 1000;
     const x = duration > 0 ? Math.min(1, this._crossfadeMs / duration) : 1;
@@ -259,10 +263,10 @@ export class EmotionLayer {
     if (blend) {
       for (const [morph, w] of Object.entries(emotion.pose || {})) {
         if (morph.startsWith('_') || !Number.isFinite(w)) continue;
-        want.set(morph, w * this.emotion.intensity);
+        want.set(morph, w * strength);
       }
     }
-    // Вниз движение ограничено долей позы, вверх — свободно. Без этого запись
+    // Движение ограничено сверху и снизу; дополнительно защищаем долю позы. Иначе запись
     // с большим размахом (у снятого `warming` улыбка гуляет почти на всю
     // шкалу) в нижней точке обнуляла заданную форму: улыбка на теплеющем лице
     // периодически пропадала совсем. Морфы, которых в позе нет, начинаются с
@@ -272,7 +276,13 @@ export class EmotionLayer {
       const morph = clip.channels[i].name;
       if (!blend) { want.set(morph, sample[i] * amplitude); continue; }
       const base = want.get(morph) || 0;
-      const moved = base + (sample[i] - clip.means[i]) * motion;
+      // Recorded blinks are not expression: playing them over procedural blinks
+      // leaves the eyelids half shut. Authored squint poses still work.
+      if (morph.startsWith('eyeBlink')) continue;
+      const cap = (C.maxMotionDelta ?? 0.12) * strength;
+      const scale = base > 0 ? 1 : (C.unposedMotionScale ?? 0.18);
+      const delta = Math.max(-cap, Math.min(cap, (sample[i] - clip.means[i]) * motion * scale));
+      const moved = base + delta;
       want.set(morph, Math.max(base * floor, Math.max(0, moved)));
     }
 

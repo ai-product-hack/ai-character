@@ -85,6 +85,18 @@ test('dev freeze keeps the current additive pose', async () => {
   idle.setMotionEnabled(false);
   const frozen = m.bones.Hips.quaternion.clone();
   idle.update(2);
-  assert.ok(m.bones.Hips.quaternion.angleTo(frozen) < 1e-9);
+  assert.ok(m.bones.Hips.quaternion.equals(frozen));
 });
 
+
+test('body motion responds gradually to state and emotional intensity', async () => {
+  const idle = new BodyIdle(model(), cfg);
+  await idle.loadClips(async url => ({ok:true, json:async () => JSON.parse(
+    readFileSync(resolve(here,'..',url.replace('/avatar/',''))))}));
+  idle.update(0.016, 'interrupted', {name:'angry',intensity:1});
+  assert.ok(idle.gain > 0.9, 'state change must not snap the torso');
+  for (let i=0;i<180;i++) idle.update(1/60,'thinking',{name:'angry',intensity:1});
+  const quiet = idle.gain;
+  for (let i=0;i<180;i++) idle.update(1/60,'speaking',{name:'warming',intensity:1});
+  assert.ok(idle.gain > quiet * 2, 'engaged speech should move more than tense thinking');
+});

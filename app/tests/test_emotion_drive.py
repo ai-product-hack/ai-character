@@ -149,3 +149,13 @@ class BaselineOutsideTheAxis(unittest.TestCase):
         for scores in ([1, 1, 1], [3, 3], [5, 5, 5], [1, 5, 3, 4]):
             m = mood_from(log_of(*scores), CRITS)
             self.assertIn(m.emotion, COLD_TO_WARM, scores)
+
+
+class ExpressionReadability(unittest.TestCase):
+    def test_non_neutral_mood_has_a_readable_strength(self):
+        for scores in ([2, 3], [3, 4], [4, 4], [1, 1]):
+            with self.subTest(scores=scores):
+                mood = mood_from(log_of(*scores), CRITS)
+                self.assertNotEqual(mood.emotion, 'neutral')
+                self.assertGreaterEqual(mood.intensity, 0.45)
+                self.assertLessEqual(mood.intensity, 1)

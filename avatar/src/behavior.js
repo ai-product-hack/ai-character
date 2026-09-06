@@ -115,6 +115,7 @@ export class Microbehavior {
     this.headPoseTarget = { tilt: 0, pitch: 0 };
     this.headPoseSmoothMs = 200;
     this._nod = null;                           // текущий микрокивок
+    this._headDelayAcc = 0;
 
     // --- переиспользуемые объекты ---
     this._v = new THREE.Vector3();
@@ -177,7 +178,13 @@ export class Microbehavior {
 
   /** Одиночный микрокивок. Складывается с шумом головы. */
   nod(amplitudeDeg, durationMs) {
-    this._nod = { t: 0, amp: amplitudeDeg, dur: durationMs / 1000 };
+    this.gesture({ pitchDeg: amplitudeDeg, durationMs });
+  }
+
+  gesture({ pitchDeg = 0, yawDeg = 0, rollDeg = 0, durationMs = 650 }) {
+    // Do not restart an unfinished gesture on every streamed clause.
+    if (this._nod) return;
+    this._nod = { t: 0, amp: pitchDeg, yaw: yawDeg, roll: rollDeg, dur: durationMs / 1000 };
   }
 
   /**
@@ -388,8 +395,13 @@ export class Microbehavior {
     // Линия задержки: голова доворачивает туда же, куда ушёл взгляд, но позже
     // и на меньший угол.
     const d = this.delay;
-    d.yaw[d.i] = this.gaze.yaw; d.pitch[d.i] = this.gaze.pitch;
-    d.i = (d.i + 1) % d.n;
+    this._headDelayAcc += dt;
+    const step = Math.max(0.001, G.delayMs / 1000 / d.n);
+    while (this._headDelayAcc >= step) {
+      d.yaw[d.i] = this.gaze.yaw; d.pitch[d.i] = this.gaze.pitch;
+      d.i = (d.i + 1) % d.n;
+      this._headDelayAcc -= step;
+    }
     const delayedYaw = d.yaw[d.i], delayedPitch = d.pitch[d.i];
 
     const k = G.enabled ? clamp(dt / (G.smoothMs / 1000), 0, 1) : 1;
@@ -403,18 +415,25 @@ export class Microbehavior {
     let nRoll = this.headNoise.roll.fbm(t + 27.7, H.octaves) * A.roll;
 
     // Микрокивок: короткий импульс поверх шума, а не отдельный канал.
-    let nodPitch = 0;
+    let nodPitch = 0, gestureYaw = 0, gestureRoll = 0;
     if (this._nod) {
       this._nod.t += dt;
       const k = this._nod.t / this._nod.dur;
       if (k >= 1) this._nod = null;
-      else nodPitch = Math.sin(k * Math.PI) * this._nod.amp;
+      else {
+        const envelope = Math.sin(k * Math.PI) ** 2;
+        nodPitch = envelope * this._nod.amp;
+        gestureYaw = Math.sin(k * Math.PI * 2) * envelope * this._nod.yaw;
+        gestureRoll = envelope * this._nod.roll;
+      }
     }
 
     const follow = G.enabled ? this.headFollow : { yaw: 0, pitch: 0 };
-    const totalYaw = nYaw + follow.yaw;
-    const totalPitch = nPitch + follow.pitch + nodPitch + this.headPitchDeg;
-    nRoll += this.headTiltDeg;
+    const totalYaw = nYaw + follow.yaw + gestureYaw;
+    // Gaze pitch and expression pitch use positive-up degrees; local Euler X
+    // uses positive-down on this rig. Nods already use positive-down.
+    const totalPitch = nPitch - follow.pitch + nodPitch - this.headPitchDeg;
+    nRoll += this.headTiltDeg + gestureRoll;
 
     // Движение делится между шеей и головой: одна кость на всё выглядит как
     // поворот манекена.

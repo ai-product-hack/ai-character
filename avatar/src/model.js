@@ -120,6 +120,15 @@ export class AvatarModel {
     if (!bone) return out.set(0, 1.694, 0.084);
     this.root.updateWorldMatrix(true, true);
     bone.getWorldPosition(out);
+    // Derive the eye midpoint from the rig: a signed offset from LeftEye
+    // was model-specific and placed both the camera and gaze anchor off-centre.
+    if (C.targetBetweenEyes) {
+      const [left, right] = this.cfg.model.eyeBones.map(name => this.bones[name]);
+      if (left && right) {
+        left.getWorldPosition(out);
+        out.add(right.getWorldPosition(new THREE.Vector3())).multiplyScalar(0.5);
+      }
+    }
     return out.add(new THREE.Vector3().fromArray(C.targetOffset));
   }
 

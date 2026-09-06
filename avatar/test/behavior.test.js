@@ -357,3 +357,18 @@ describe('бюджет кадра', () => {
     assert.ok(grew < 128 * 1024, `куча выросла на ${grew} байт за 2 минуты анимации`);
   });
 });
+
+test('negative expression pitch lowers the chin', () => {
+  const model = makeModel();
+  const local = structuredClone(cfg);
+  local.head.amplitudeDeg = {yaw:0,pitch:0,roll:0};
+  local.head.gazeFollow.enabled = false;
+  const behavior = new Microbehavior(model, local);
+  behavior.setEnabled('gaze', false); behavior.setEnabled('breath', false);
+  behavior.setHeadPose(0, -3, 0);
+  run(behavior, model, 0.1);
+  const forward = new THREE.Vector3(0,0,1);
+  model.root.updateMatrixWorld(true);
+  forward.applyQuaternion(model.bones.Head.getWorldQuaternion(new THREE.Quaternion()));
+  assert.ok(forward.y < -0.04, `negative pitch must look down, got y=${forward.y}`);
+});

@@ -1,26 +1,25 @@
 {
   "_": "Автомат состояний и слой эмоции. Оба правят одну зону морфов (брови, веки, уголки рта), поэтому лежат в одном файле — иначе связь между ними теряется из виду.",
-
   "transitionMs": 200,
   "_transitionMs": "Переходы между состояниями плавные, 150-250 мс по заданию.",
-
   "clips": {
     "_": "Записанная мимика. enabled=false мгновенно возвращает прежние pose без правки кода; отсутствующий или битый клип тоже автоматически откатывается на pose.",
     "enabled": true,
     "basePath": "/avatar/clips",
     "blend": true,
     "_blend": "Поза задаёт ФОРМУ, запись добавляет ДВИЖЕНИЕ вокруг неё (вычитается среднее канала). До этого клип позу ПОДМЕНЯЛ: вся продуманная статика не работала, а работала запись — форма которой местами противоположна задуманной (в снятом pressing брови идут ВВЕРХ, и давление читалось как лёгкое удивление). Плюс половину записи выбрасывает таблица зон, так что до лица доезжала пятая часть снятого. false мгновенно возвращает прежнее поведение без правки кода.",
-    "motion": 0.6,
-    "_motion": "Сколько записанного ДВИЖЕНИЯ подмешивать к позе. Замерено: у снятых клипов размах сильнейших каналов вокруг среднего 0.6-0.95, то есть при 0.6 лицо качает на ±0.2-0.28 — заметно и не карикатурно. У синтетических (angry, anxious) размах 0.05-0.12, движение едва уловимое, и это правильно: их форму задаёт поза.",
-    "motionFloor": 0.5,
-    "_motionFloor": "Ниже этой доли позы движение не опускает. Вверх не ограничено. Без пола запись с большим размахом в нижней точке обнуляла форму: у снятого warming улыбка гуляет почти на всю шкалу, и на теплеющем лице она периодически пропадала совсем. Морфов, которых в позе нет, ограничение не касается — им падать неоткуда.",
+    "motion": 0.4,
+    "_motion": "Запись сохраняет движение, но ограничение maxMotionDelta защищает форму. Каналы вне позы приглушены; моргания записи исключены в режиме blend.",
+    "motionFloor": 0.72,
+    "_motionFloor": "Минимум 72% заданной позы; движения вверх и вниз ограничены maxMotionDelta.",
     "amplitude": 0.42,
     "_amplitude": "Осталась для blend=false: доля записанной амплитуды в прежнем режиме подмены. Полный mocap выглядит мультяшно.",
     "crossfadeMs": 400,
     "seamMs": 420,
-    "randomizePhase": true
+    "randomizePhase": true,
+    "maxMotionDelta": 0.12,
+    "unposedMotionScale": 0.18
   },
-
   "speechMotion": {
     "_": "Связывает артикуляцию с верхней частью лица: без этого двигается только рот, а голова выглядит как маска. Сигнал сглаживается отдельно, чтобы сетка 40 мс не превратила щёки в тремор.",
     "attackMs": 100,
@@ -35,84 +34,137 @@
       "mouthDimpleLeft": 0.045,
       "mouthDimpleRight": 0.035
     },
-    "nodDeg": 1.8,
-    "backchannelNodDeg": 3.2,
-    "nodDurationMs": 520
+    "nodDeg": 1.2,
+    "backchannelNodDeg": 2.0,
+    "nodDurationMs": 520,
+    "beatEverySec": 2.8
   },
-
   "states": {
     "_": "Состояние задаёт позу лица И модуляцию микроповедения. Взгляд и моргание принадлежат слою idle, поэтому состояние их не пишет, а СМЕЩАЕТ: gazeBias добавляется к точкам фиксации, blinkScale умножает интервалы. Так владение зонами остаётся нетронутым.",
-
     "listening": {
-      "_": "Пользователь печатает. Состояние новое: при голосовом вводе его не существовало.",
-      "pose": { "browInnerUp": 0.06 },
-      "gazeBias": [0, 0],
+      "_": "Спокойное ожидание с преобладающим контактом. Кивки только пока собеседник проявляет активность.",
+      "pose": {
+        "browInnerUp": 0.06
+      },
+      "gazeBias": [
+        0,
+        0
+      ],
       "blinkScale": 1.0,
-      "headTiltDeg": 3.5,
+      "headTiltDeg": 1.8,
       "_headTiltDeg": "Лёгкий наклон головы — поза слушающего.",
-      "nod": { "everySec": [5, 11], "amplitudeDeg": 2.8, "durationMs": 560 },
+      "nod": {
+        "everySec": [
+          6,
+          12
+        ],
+        "amplitudeDeg": 1.6,
+        "durationMs": 560,
+        "activityWindowSec": 3
+      },
       "_nod": "Изредка микрокивок. Интервал случайный в диапазоне.",
       "impatience": {
-        "_": "На паузе дольше afterSec — нарастающее нетерпение: взгляд уходит в сторону, бровь чуть поднимается.",
-        "afterSec": 8,
-        "rampSec": 6,
-        "gazeBias": [14, -3],
-        "pose": { "browOuterUpLeft": 0.3, "browInnerUp": 0.18 },
-        "blinkScale": 0.8
-      }
+        "_": "Долгая пауза слегка меняет лицо, но не удерживает взгляд в стороне и не означает недовольство.",
+        "afterSec": 20,
+        "rampSec": 12,
+        "gazeBias": [
+          0,
+          0
+        ],
+        "pose": {
+          "browOuterUpLeft": 0.08,
+          "browInnerUp": 0.04
+        },
+        "blinkScale": 0.95
+      },
+      "gazeStyle": {
+        "anchorChance": 0.86,
+        "anchorEverySec": [
+          1.2,
+          2.2
+        ],
+        "anchorJitterDeg": 0.55,
+        "returnChance": 0.55,
+        "returnJitterDeg": 0.8,
+        "largeChance": 0.01,
+        "amplitudeScale": 0.65,
+        "fixationScale": 1.6
+      },
+      "snapGaze": true
     },
-
     "thinking": {
       "_": "Генерируется ответ. Взгляд мягко отводится, перебирает несколько близких точек и ненадолго возвращается к собеседнику; лёгкий прищур собирает выражение.",
       "pose": {
-        "browInnerUp": 0.22,
-        "browDownLeft": 0.12,
-        "browDownRight": 0.12,
-        "eyeSquintLeft": 0.09,
-        "eyeSquintRight": 0.07
+        "browInnerUp": 0.12,
+        "browDownLeft": 0.08,
+        "browDownRight": 0.06,
+        "eyeSquintLeft": 0.06,
+        "eyeSquintRight": 0.045
       },
       "_pose": "Брови сходятся: внутренние концы вверх, наружные вниз. browDown* делится с морганием по сумме.",
-      "gazeBias": [-9, 4],
-      "_gazeBias": "Небольшой отвод вверх-влево вместо прежнего театрального −20°/+9°.",
+      "gazeBias": [
+        -9,
+        4
+      ],
+      "_gazeBias": "Сторона отвода чередуется между ходами; контакт остаётся основной точкой внимания.",
       "gazeStyle": {
-        "anchorEverySec": [0.8, 1.5],
-        "anchorChance": 0.08,
+        "anchorEverySec": [
+          0.9,
+          1.6
+        ],
+        "anchorChance": 0.58,
         "anchorJitterDeg": 0.7,
         "returnChance": 0.45,
         "returnJitterDeg": 1.1,
         "amplitudeScale": 0.8,
         "largeChance": 0.02,
-        "fixationScale": 1.25
+        "fixationScale": 1.5
       },
       "_gazeStyle": "Каждые 0.8–1.5 с гарантирован короткий взгляд обратно на человека; небольшой случайный шанс делает рисунок менее периодичным.",
       "blinkScale": 1.45,
       "_blinkScale": "Моргания немного редеют, но не превращают задумчивость в застывшую маску.",
       "headTiltDeg": 1.5,
-      "nod": null
+      "nod": null,
+      "alternateGazeSide": true
     },
-
     "speaking": {
       "_": "Висемы плюс эмоция. В начале фразы взгляд возвращается к собеседнику; во время речи контакт доминирует, но редкие короткие отводы сохраняются.",
       "pose": {},
-      "gazeBias": [0, 0],
+      "gazeBias": [
+        0,
+        0
+      ],
       "snapGaze": true,
       "_snapGaze": "После thinking нельзя начинать ответ, продолжая смотреть вверх-влево.",
       "gazeStyle": {
         "returnChance": 0.88,
         "returnJitterDeg": 0.45,
         "amplitudeScale": 0.45,
-        "largeChance": 0.025
+        "largeChance": 0.025,
+        "anchorEverySec": [
+          1.4,
+          2.4
+        ],
+        "fixationScale": 1.5
       },
       "_gazeStyle": "Примерно одна из восьми фиксаций кратко отводится; остальные держатся в пределах лица собеседника.",
       "blinkScale": 1.1,
       "headTiltDeg": 0,
       "nod": null
     },
-
     "interrupted": {
       "_": "Пользователь нажал Enter посреди реплики. Двадцать строк, но именно этот момент продаёт всю отмену на демо: жюри видит не тишину, а реакцию.",
-      "pose": { "browInnerUp": 0.5, "browOuterUpLeft": 0.55, "browOuterUpRight": 0.55, "eyeWideLeft": 0.35, "eyeWideRight": 0.35 },
-      "gazeBias": [0, 0],
+      "pose": {
+        "browInnerUp": 0.5,
+        "browOuterUpLeft": 0.55,
+        "browOuterUpRight": 0.55,
+        "eyeWideLeft": 0.35,
+        "eyeWideRight": 0.35
+      },
+      "gazeBias": [
+        0,
+        0
+      ],
       "snapGaze": true,
       "_snapGaze": "Взгляд резко возвращается на собеседника: саккада отменяется, фиксация ставится в ноль немедленно.",
       "blinkScale": 1.4,
@@ -124,80 +176,118 @@
       "nod": null
     }
   },
-
   "emotions": {
     "_ось": "Пять эмоций — neutral, skeptical, pressing, warming, impressed — лежат на оси «холодно → тепло» и выводятся из накопленных оценок по ходу разговора. `angry` и `anxious` на этой оси НЕ лежат: их включает персона сценария или разметка [emo:] в реплике. Механика у них общая, разница только в том, кто их назначает.",
-
     "_": "Эмоция владеет бровями, веками и уголками рта. Рот не трогает — им распоряжаются висемы. Уголки рта (mouthSmile/mouthFrown/mouthDimple) в зоне эмоции законно: это ДРУГИЕ морфы, чем те, что двигают висемы (челюсть, смыкание, вытягивание), и таблица зон это разделение стережёт.",
-
     "neutral": {
       "clip": "neutral.json",
       "_": "Покой — не нули. У живого человека в покое веки чуть прижаты, а брови чуть опущены; поза это и описывает. Пока клип ПОДМЕНЯЛ позу, покой брался из записи и выглядел живым при пустой позе. После перехода на смешивание пустая поза сделала бы его мёртвым, поэтому записанный покой перенесён сюда числами (это средние по снятому клипу, умноженные на прежнюю амплитуду 0.42).",
       "pose": {
-        "eyeSquintLeft": 0.11, "eyeSquintRight": 0.12,
-        "browDownLeft": 0.08, "browDownRight": 0.07
+        "eyeSquintLeft": 0.11,
+        "eyeSquintRight": 0.12,
+        "browDownLeft": 0.08,
+        "browDownRight": 0.07
       },
       "_eyeBlink": "Веки в позу покоя не пишем: ими распоряжается моргание, и постоянная добавка держала бы глаза приоткрытыми всегда.",
-      "blinkScale": 1.0, "articulationRate": 1.0, "headPitchDeg": 0
+      "blinkScale": 1.0,
+      "articulationRate": 1.0,
+      "headPitchDeg": 0,
+      "accent": {
+        "pitchDeg": 0.8,
+        "yawDeg": 0,
+        "rollDeg": 0,
+        "durationMs": 700
+      }
     },
-
     "skeptical": {
       "clip": "skeptical.json",
       "_": "Скепсис: асимметрия. Одна бровь вниз, другая вверх — симметричный скепсис читается как недоумение.",
       "pose": {
-        "browDownLeft": 0.42, "browOuterUpRight": 0.38, "browInnerUp": 0.1,
-        "eyeSquintLeft": 0.3, "eyeSquintRight": 0.16,
-        "eyeBlinkLeft": 0.16, "eyeBlinkRight": 0.1,
+        "browDownLeft": 0.42,
+        "browOuterUpRight": 0.38,
+        "browInnerUp": 0.1,
+        "eyeSquintLeft": 0.3,
+        "eyeSquintRight": 0.16,
+        "eyeBlinkLeft": 0.16,
+        "eyeBlinkRight": 0.1,
         "mouthFrownLeft": 0.12
       },
       "_eyeBlink": "Прищур подмешивает eyeBlink — тот самый морф, за который спорит моргание. Правило MAX в таблице зон: моргание перебивает прищур полностью и отпускает обратно на его уровень.",
       "blinkScale": 1.15,
       "articulationRate": 0.94,
       "headPitchDeg": -1.6,
-      "_headPitchDeg": "Подбородок чуть вниз — взгляд исподлобья."
+      "_headPitchDeg": "Подбородок чуть вниз — взгляд исподлобья.",
+      "accent": {
+        "pitchDeg": 0,
+        "yawDeg": 2.0,
+        "rollDeg": 0.5,
+        "durationMs": 700
+      }
     },
-
     "pressing": {
       "clip": "pressing.json",
       "_": "Давит: брови вниз и сведены, веки прищурены, голова подана вперёд.",
       "pose": {
-        "browDownLeft": 0.5, "browDownRight": 0.5, "browInnerUp": 0.22,
-        "eyeSquintLeft": 0.34, "eyeSquintRight": 0.34,
-        "noseSneerLeft": 0.1, "noseSneerRight": 0.1
+        "browDownLeft": 0.5,
+        "browDownRight": 0.5,
+        "browInnerUp": 0.06,
+        "eyeSquintLeft": 0.34,
+        "eyeSquintRight": 0.34,
+        "noseSneerLeft": 0.1,
+        "noseSneerRight": 0.1
       },
       "blinkScale": 0.85,
       "articulationRate": 1.08,
       "_articulationRate": "Артикуляция чуть быстрее — напор.",
-      "headPitchDeg": -2.4
+      "headPitchDeg": -2.4,
+      "accent": {
+        "pitchDeg": 1.0,
+        "yawDeg": 0,
+        "rollDeg": 0,
+        "durationMs": 700
+      }
     },
-
     "angry": {
       "clip": "angry.json",
       "_": "Гнев. От `pressing` отличается не силой, а рисунком: давление — это сведённые брови и прищур, гнев добавляет раздутые ноздри и опущенные уголки рта. Без ноздрей и рта злое лицо читается как «очень недоволен», а разгневанный клиент на демо должен читаться с первого кадра.",
       "pose": {
-        "browDownLeft": 0.72, "browDownRight": 0.68, "browInnerUp": 0.1,
-        "eyeSquintLeft": 0.42, "eyeSquintRight": 0.38,
-        "noseSneerLeft": 0.34, "noseSneerRight": 0.29,
-        "mouthFrownLeft": 0.3, "mouthFrownRight": 0.25,
-        "cheekSquintLeft": 0.16, "cheekSquintRight": 0.13
+        "browDownLeft": 0.72,
+        "browDownRight": 0.68,
+        "browInnerUp": 0.1,
+        "eyeSquintLeft": 0.42,
+        "eyeSquintRight": 0.38,
+        "noseSneerLeft": 0.34,
+        "noseSneerRight": 0.29,
+        "mouthFrownLeft": 0.3,
+        "mouthFrownRight": 0.25,
+        "cheekSquintLeft": 0.16,
+        "cheekSquintRight": 0.13
       },
       "_asymmetry": "Стороны намеренно не равны, как и в остальных эмоциях: симметричная гримаса читается как маска.",
       "blinkScale": 1.35,
       "_blinkScale": "Моргает реже: гнев — это неподвижный взгляд. Множитель растягивает интервалы, поэтому он больше единицы.",
       "articulationRate": 1.16,
       "_articulationRate": "Речь быстрее и отрывистее, чем при давлении (1.08).",
-      "headPitchDeg": -3.2
+      "headPitchDeg": -3.2,
+      "accent": {
+        "pitchDeg": 0.7,
+        "yawDeg": 0,
+        "rollDeg": 0,
+        "durationMs": 700
+      }
     },
-
     "anxious": {
       "clip": "anxious.json",
       "_": "Тревога. Ключ — форма бровей «домиком»: внутренние концы ВВЕРХ при слегка опущенных наружных. Ровно этим тревога отличается от всего остального набора, где брови либо вниз, либо целиком вверх.",
       "pose": {
         "browInnerUp": 0.52,
-        "browDownLeft": 0.18, "browDownRight": 0.15,
-        "eyeWideLeft": 0.14, "eyeWideRight": 0.17,
+        "browDownLeft": 0.18,
+        "browDownRight": 0.15,
+        "eyeWideLeft": 0.14,
+        "eyeWideRight": 0.17,
         "eyeSquintLeft": 0.07,
-        "mouthFrownLeft": 0.16, "mouthFrownRight": 0.2,
+        "mouthFrownLeft": 0.16,
+        "mouthFrownRight": 0.2,
         "mouthDimpleLeft": 0.1
       },
       "_eyeWide": "Раскрытие глаз намеренно мало, как и у `impressed`: на полной интенсивности это читается как испуг, а широко раскрытые глаза — главный источник кукольности.",
@@ -205,36 +295,66 @@
       "_blinkScale": "Моргает часто: множитель СОКРАЩАЕТ интервалы, поэтому он меньше единицы.",
       "articulationRate": 1.06,
       "_articulationRate": "Говорит чуть быстрее и сбивчивее.",
-      "headPitchDeg": -0.9
+      "headPitchDeg": -0.9,
+      "accent": {
+        "pitchDeg": 0.3,
+        "yawDeg": 0,
+        "rollDeg": 0.7,
+        "durationMs": 700
+      }
     },
-
     "warming": {
       "clip": "warming.json",
       "_": "Теплеет: брови расслаблены, уголки рта чуть вверх, веки мягкие.",
       "pose": {
-        "browInnerUp": 0.16, "browOuterUpLeft": 0.14, "browOuterUpRight": 0.14,
-        "mouthSmileLeft": 0.26, "mouthSmileRight": 0.24,
-        "mouthDimpleLeft": 0.16, "mouthDimpleRight": 0.14,
-        "cheekSquintLeft": 0.2, "cheekSquintRight": 0.18
+        "browInnerUp": 0.16,
+        "browOuterUpLeft": 0.14,
+        "browOuterUpRight": 0.14,
+        "mouthSmileLeft": 0.42,
+        "mouthSmileRight": 0.38,
+        "mouthDimpleLeft": 0.16,
+        "mouthDimpleRight": 0.14,
+        "cheekSquintLeft": 0.2,
+        "cheekSquintRight": 0.18
       },
       "_asymmetry": "Левая и правая стороны намеренно не равны: симметричная улыбка читается как маска.",
       "blinkScale": 1.0,
       "articulationRate": 0.97,
-      "headPitchDeg": 0.8
+      "headPitchDeg": 0.8,
+      "accent": {
+        "pitchDeg": 1.8,
+        "yawDeg": 0,
+        "rollDeg": 0.3,
+        "durationMs": 700
+      }
     },
-
     "impressed": {
       "clip": "impressed.json",
       "_": "Впечатлён: брови вверх, глаза шире, лёгкая улыбка.",
       "pose": {
-        "browInnerUp": 0.36, "browOuterUpLeft": 0.42, "browOuterUpRight": 0.38,
-        "eyeWideLeft": 0.16, "eyeWideRight": 0.13,
-        "mouthSmileLeft": 0.2, "mouthSmileRight": 0.23
+        "browInnerUp": 0.46,
+        "browOuterUpLeft": 0.5,
+        "browOuterUpRight": 0.46,
+        "eyeWideLeft": 0.16,
+        "eyeWideRight": 0.13,
+        "mouthSmileLeft": 0.2,
+        "mouthSmileRight": 0.23
       },
       "_eyeWide": "Раскрытие глаз приглушено против первой версии (0.30/0.28): на полной интенсивности лицо читалось не как «впечатлён», а как «испуган». Широко раскрытые глаза — главный источник кукольности из всей мимики.",
       "blinkScale": 0.9,
       "articulationRate": 1.02,
-      "headPitchDeg": 1.4
+      "headPitchDeg": 1.4,
+      "accent": {
+        "pitchDeg": 2.3,
+        "yawDeg": 0,
+        "rollDeg": 0,
+        "durationMs": 700
+      }
     }
+  },
+  "performance": {
+    "intensityGain": 1,
+    "statePoseFloor": 0.3,
+    "_": "Единая калибровка для боевой страницы и стенда. Сильная эмоция ослабляет фоновую позу состояния."
   }
 }

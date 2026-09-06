@@ -32,3 +32,17 @@ test('expensive post path has a measured pixel budget and no redundant DOF', () 
   assert.equal(look.post.dof.enabled, false);
   assert.equal(look.renderer.maxPixelRatio, 1.5);
 });
+
+test('portrait target uses the actual midpoint of both eye bones', async () => {
+  const THREE = await import('three');
+  const { AvatarModel } = await import('../src/model.js');
+  const root = new THREE.Object3D();
+  const left = new THREE.Bone(), right = new THREE.Bone();
+  left.position.set(0.0358, 1.694, 0.0721);
+  right.position.set(-0.0352, 1.693, 0.0735);
+  root.add(left, right);
+  const model = { root, bones: { LeftEye:left, RightEye:right }, cfg:look };
+  const target = AvatarModel.prototype.frameTarget.call(model);
+  assert.ok(Math.abs(target.x - 0.0003) < 1e-8);
+  assert.ok(Math.abs(target.y - 1.6935) < 1e-8);
+});

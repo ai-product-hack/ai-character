@@ -50,6 +50,8 @@ export class Avatar {
     this.clock = null;
 
     this._lastFrameMs = 0;
+    this._speechBeatIn = 0;
+    this._pendingAccents = [];
     this._running = false;
     this.stats = { fps: 0, frameMs: 0, cpuMs: 0 };
     this._fps = { frames: 0, acc: 0 };
@@ -119,14 +121,28 @@ export class Avatar {
     return this;
   }
 
+  /** Queue a gesture until articulation is actually playing. */
+  queueSpeechAccent(kind = 'speech', ptsMs = 0) {
+    this._pendingAccents.push({ kind, ptsMs });
+    this._pendingAccents.sort((a, b) => a.ptsMs - b.ptsMs);
+    return this;
+  }
+
   /** Осмысленный жест на начале заполнителя или содержательной реплики. */
   speechAccent(kind = 'speech') {
     if (!this.behavior) return this;
     const cfg = this.configs.expression.speechMotion || {};
-    const amp = kind === 'backchannel'
-      ? (cfg.backchannelNodDeg ?? 3.0)
-      : (cfg.nodDeg ?? 1.6);
-    this.behavior.nod(amp, cfg.nodDurationMs ?? 520);
+    const accent = this.configs.expression.emotions[this.emotion.name]?.accent;
+    if (kind === 'backchannel') {
+      this.behavior.nod(cfg.backchannelNodDeg ?? 2, cfg.nodDurationMs ?? 520);
+    } else if (accent) {
+      const strength = this.emotion.name === 'neutral' ? 1 : this.emotion.intensity;
+      this.behavior.gesture({ ...accent, pitchDeg: accent.pitchDeg * strength,
+        yawDeg: accent.yawDeg * strength, rollDeg: accent.rollDeg * strength });
+    } else {
+      this.behavior.nod(cfg.nodDeg ?? 1.2, cfg.nodDurationMs ?? 520);
+    }
+    this._speechBeatIn = cfg.beatEverySec ?? 2.8;
     this.behavior.notifyEvent();
     return this;
   }
@@ -159,6 +175,7 @@ export class Avatar {
     if (!this.visemes) return false;
     const releaseMs = this.configs.visemes.timing.interruptReleaseMs ?? 45;
     const ok = this.visemes.cancel(genId, releaseMs);
+    if (ok) { this._pendingAccents.length = 0; this._speechBeatIn = 0; }
     if (ok && this.behavior) this.behavior.notifyEvent();
     // Отмена и реакция — одно событие: жюри должно увидеть не тишину, а лицо.
     if (ok && this.states) this.states.set('interrupted');
@@ -168,6 +185,7 @@ export class Avatar {
   setSize(w, h) {
     this.look.setSize(w, h);
     if (this.model) this.look.frameOn(this.model.frameTarget());
+    if (this.behavior) this.behavior.setAnchor(this.look.camera.position);
   }
 
   /**
@@ -190,8 +208,22 @@ export class Avatar {
         const speechActivity = this.visemes && this.visemes.isPlaying
           ? this.visemes.activity : 0;
         this.emotionLayer.update(dt, fastMs, speechActivity);
+        this._speechBeatIn -= dt;
+        const audioMs = this.clock?.nowMs();
+        let accent = null;
+        while (audioMs != null && this._pendingAccents.length &&
+               this._pendingAccents[0].ptsMs <= audioMs) {
+          accent = this._pendingAccents.shift();
+        }
+        if (this.state === 'speaking' && speechActivity > 0.18 &&
+            (accent || this._speechBeatIn <= 0)) {
+          this.speechAccent(accent?.kind || 'speech');
+        } else if (accent && this.state === 'speaking') {
+          // A clause can start with silence: retain its cue until the first phoneme.
+          this._pendingAccents.unshift(accent);
+        }
       }
-      if (this.bodyIdle) this.bodyIdle.update(dt);
+      if (this.bodyIdle) this.bodyIdle.update(dt, this.state, this.emotion);
       if (this.behavior) this.behavior.update(dt, nowMs / 1000);
       morphs.commit();
     }

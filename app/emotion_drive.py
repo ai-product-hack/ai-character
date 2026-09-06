@@ -102,5 +102,8 @@ def mood_from(log, criteria, min_scored: int = 2, recent: int = 4,
 
     # Интенсивность — насколько далеко от середины. Ровно посередине лицо
     # нейтрально, и подмешивать туда нечего.
-    intensity = min(1.0, abs(ratio - 0.5) * 2 + abs(trend))
+    strength = min(1.0, abs(ratio - 0.5) * 2 + abs(trend))
+    # A selected non-neutral expression needs enough signal to be legible.
+    # Neutral still carries zero emotional force; the renderer owns the rest face.
+    intensity = 0.0 if emotion == "neutral" else 0.45 + 0.55 * strength
     return Mood(emotion, intensity, ratio, len(vals), trend)

@@ -31,6 +31,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     os.chdir(ROOT)
     socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+    with socketserver.TCPServer(("127.0.0.1", PORT), Handler) as httpd:
         print(f"http://localhost:{PORT}/avatar/dev/")
         httpd.serve_forever()

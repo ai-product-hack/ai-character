@@ -422,14 +422,14 @@ function playAudio(h, payload) {
   stats.lateAudioMs = Math.max(stats.lateAudioMs, Math.round(schedule.slipMs));
   if (h.backchannel) {
     backchannelSources.set(h.generation_id, src);
-    avatar.speechAccent('backchannel');
+    avatar.queueSpeechAccent('backchannel', h.start_ms + schedule.slipMs);
   } else if (!contentAccented) {
     contentAccented = true;
     // Страховка протокола: содержательная речь после заполнителя идёт в той
     // же generation, поэтому ветка «новая генерация» выше не срабатывает.
     // Без явного возврата лицо оставалось в thinking и смотрело мимо человека.
     avatar.setState('speaking');
-    avatar.speechAccent('speech');
+    avatar.queueSpeechAccent('speech', h.start_ms + schedule.slipMs);
   }
   if (!h.backchannel) lastContentSource = src;
   // Когда звук РЕАЛЬНО зазвучит: время старта источника, а не прихода кадра.
@@ -479,16 +479,16 @@ function onCancel(gid) {
 
 function loop(now) {
   requestAnimationFrame(loop);
+  applyEmotions();
   avatar.frame(now);
   drawSubs();
-  applyEmotions();
   applyPanels();
   if ($('hud').style.display !== 'none') drawHud();
 }
 
-// Амплитуда умеренная: на полуреалистичном лице большая мимика превращает
-// персонажа в мультик. Натекание и спад делает сам слой эмоции за 200 мс.
-const EMO_INTENSITY = 0.68;
+// Калибровка интенсивности общая со стендом: expression.config.json.
+// Переходы и пределы записанной мимики контролирует сам эмоциональный слой.
+
 
 function applyEmotions() {
   if (!clock || clock.t0 === null || !emoMarks.length) return;
@@ -500,7 +500,7 @@ function applyEmotions() {
   if (i === emoApplied || i < 0) return;
   emoApplied = i;
   const m = emoMarks[i];
-  avatar.setEmotion(m.emotion, EMO_INTENSITY * (m.intensity ?? 1));
+  avatar.setEmotion(m.emotion, (avatar.configs.expression.performance?.intensityGain ?? 1) * (m.intensity ?? 1));
 }
 
 // ------------------------------------------------------------------ панель
@@ -835,6 +835,7 @@ async function sendChunk(f32) {
   try {
     const r = await fetch(api('/api/audio'), {method: 'POST', body: i16.buffer});
     const d = await r.json();
+    if (d.user_speaking && avatar?.state === 'listening') avatar.noteActivity();
     if (d.endpoint) {
       tAsk = performance.now();
       if (d.text) micSay('Ответ распознан. Микрофон остаётся включён.', 'hot');

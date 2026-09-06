@@ -23,6 +23,8 @@ export class StateMachine {
     this.setConfig(cfg);
 
     this.state = 'listening';
+    this._thinkingSide = -1;
+    this._activityAge = Infinity;
     this.sinceEnter = 0;
     // Часы нетерпения идут отдельно от часов состояния: человек, который
     // печатает ответ, не «молчит», и подгонять его нечестно. Набор текста
@@ -51,6 +53,8 @@ export class StateMachine {
     if (!STATES.includes(state)) throw new Error(`StateMachine: неизвестное состояние «${state}»`);
     if (state === this.state) return this;
     this.state = state;
+    if (state === 'thinking') this._thinkingSide *= -1;
+    this._nodIn = this._nextNodDelay();
     this.sinceEnter = 0;
     this.idleSince = 0;
     if (state !== 'listening') this.impatience = 0;
@@ -83,6 +87,7 @@ export class StateMachine {
 
     let biasYaw = (c.gazeBias || [0, 0])[0];
     let biasPitch = (c.gazeBias || [0, 0])[1];
+    if (c.alternateGazeSide) biasYaw = Math.abs(biasYaw) * this._thinkingSide;
     let blink = c.blinkScale ?? 1;
 
     // Нетерпение подмешивается пропорционально, а не включается порогом:
@@ -99,7 +104,9 @@ export class StateMachine {
       blink += ((imp.blinkScale ?? 1) - blink) * k;
     }
 
-    this.emotion.setStatePose(pose);
+    const strength = this.emotion.emotion.name === 'neutral' ? 0 : this.emotion.emotion.intensity;
+    const floor = this.cfg.performance?.statePoseFloor ?? 0.3;
+    this.emotion.setStatePose(pose, this.state === 'interrupted' ? 1 : 1 - strength * (1 - floor));
     this.behavior.setGazeBias(biasYaw, biasPitch);
     this.behavior.setGazeStyle(c.gazeStyle);
     // Множители моргания от состояния и от эмоции перемножаются: «думает и при
@@ -122,12 +129,15 @@ export class StateMachine {
    * дёрганье.
    */
   noteActivity() {
+    if (this._activityAge > 3 && this.state === 'listening') this.behavior.snapGaze();
+    this._activityAge = 0;
     this.idleSince = 0;
     return this;
   }
 
   update(dt) {
     this.sinceEnter += dt;
+    this._activityAge += dt;
     this.idleSince += dt;
     const c = this.config;
 
@@ -146,7 +156,9 @@ export class StateMachine {
     if (c.nod) {
       this._nodIn -= dt;
       if (this._nodIn <= 0) {
-        this.behavior.nod(c.nod.amplitudeDeg, c.nod.durationMs);
+        if (this._activityAge <= (c.nod.activityWindowSec ?? Infinity)) {
+          this.behavior.nod(c.nod.amplitudeDeg, c.nod.durationMs);
+        }
         this._nodIn = this._nextNodDelay();
       }
     }

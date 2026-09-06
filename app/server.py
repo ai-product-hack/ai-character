@@ -291,9 +291,15 @@ class Session:
         решения эндпоинтера: заполнитель обязан стартовать оттуда, иначе к
         паузе добавится ещё и расшифровка.
         """
+        endpointer = self.voice.endpointer
+        speech_before = endpointer.speech_ms if endpointer is not None else 0
         utt = self.voice.push(pcm)
         if utt is None:
-            return {"ok": True, "endpoint": False}
+            speech_after = endpointer.speech_ms if endpointer is not None else 0
+            # Reuse VAD evidence for listening gestures; silence and the muted
+            # microphone during agent speech must not look like user activity.
+            return {"ok": True, "endpoint": False,
+                    "user_speaking": speech_after > speech_before}
         return self._on_utterance(utt)
 
     def end_utterance(self) -> dict:
@@ -457,11 +463,10 @@ class Session:
             # ровное лицо весь показ — хуже, чем эмоция от механики продукта.
             mood = mood_from(self.evaluator.log, self.scenario.criteria,
                              baseline=self.scenario.persona.start_emotion)
-            if mood.intensity > 0:
-                self._emit({"kind": "emotions", "generation_id": r.generation_id,
-                            "clause": idx, "from_scores": True,
-                            "marks": [{"pts_ms": off, "emotion": mood.emotion,
-                                       "intensity": mood.intensity}]})
+            self._emit({"kind": "emotions", "generation_id": r.generation_id,
+                        "clause": idx, "from_scores": True,
+                        "marks": [{"pts_ms": r.start_ms + off, "emotion": mood.emotion,
+                                   "intensity": mood.intensity}]})
         if r.panels:
             em["panels"] = em.get("panels", 0) + len(r.panels)
             # Данные кладём сразу: панель рисуется из уже накопленного отчёта,

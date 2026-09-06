@@ -60,3 +60,52 @@ class SpeakingAfterBackchannel(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EmotionReset(unittest.TestCase):
+    def test_unmarked_neutral_clause_clears_previous_expression_at_audio_start(self):
+        session = Session.__new__(Session)
+        session.bc_cfg = {}; session.spoken = {}
+        session.evaluator = types.SimpleNamespace(log=EvaluationLog())
+        session.scenario = types.SimpleNamespace(criteria=[], persona=Persona(role='проверяющий'))
+        frames = []
+        session._emit = lambda header, payload=b'': frames.append(header)
+        em = {'offset_ms':700, 'clause_base':1, 'used_bc':True,
+              't_first_audio':None, 't_first_speech':None, '_placed':True}
+        result = clause(); result.start_ms = 120
+        session._emit_clause(None, result, em, time.perf_counter())
+        emotions = [f for f in frames if f['kind'] == 'emotions']
+        self.assertEqual(len(emotions), 1)
+        self.assertEqual(emotions[0]['marks'], [
+            {'pts_ms':820, 'emotion':'neutral', 'intensity':0.0}])
+
+    def test_explicit_semantic_tag_takes_priority_over_score_fallback(self):
+        session = Session.__new__(Session)
+        session.bc_cfg = {}; session.spoken = {}
+        frames = []
+        session._emit = lambda header, payload=b'': frames.append(header)
+        em = {'offset_ms':0, 'clause_base':0, 'used_bc':False,
+              't_first_audio':None, 't_first_speech':None, '_placed':True}
+        result = clause(); result.emotions = [{'pts_ms':0, 'emotion':'anxious', 'intensity':0.8}]
+        session._emit_clause(None, result, em, time.perf_counter())
+        emotions = [f for f in frames if f['kind'] == 'emotions']
+        self.assertEqual(len(emotions), 1)
+        self.assertEqual(emotions[0]['marks'][0]['emotion'], 'anxious')
+
+
+class VoiceActivity(unittest.TestCase):
+    def test_only_new_vad_speech_counts_as_listening_activity(self):
+        session = Session.__new__(Session)
+        endpointer = types.SimpleNamespace(speech_ms=100)
+        def push(pcm):
+            endpointer.speech_ms += float(pcm[0])
+            return None
+        session.voice = types.SimpleNamespace(endpointer=endpointer, push=push)
+        self.assertFalse(session.push_audio([0])['user_speaking'])
+        self.assertTrue(session.push_audio([32])['user_speaking'])
+        self.assertFalse(session.push_audio([0])['user_speaking'])
+
+    def test_no_vad_does_not_invent_user_activity(self):
+        session = Session.__new__(Session)
+        session.voice = types.SimpleNamespace(endpointer=None, push=lambda pcm: None)
+        self.assertFalse(session.push_audio([1])['user_speaking'])

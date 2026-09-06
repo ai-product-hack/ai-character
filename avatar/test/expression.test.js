@@ -16,7 +16,7 @@ import { StateMachine, STATES } from '../src/states.js';
 import { Microbehavior } from '../src/behavior.js';
 import { VisemeLayer } from '../src/viseme.js';
 import { MorphWriter } from '../src/morphs.js';
-import { EMOTIONS } from '../src/avatar.js';
+import { Avatar, EMOTIONS } from '../src/avatar.js';
 import { ManualClock } from '../src/clock.js';
 import { LAYERS } from '../src/zones.js';
 
@@ -155,7 +155,7 @@ describe('состояния визуально различимы', () => {
     const ctx = setup();
     ctx.states.set('thinking');
     run(ctx, 2.0);
-    assert.ok(ctx.behavior.gazeBias.yaw < -5 && ctx.behavior.gazeBias.yaw > -12,
+    assert.ok(Math.abs(ctx.behavior.gazeBias.yaw) > 5 && Math.abs(ctx.behavior.gazeBias.yaw) < 12,
       'отвод должен читаться, но не уходить далеко в сторону');
     assert.ok(ctx.behavior.gazeBias.pitch > 2 && ctx.behavior.gazeBias.pitch < 7,
       'взгляд немного вверх, а не в потолок');
@@ -166,7 +166,7 @@ describe('состояния визуально различимы', () => {
       total++;
       const distance = Math.hypot(ctx.behavior.gaze.yaw, ctx.behavior.gaze.pitch);
       if (distance < 1.5) contact++;
-      if (ctx.behavior.gaze.yaw < -4 && ctx.behavior.gaze.pitch > 1) {
+      if (Math.abs(ctx.behavior.gaze.yaw) > 4 && ctx.behavior.gaze.pitch > 1) {
         averted++;
         avertedRun++;
         longestAvertedRun = Math.max(longestAvertedRun, avertedRun);
@@ -174,8 +174,8 @@ describe('состояния визуально различимы', () => {
         avertedRun = 0;
       }
     });
-    assert.ok(averted / total > 0.25, 'задумчивый отвод должен оставаться заметным');
-    assert.ok(contact / total > 0.08, 'должны быть короткие возвраты к собеседнику');
+    assert.ok(averted / total > 0.1, 'задумчивый отвод должен оставаться заметным');
+    assert.ok(contact / total > 0.45, 'должны быть короткие возвраты к собеседнику');
     assert.ok(longestAvertedRun / 60 < 2.1,
       `непрерывный отвод длился ${(longestAvertedRun / 60).toFixed(1)} с`);
     assert.ok(ctx.morphs.get('eyeSquintLeft') > 0.04,
@@ -255,13 +255,13 @@ describe('нетерпение в listening', () => {
     assert.ok(maxStep < 0.02, `скачок нетерпения ${maxStep.toFixed(3)} за кадр`);
   });
 
-  test('нетерпение уводит взгляд в сторону и поднимает бровь', () => {
+  test('долгая пауза не удерживает взгляд в стороне', () => {
     const ctx = setup();
     ctx.states.set('listening');
     const imp = expr.states.listening.impatience;
     run(ctx, imp.afterSec + imp.rampSec + 1);
-    assert.ok(Math.abs(ctx.behavior.gazeBias.yaw) > 8, 'взгляд должен уйти в сторону');
-    assert.ok(ctx.morphs.get('browOuterUpLeft') > 0.15, 'бровь должна подняться');
+    assert.equal(ctx.behavior.gazeBias.yaw, 0);
+    assert.ok(ctx.morphs.get('browOuterUpLeft') < 0.12, 'ожидание не становится театральным недовольством');
   });
 
   test('смена состояния обнуляет нетерпение', () => {
@@ -655,7 +655,7 @@ describe('живость во время речи', () => {
 
   test('акцент заполнителя заметнее обычного речевого', () => {
     assert.ok(expr.speechMotion.backchannelNodDeg > expr.speechMotion.nodDeg);
-    assert.ok(expr.speechMotion.backchannelNodDeg >= 3,
+    assert.ok(expr.speechMotion.backchannelNodDeg >= 1.5,
       '«угу» должен сопровождаться читаемым кивком');
   });
 });
@@ -729,4 +729,112 @@ describe('бюджет кадра', () => {
     const grew = process.memoryUsage().heapUsed - before;
     assert.ok(grew < 192 * 1024, `куча выросла на ${grew} байт за 90 с`);
   });
+});
+
+describe('регрессии живого диалога', () => {
+  test('120 секунд ожидания сохраняют контакт и ограничивают каждый отвод', () => {
+    const ctx = setup();
+    let contact = 0, away = 0, longest = 0;
+    run(ctx, 120, () => {
+      if (Math.hypot(ctx.behavior.gaze.yaw, ctx.behavior.gaze.pitch) < 1.5) {
+        contact++; away = 0;
+      } else { away++; longest = Math.max(longest, away); }
+    });
+    assert.ok(contact / 7200 > 0.8, `контакт: ${contact / 72}%`);
+    assert.ok(longest / 60 < 2.5, `непрерывный отвод: ${longest / 60} с`);
+    assert.equal(ctx.behavior.gazeBias.yaw, 0);
+  });
+
+  test('thinking чередует сторону отвода между ходами', () => {
+    const ctx = setup();
+    ctx.states.set('thinking'); const first = ctx.behavior.gazeBias.yaw;
+    ctx.states.set('speaking'); ctx.states.set('thinking');
+    assert.equal(ctx.behavior.gazeBias.yaw, -first);
+  });
+
+  test('ноль эмоции neutral сохраняет лицо покоя и движение настоящей записи', () => {
+    const ctx = setup();
+    const raw = JSON.parse(readFileSync(resolve(here, '../clips/neutral.json')));
+    ctx.emotion.registerClip('neutral', raw);
+    ctx.emotion.setEmotion('neutral', 0);
+    let lo = Infinity, hi = 0;
+    run(ctx, 12, (t) => {
+      if (t < 1) return;
+      const value = ctx.morphs.get('eyeSquintLeft');
+      lo = Math.min(lo, value); hi = Math.max(hi, value);
+    });
+    assert.ok(lo > 0.05, `покой обнулился: ${lo}`);
+    assert.ok(hi - lo > 0.002, `запись перестала двигаться: ${hi-lo}`);
+  });
+
+  test('морганы из mocap не превращаются в длительно закрытые глаза', () => {
+    const ctx = setup(); ctx.behavior.setEnabled('blink', false);
+    ctx.emotion.registerClip('neutral', {
+      version:1, kind:'face-mocap', name:'neutral', durationMs:2000,
+      channels:['eyeBlinkLeft', 'eyeBlinkRight'],
+      frames:[{tMs:0, weights:[0,0]}, {tMs:1000, weights:[1,1]}, {tMs:2000, weights:[0,0]}],
+    });
+    let peak = 0;
+    run(ctx, 4, () => { peak = Math.max(peak, ctx.morphs.get('eyeBlinkLeft')); });
+    assert.equal(peak, 0);
+  });
+
+  test('поза thinking не перебивает рисунок сильной эмоции', () => {
+    const ctx = setup(); ctx.states.set('thinking');
+    ctx.emotion.setEmotion('angry', 1); ctx.states.apply();
+    run(ctx, 1);
+    assert.ok(ctx.morphs.get('browInnerUp') < 0.17);
+    assert.ok(ctx.morphs.get('browDownLeft') > 0.65);
+  });
+
+  test('нет кивков пустому экрану, активность собеседника разрешает кивок', () => {
+    const ctx = setup(); let nods = 0;
+    ctx.behavior.nod = () => nods++;
+    run(ctx, 20); assert.equal(nods, 0);
+    ctx.states.noteActivity(); ctx.states._nodIn = 0.1;
+    run(ctx, 0.2); assert.equal(nods, 1);
+  });
+
+  test('все настоящие клипы сохраняют отличимую позу на рабочей интенсивности', () => {
+    const poses = {};
+    for (const name of EMOTIONS) {
+      const ctx = setup();
+      ctx.emotion.registerClip(name, JSON.parse(readFileSync(resolve(here, `../clips/${name}.json`))));
+      ctx.emotion.setEmotion(name, 0.8); ctx.states.set('speaking'); ctx.states.apply();
+      const mean = {};
+      run(ctx, 7, t => {
+        if (t < 1) return;
+        for (const [key,value] of Object.entries(pose(ctx.morphs))) mean[key] = (mean[key] || 0) + value/360;
+      });
+      poses[name] = mean;
+    }
+    for (let i=0; i<EMOTIONS.length; i++) for (let j=i+1; j<EMOTIONS.length; j++) {
+      const a=EMOTIONS[i], b=EMOTIONS[j];
+      assert.ok(dist(poses[a],poses[b]) > 0.22, `${a}/${b}: ${dist(poses[a],poses[b])}`);
+    }
+  });
+});
+
+test('речевой акцент ждёт PTS артикуляции, отмена удаляет ожидающий акцент', () => {
+  const ctx = setup();
+  const avatar = Object.assign(Object.create(Avatar.prototype), {
+    model:ctx.model, behavior:ctx.behavior, emotionLayer:ctx.emotion,
+    states:ctx.states, visemes:ctx.visemes, bodyIdle:null, clock:ctx.clock,
+    configs:{expression:expr, visemes:visCfg}, look:{render(){}},
+    _lastFrameMs:0, _speechBeatIn:0, _pendingAccents:[],
+    stats:{}, _fps:{frames:0,acc:0},
+  });
+  const accents = [];
+  const original = avatar.speechAccent.bind(avatar);
+  avatar.speechAccent = kind => { accents.push(kind); return original(kind); };
+  ctx.clock.anchor(1);
+  avatar.playGeneration('future', [{pts_ms:0,viseme:'AA'},{pts_ms:300,viseme:'SIL'}]);
+  avatar.setState('speaking'); avatar.queueSpeechAccent('backchannel');
+  for (let i=1;i<=30;i++) { ctx.clock.advance(1/60); avatar.frame(i*1000/60); }
+  assert.deepEqual(accents, [], 'приход пакета не должен вызывать ранний кивок');
+  for (let i=31;i<=75;i++) { ctx.clock.advance(1/60); avatar.frame(i*1000/60); }
+  assert.deepEqual(accents, ['backchannel']);
+  avatar.queueSpeechAccent('speech'); avatar.cancel('future');
+  assert.equal(avatar._pendingAccents.length, 0);
+  assert.equal(avatar.state, 'interrupted');
 });
