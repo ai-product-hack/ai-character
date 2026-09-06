@@ -202,7 +202,7 @@ describe('состояния визуально различимы', () => {
       if (Math.hypot(ctx.behavior.gaze.yaw, ctx.behavior.gaze.pitch) <= 0.75) contact++;
       else away++;
     });
-    assert.ok(contact > away * 2, `контакт ${contact}, отвод ${away}`);
+    assert.ok(contact > away, `контакт ${contact}, отвод ${away}`);
     assert.ok(away > 0, 'редкие естественные отводы не должны исчезнуть совсем');
   });
 
@@ -418,7 +418,7 @@ describe('эмоции', () => {
     // Цель — поза эмоции: клип теперь добавляет движение вокруг неё, а не
     // подменяет её собой. У синтетического клипа движения нет (обе рамки
     // одинаковы), поэтому итог обязан сойтись именно к позе.
-    const want = expr.emotions.warming.pose.mouthSmileLeft;
+    const want = expr.emotions.warming.pose.mouthSmileLeft * expr.performance.expressionGain;
     assert.ok(ctx.morphs.get('mouthSmileLeft') > want * 0.9,
       `новое выражение должно войти: ${ctx.morphs.get('mouthSmileLeft')} против ${want}`);
     assert.ok(ctx.morphs.get('browDownLeft') < 0.04, 'старое выражение должно уйти');
@@ -740,7 +740,7 @@ describe('регрессии живого диалога', () => {
         contact++; away = 0;
       } else { away++; longest = Math.max(longest, away); }
     });
-    assert.ok(contact / 7200 > 0.8, `контакт: ${contact / 72}%`);
+    assert.ok(contact / 7200 > 0.60 && contact / 7200 < 0.90, `контакт: ${contact / 72}%`);
     assert.ok(longest / 60 < 2.5, `непрерывный отвод: ${longest / 60} с`);
     assert.equal(ctx.behavior.gazeBias.yaw, 0);
   });
@@ -837,4 +837,19 @@ test('речевой акцент ждёт PTS артикуляции, отме�
   avatar.queueSpeechAccent('speech'); avatar.cancel('future');
   assert.equal(avatar._pendingAccents.length, 0);
   assert.equal(avatar.state, 'interrupted');
+});
+
+test('отводы взгляда заметны, выдерживаются и чаще встречаются во время речи', () => {
+  const measure = state => {
+    const ctx = setup(); ctx.states.set(state);
+    let away = 0, episode = 0, episodes = [];
+    run(ctx, 120, () => {
+      if (ctx.behavior.gaze.averted) { away++; episode++; }
+      else if (episode) { episodes.push(episode/60); episode=0; }
+    });
+    assert.ok(episodes.length >= 15, `${state}: отводы слишком редки`);
+    assert.ok(episodes.every(s => s >= 0.65 && s <= 1.7), `${state}: ${episodes}`);
+    return away;
+  };
+  assert.ok(measure('speaking') > measure('listening'));
 });
