@@ -7,6 +7,7 @@
 import pathlib
 import sys
 import threading
+import time
 import types
 import unittest
 
@@ -67,32 +68,101 @@ class PartialFeedsSpeculation(unittest.TestCase):
             speech_ms=0, push=lambda pcm: False, reset=lambda: None))
         s.voice.enabled = True
         s.partial_text = ""
+        s._partial_sent = ""
         s._partial_at = 0.0
+        s._partial_cost = 0.0
+        s._turn = 0
+        s._partial_thread = None
         s._partial_lock = threading.Lock()
         s.marks = []
         s.typed = []
         s.spec = types.SimpleNamespace(on_typing=s.typed.append)
         return s
 
+    def _settle(self, s):
+        """Дождаться фонового разбора. В бою его никто не ждёт — в том и смысл."""
+        if s._partial_thread is not None:
+            s._partial_thread.join(timeout=5)
+
+    def _partial(self, s):
+        """Разбор и его результат. В бою они приходят разными вызовами: опрос
+        не ждёт разбора. Здесь заглушка успевает за тот же вызов, поэтому
+        берём первый непустой ответ из двух."""
+        first = s._maybe_partial()
+        self._settle(s)
+        return first if first is not None else s._maybe_partial()
+
     def test_partial_reaches_speculation(self):
         s = self._session()
         s.voice.push(np.ones(16000, dtype=np.float32) * 0.1)
-        got = s._maybe_partial()
+        got = self._partial(s)
         self.assertIn("бекенд", got)
-        self.assertEqual(s.typed, [got], "спекуляция обязана получить тот же текст")
+        # Спекуляции достаётся текст без последнего слова: хвост распознавания
+        # ещё перепишется, и запрос по нему не пройдёт проверку префикса.
+        self.assertEqual(s.typed, [got.rsplit(" ", 1)[0]])
+
+    def test_intake_does_not_wait_for_recognition(self):
+        """Главное свойство починки: приём звука не ждёт разбор никогда.
+
+        Раньше разбор шёл прямо в обработчике `/api/audio`, а он на восьми
+        секундах речи занимает 703 мс. Куски идут раз в 100 мс и строго по
+        одному — очередь на клиенте упиралась в потолок и теряла звук.
+        """
+        s = self._session()
+        started = threading.Event()
+        release = threading.Event()
+
+        def slow(pcm, sr):
+            started.set()
+            release.wait(5)
+            return [{"ch": c, "ms": 0} for c in "поздно"]
+
+        s.models["aligner"] = slow
+        s.voice.push(np.ones(16000, dtype=np.float32) * 0.1)
+        t0 = time.perf_counter()
+        s._maybe_partial()
+        self.assertLess((time.perf_counter() - t0) * 1000, 100,
+                        "приём звука заблокировался разбором")
+        self.assertTrue(started.wait(5), "разбор не начался вовсе")
+        # И пока разбор идёт, следующие куски тоже проходят насквозь.
+        t0 = time.perf_counter()
+        s._maybe_partial()
+        self.assertLess((time.perf_counter() - t0) * 1000, 100)
+        release.set()
+        self._settle(s)
+
+    def test_late_result_does_not_leak_into_the_next_turn(self):
+        """Ход мог кончиться, пока мы разбирали: чужой текст не показываем."""
+        s = self._session()
+        started, release = threading.Event(), threading.Event()
+
+        def slow(pcm, sr):
+            started.set()
+            release.wait(5)
+            return [{"ch": c, "ms": 0} for c in "из прошлой реплики"]
+
+        s.models["aligner"] = slow
+        s.voice.push(np.ones(16000, dtype=np.float32) * 0.1)
+        s._maybe_partial()
+        self.assertTrue(started.wait(5))
+        s._turn += 1                      # ход кончился, пока шёл разбор
+        release.set()
+        self._settle(s)
+        self.assertEqual(s.partial_text, "")
+        self.assertEqual(s.typed, [])
 
     def test_too_short_audio_is_skipped(self):
         """Меньше полусекунды разбирать нечего — только жечь процессор."""
         s = self._session()
         s.voice.push(np.ones(4000, dtype=np.float32) * 0.1)
-        self.assertIsNone(s._maybe_partial())
+        self.assertIsNone(self._partial(s))
         self.assertEqual(s.typed, [])
 
     def test_unchanged_text_does_not_relaunch(self):
         s = self._session()
         s.voice.push(np.ones(16000, dtype=np.float32) * 0.1)
-        s._maybe_partial()
-        s._maybe_partial()
+        self._partial(s)
+        self._partial(s)
         self.assertEqual(len(s.typed), 1, "тот же текст не должен пускать второй запрос")
 
     def test_recognizer_failure_does_not_break_audio_intake(self):
@@ -102,21 +172,34 @@ class PartialFeedsSpeculation(unittest.TestCase):
             raise RuntimeError("распознаватель упал")
         s.models["aligner"] = boom
         s.voice.push(np.ones(16000, dtype=np.float32) * 0.1)
-        self.assertIsNone(s._maybe_partial())
+        self.assertIsNone(self._partial(s))
         self.assertTrue(s.marks and "partial_error" in s.marks[0])
 
     def test_no_recognizer_means_no_partial(self):
         s = self._session()
         s.models["aligner"] = None
         s.voice.push(np.ones(16000, dtype=np.float32) * 0.1)
-        self.assertIsNone(s._maybe_partial())
+        self.assertIsNone(self._partial(s))
 
     def test_rate_limit_holds(self):
         s = self._session()
         s.models["voice_cfg"] = {"partial_every_ms": 100000}
         s.voice.push(np.ones(16000, dtype=np.float32) * 0.1)
+        self._partial(s)
+        s._partial_thread = None
+        self.assertIsNone(self._partial(s), "чаще заданного разбирать незачем")
+
+    def test_pause_scales_with_how_long_recognition_took(self):
+        """На длинной реплике разбор дорожает: 30 с звука — 3 с работы.
+
+        Без этой оговорки ядро было бы занято распознаванием непрерывно.
+        """
+        s = self._session()
+        s.voice.push(np.ones(16000, dtype=np.float32) * 0.1)
+        s._partial_cost = 100000.0        # прошлый разбор был очень долгим
+        s._partial_at = time.perf_counter() * 1000
         s._maybe_partial()
-        self.assertIsNone(s._maybe_partial(), "чаще заданного разбирать незачем")
+        self.assertIsNone(s._partial_thread, "разбор пустился слишком рано")
 
 
 class OpeningHasNoFiller(unittest.TestCase):

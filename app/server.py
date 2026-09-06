@@ -55,6 +55,18 @@ from app.voice import Utterance, VoiceInput, transcribe     # noqa: E402
 PORT = 8010
 
 
+def _stable_head(text: str) -> str:
+    """Расшифровка без последнего слова — его ещё перепишут.
+
+    Распознавание не монотонно, в отличие от набора: хвост переписывается по
+    мере того, как приходит звук («я быки» → «я бекенд-разработчик»). Запрос,
+    пущенный по неустоявшемуся хвосту, потом не проходит проверку префикса, и
+    спекуляция платит за него входом впустую.
+    """
+    head = text.rsplit(" ", 1)[0] if " " in text.strip() else ""
+    return head.strip()
+
+
 class Session:
     """Один тренировочный диалог. Живёт в процессе сервера."""
 
@@ -111,7 +123,11 @@ class Session:
         # Даёт две вещи сразу — слова в интерфейсе (человек видит, что его
         # слышат) и текст для спекуляции (запрос уходит до конца реплики).
         self.partial_text = ""
-        self._partial_at = 0.0
+        self._partial_sent = ""      # что уже ушло на экран
+        self._partial_at = 0.0       # когда закончился прошлый разбор
+        self._partial_cost = 0.0     # сколько он занял
+        self._turn = 0               # номер хода: опоздавший разбор его не тронет
+        self._partial_thread: threading.Thread | None = None
         self._partial_lock = threading.Lock()
         self.frames: list[tuple[dict, bytes]] = []
         self.frame_cv = threading.Condition()
@@ -316,45 +332,79 @@ class Session:
         return self._on_utterance(utt)
 
     def _maybe_partial(self) -> str | None:
-        """Разобрать сказанное на лету, если пора. Возвращает текст или None.
+        """Отдать последнюю расшифровку на лету. Сам разбор идёт в стороне.
 
-        Дважды одновременно не запускается: пока идёт разбор, следующий кусок
-        просто проходит мимо. Опоздать здесь не страшно — это подсказка
-        человеку и корм для спекуляции, а не источник правды. Правду даёт
-        разбор целой реплики на конце хода.
+        Раньше распознавание крутилось прямо здесь, в обработчике `/api/audio`.
+        Замерено на нашем же распознавателе: 5 секунд речи — 342 мс разбора,
+        8 секунд — 703 мс, при интервале в 500. Куски приходят раз в 100 мс и
+        строго по одному (клиент шлёт их очередью), поэтому каждый такой разбор
+        затыкал приём звука на своё время. Очередь на клиенте упиралась в
+        потолок 20 и молча теряла куски — отсюда и жалоба: расшифровка замирает
+        на четвёртом-пятом слове, а реплика уходит недоговорённой.
+
+        Теперь приём звука не ждёт разбора никогда. Здесь только отдаём то, что
+        успел приготовить фоновый разбор, и только если оно изменилось.
         """
-        # Без распознавателя разбирать нечем: голос в такой сборке не
-        # включается вовсе, и приём звука не должен об этом спотыкаться.
-        if self.models.get("aligner") is None or self.voice.endpointer is None:
+        self._kick_partial()
+        text = self.partial_text
+        if text == self._partial_sent:
             return None
+        self._partial_sent = text
+        return text
+
+    def _kick_partial(self) -> None:
+        """Запустить фоновый разбор, если пора и предыдущий закончился."""
+        if self.models.get("aligner") is None or self.voice.endpointer is None:
+            return
         every = self.models.get("voice_cfg", {}).get("partial_every_ms", 500)
         now = time.perf_counter() * 1000
-        if now - self._partial_at < every:
-            return None
+        # Пауза между разборами — не меньше самого разбора. На длинной реплике
+        # он дорожает (30 секунд звука — 3 секунды работы), и без этой оговорки
+        # ядро было бы занято распознаванием непрерывно. Так — не больше
+        # половины времени, ценой более редкого обновления строки.
+        if now - self._partial_at < max(every, self._partial_cost):
+            return
         if not self._partial_lock.acquire(blocking=False):
-            return None
-        try:
+            return                              # предыдущий разбор ещё идёт
+        audio = self.voice.snapshot()
+        if audio is None or len(audio) < 8000:  # меньше полусекунды
             self._partial_at = now
-            audio = self.voice.snapshot()
-            if audio is None or len(audio) < 8000:      # меньше полусекунды
-                return None
+            self._partial_lock.release()
+            return
+        t = threading.Thread(target=self._run_partial, args=(audio, self._turn),
+                             daemon=True)
+        self._partial_thread = t         # за него держатся тесты, чтобы дождаться
+        t.start()
+
+    def _run_partial(self, audio, turn: int) -> None:
+        """Разбор на лету. Живёт в своём потоке и никого не задерживает."""
+        t0 = time.perf_counter()
+        try:
             text = transcribe(self.models["aligner"],
                               Utterance(pcm=audio, sample_rate=16000,
                                         speech_ms=0.0, t_endpoint=0.0))
-            if not text or text == self.partial_text:
-                return text or ""
+            # Ход мог закончиться, пока мы разбирали. Опоздавший результат
+            # относится к прошлой реплике, и его текст затёр бы пустую строку
+            # уже начатого следующего хода.
+            if turn != self._turn or not text or text == self.partial_text:
+                return
             self.partial_text = text
             # Спекуляция на недосказанном — тот же механизм, что на
             # недопечатанном. Растущий текст, порог по длине, перезапуск по
             # приросту, проверка префикса на конце хода: всё уже написано,
             # голосу оно просто не досталось, потому что висело на /api/typing.
-            self.spec.on_typing(text)
-            return text
+            #
+            # Кормим её текстом без последнего слова: у распознавания хвост
+            # переписывается («я быки» → «я бекенд-разработчик»), и запрос,
+            # пущенный по неустоявшемуся слову, потом не проходит проверку
+            # префикса. Человеку на экране показываем всё целиком.
+            self.spec.on_typing(_stable_head(text))
         except Exception as e:                          # noqa: BLE001
             # Разбор на лету не имеет права ломать приём звука.
             self.marks.append({"partial_error": f"{type(e).__name__}: {e}"})
-            return None
         finally:
+            self._partial_cost = (time.perf_counter() - t0) * 1000
+            self._partial_at = time.perf_counter() * 1000
             self._partial_lock.release()
 
     def end_utterance(self) -> dict:
@@ -377,13 +427,20 @@ class Session:
         })
         if not text:
             # Распозналась пустота — это не реплика. Молчим, микрофон дальше
-            # слушает: иначе агент отвечал бы на шум.
+            # слушает: иначе агент отвечал бы на шум. Буфер при этом обнулён,
+            # значит и строку на экране надо погасить: она относилась к звуку,
+            # которого больше нет.
             self.voice.start()
+            self._turn += 1
+            self.partial_text = ""
+            self._partial_sent = ""
             return {"ok": True, "endpoint": True, "text": "", "asr_ms": round(asr_ms)}
         # Пока агент говорит, микрофон закрыт: на колонках VAD услышал бы его
         # самого и перебил бы его же репликой.
         self.voice.muted_by_agent = True
+        self._turn += 1
         self.partial_text = ""
+        self._partial_sent = ""
         self.cancel()
         threading.Thread(target=self.speak, args=(text, utt.t_endpoint),
                          daemon=True).start()

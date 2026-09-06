@@ -102,7 +102,11 @@ class VoiceActivity(unittest.TestCase):
         s.voice = voice
         s.models = {}                    # распознавателя нет — частичного разбора тоже
         s.partial_text = ""
+        s._partial_sent = ""
         s._partial_at = 0.0
+        s._partial_cost = 0.0
+        s._turn = 0
+        s._partial_thread = None
         s._partial_lock = threading.Lock()
         return s
 
