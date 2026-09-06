@@ -66,6 +66,7 @@
 <span id="micNote" role="status">Включите и говорите — ответ отправится после паузы</span>
 <button id="ptt" disabled title="Отправить голосовой ответ сейчас">Завершить реплику ↵</button>
 </div>
+<div id="partialRow"><span id="partial"></span></div>
 <div id="inputRow">
 <input id="msg" aria-label="Ваш ответ" placeholder="Или напишите ответ…" autocomplete="off">
 <button id="send" aria-label="Отправить сообщение" title="Отправить сообщение">
@@ -825,23 +826,74 @@ function micStop() {
   micCtx = micStream = micNode = null;
 }
 
-async function sendChunk(f32) {
+// Очередь отправки. Куски микрофона идут СТРОГО по одному и строго по
+// порядку — это оказалось корнем главной беды с голосом.
+//
+// Раньше `sendChunk` вызывался на каждый стомиллисекундный кусок без await:
+// до десяти параллельных POST в секунду. Браузер держит около шести соединений
+// на хост, дальше запросы встают в очередь, а приходят на сервер в
+// произвольном порядке. Сервер складывает их в буфер В ПОРЯДКЕ ПРИХОДА, то
+// есть звук перемешивался, VAD видел тишину вперемешку с речью и решал о конце
+// хода поздно. Замерено на живой сессии: первый звук доходил до 16.9 с при
+// медиане 4.6 с, тогда как в репетиции (она шлёт куски по одному) — 125 мс.
+let sendQueue = [];
+let sending = false;
+let dropped = 0;
+
+function sendChunk(f32) {
   if (!micSending || sessionOver) return;
-  const i16 = new Int16Array(f32.length);
-  for (let i = 0; i < f32.length; i++) {
-    const v = Math.max(-1, Math.min(1, f32[i]));
-    i16[i] = v * 32767;
-  }
+  // Потолок очереди: если сеть не успевает, лучше потерять кусок, чем
+  // накапливать отставание, которое уже не наверстать. Потери видно в HUD.
+  if (sendQueue.length > 20) { sendQueue.shift(); dropped++; }
+  sendQueue.push(f32);
+  pumpQueue();
+}
+
+async function pumpQueue() {
+  if (sending) return;
+  sending = true;
   try {
-    const r = await fetch(api('/api/audio'), {method: 'POST', body: i16.buffer});
-    const d = await r.json();
-    if (d.user_speaking && avatar?.state === 'listening') avatar.noteActivity();
-    if (d.endpoint) {
-      tAsk = performance.now();
-      if (d.text) micSay('Ответ распознан. Микрофон остаётся включён.', 'hot');
-      else micSay('тишина — говорите', '');
+    while (sendQueue.length && micSending && !sessionOver) {
+      const f32 = sendQueue.shift();
+      const i16 = new Int16Array(f32.length);
+      for (let i = 0; i < f32.length; i++) {
+        const v = Math.max(-1, Math.min(1, f32[i]));
+        i16[i] = v * 32767;
+      }
+      try {
+        const r = await fetch(api('/api/audio'),
+                              {method: 'POST', body: i16.buffer});
+        handleAudioReply(await r.json());
+      } catch (e) { /* пропущенный кусок не должен ломать поток */ }
     }
-  } catch (e) { /* пропущенный кусок не должен ломать поток */ }
+  } finally {
+    sending = false;
+  }
+}
+
+// Живое распознавание в интерфейсе. Человек, говорящий в тишину, не знает,
+// слышат ли его вообще; растущая строка отвечает на это раньше, чем агент.
+let partialSeen = "";
+
+function showPartial(text) {
+  const el = $('partial');
+  const row = $('partialRow');
+  partialSeen = text || "";
+  el.textContent = partialSeen;
+  row.classList.toggle('on', !!partialSeen);
+}
+
+function handleAudioReply(d) {
+  if (d.user_speaking && avatar?.state === 'listening') avatar.noteActivity();
+  // Частичное распознавание: показываем слова по мере того, как их разбирают.
+  // Без этого человек говорит в пустоту и не понимает, слышат ли его вообще.
+  if (d.partial !== undefined) showPartial(d.partial);
+  if (d.endpoint) {
+    tAsk = performance.now();
+    showPartial('');
+    if (d.text) micSay('распознано, отвечаю…', 'hot');
+    else micSay('тишина — говорите', '');
+  }
 }
 
 function syncMicButton(on) {

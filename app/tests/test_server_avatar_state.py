@@ -94,18 +94,40 @@ class EmotionReset(unittest.TestCase):
 
 
 class VoiceActivity(unittest.TestCase):
+    @staticmethod
+    def _session(voice):
+        """Сессия без моделей: приём звука не должен требовать ничего лишнего."""
+        import threading
+        s = Session.__new__(Session)
+        s.voice = voice
+        s.models = {}                    # распознавателя нет — частичного разбора тоже
+        s.partial_text = ""
+        s._partial_sent = ""
+        s._partial_at = 0.0
+        s._partial_cost = 0.0
+        s._turn = 0
+        s._partial_thread = None
+        s._partial_lock = threading.Lock()
+        return s
+
     def test_only_new_vad_speech_counts_as_listening_activity(self):
-        session = Session.__new__(Session)
         endpointer = types.SimpleNamespace(speech_ms=100)
         def push(pcm):
             endpointer.speech_ms += float(pcm[0])
             return None
-        session.voice = types.SimpleNamespace(endpointer=endpointer, push=push)
+        session = self._session(
+            types.SimpleNamespace(endpointer=endpointer, push=push))
         self.assertFalse(session.push_audio([0])['user_speaking'])
         self.assertTrue(session.push_audio([32])['user_speaking'])
         self.assertFalse(session.push_audio([0])['user_speaking'])
 
     def test_no_vad_does_not_invent_user_activity(self):
-        session = Session.__new__(Session)
-        session.voice = types.SimpleNamespace(endpointer=None, push=lambda pcm: None)
+        session = self._session(
+            types.SimpleNamespace(endpointer=None, push=lambda pcm: None))
         self.assertFalse(session.push_audio([1])['user_speaking'])
+
+    def test_partial_needs_a_recognizer(self):
+        """Без распознавателя приём звука работает и молчит про частичный текст."""
+        session = self._session(
+            types.SimpleNamespace(endpointer=None, push=lambda pcm: None))
+        self.assertNotIn("partial", session.push_audio([1]))

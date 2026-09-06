@@ -130,6 +130,18 @@ class VoiceInput:
             if self.endpointer is not None:
                 self.endpointer.reset()
 
+    def snapshot(self) -> np.ndarray | None:
+        """Копия накопленного звука, не трогая сам буфер.
+
+        Нужна для распознавания на лету: пока человек говорит, мы прогоняем
+        уже сказанное и показываем ему слова. Копия обязательна — буфер живёт
+        в другом потоке и продолжает расти.
+        """
+        with self._lock:
+            if not self._chunks:
+                return None
+            return np.concatenate(self._chunks)
+
     def push(self, pcm: np.ndarray) -> Utterance | None:
         """Кусок с микрофона. Вернёт реплику, когда ход закончится."""
         if not self.enabled:

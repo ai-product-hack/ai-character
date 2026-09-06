@@ -26,6 +26,7 @@ from .emotion_tags import parse as parse_emotions, to_timeline
 from .clauses import Clause, ClauseSplitter
 from .generation import Generation, GenerationRegistry, PTSTimeline
 from .panels import parse as parse_panels, to_timeline as panels_timeline
+from .stage_directions import count as count_directions, strip as strip_directions
 from .pronounce import normalize, word_map
 
 
@@ -176,6 +177,17 @@ class ReplyPipeline:
             return None
         if text != clause.text:
             stats["clauses_with_control"] = stats.get("clauses_with_control", 0) + 1
+
+        # Ремарки в звёздочках — по той же причине и в том же месте. Модель
+        # отыгрывает роль как в пьесе: «*кивает*», «*короткая пауза*». Синтез
+        # прочитает это буквально, со звёздочками.
+        marked = count_directions(text)
+        if marked:
+            stats["stage_directions"] = stats.get("stage_directions", 0) + marked
+        text = strip_directions(text)
+        if not text:
+            stats["direction_only_clauses"] = stats.get("direction_only_clauses", 0) + 1
+            return None
 
         # Теги эмоций вырезаются ДО синтеза, но их позиции запоминаются: дальше
         # они превратятся в pts_ms по тем же таймкодам, что и висемы.
