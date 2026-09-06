@@ -216,7 +216,8 @@ export class EmotionLayer {
   _applyEmotion(target, emotion, dt) {
     const C = this.cfg.clips || {};
     // Neutral is a resting face, even when the mood intensity is zero.
-    const strength = this.emotion.name === 'neutral' ? 1 : this.emotion.intensity;
+    const strength = this.emotion.name === 'neutral' ? 1
+      : this.emotion.intensity * (this.cfg.performance?.expressionGain ?? 1);
     const clip = C.enabled ? this.clips.get(this.emotion.name) : null;
     if (!clip) {
       this._emotionFrame.clear();

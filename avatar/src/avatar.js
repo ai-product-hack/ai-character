@@ -215,7 +215,7 @@ export class Avatar {
                this._pendingAccents[0].ptsMs <= audioMs) {
           accent = this._pendingAccents.shift();
         }
-        if (this.state === 'speaking' && speechActivity > 0.18 &&
+        if (this.state === 'speaking' && audioMs != null && audioMs >= 0 && speechActivity > 0.18 &&
             (accent || this._speechBeatIn <= 0)) {
           this.speechAccent(accent?.kind || 'speech');
         } else if (accent && this.state === 'speaking') {

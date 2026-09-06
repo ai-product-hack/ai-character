@@ -107,6 +107,7 @@ export class Microbehavior {
     // Писать в чужие морфы им нельзя — таблица зон не даст, — поэтому они
     // СМЕЩАЮТ поведение, а не подменяют его.
     this.gazeBias = { yaw: 0, pitch: 0 };       // куда смещены точки фиксации
+    this._aversionIn = Infinity;
     this.gazeStyle = null;                      // профиль состояния: контакт/отводы
     this.gazeAnchorIn = Infinity;               // обязательный возврат к собеседнику
     this.blinkScale = 1;                        // множитель интервала моргания
@@ -149,6 +150,8 @@ export class Microbehavior {
     const next = style || null;
     if (next === this.gazeStyle) return;
     this.gazeStyle = next;
+    this.gaze.averted = false;
+    this._aversionIn = this._range(next?.aversion?.everySec, Infinity);
     this.gazeAnchorIn = this._nextAnchorDelay();
   }
 
@@ -169,6 +172,8 @@ export class Microbehavior {
   snapGaze() {
     const g = this.gaze;
     g.phase = 'fixate';
+    g.averted = false;
+    this._aversionIn = this._range(this.gazeStyle?.aversion?.everySec, Infinity);
     g.t = 0;
     g.duration = this._fixationDuration();
     g.yaw = 0; g.pitch = 0;
@@ -216,7 +221,11 @@ export class Microbehavior {
     return range[0] + this.gazeRnd.uniform() * (range[1] - range[0]);
   }
 
-  _startSaccade() {
+  _range(range, fallback = 0) {
+    return range ? range[0] + this.gazeRnd.uniform() * (range[1] - range[0]) : fallback;
+  }
+
+  _startSaccade(yaw, pitch, holdSec = null) {
     const S = this.cfg.gaze.saccade, L = this.cfg.gaze.limitDeg;
     const P = this.gazeStyle || {};
     const g = this.gaze;
@@ -254,6 +263,10 @@ export class Microbehavior {
       g.toYaw = bx + Math.cos(dir) * amp;
       g.toPitch = by + Math.sin(dir) * amp * 0.65;
     }
+    if (Number.isFinite(yaw) && Number.isFinite(pitch)) {
+      g.toYaw = yaw; g.toPitch = pitch;
+    }
+    g.holdSec = holdSec;
     g.toYaw = clamp(g.toYaw, -L.yaw, L.yaw);
     g.toPitch = clamp(g.toPitch, -L.pitch, L.pitch);
 
@@ -281,13 +294,29 @@ export class Microbehavior {
   _updateGaze(dt) {
     const g = this.gaze;
     this.gazeAnchorIn -= dt;
+    if (!g.averted) this._aversionIn -= dt;
     g.t += dt;
     if (g.phase === 'fixate') {
-      if (g.t >= g.duration || this.gazeAnchorIn <= 0) this._startSaccade();
+      const aversion = this.gazeStyle?.aversion;
+      if (g.averted) {
+        // Hold one off-face target, then return. Do not scatter random targets
+        // around the room or let the contact timer interrupt the glance.
+        if (g.t >= g.duration) {
+          g.averted = false;
+          this._aversionIn = this._range(aversion?.everySec, Infinity);
+          this.gazeAnchorIn = this._nextAnchorDelay();
+          this._startSaccade(0, 0);
+        }
+      } else if (aversion && this._aversionIn <= 0) {
+        g.averted = true;
+        const side = this.gazeRnd.uniform() < 0.5 ? -1 : 1;
+        this._startSaccade(side * this._range(aversion.yawDeg),
+          this._range(aversion.pitchDeg), this._range(aversion.holdSec));
+      } else if (g.t >= g.duration || this.gazeAnchorIn <= 0) this._startSaccade();
     } else {
       if (g.t >= g.duration) {
         g.yaw = g.toYaw; g.pitch = g.toPitch;
-        g.phase = 'fixate'; g.t = 0; g.duration = this._fixationDuration();
+        g.phase = 'fixate'; g.t = 0; g.duration = g.holdSec ?? this._fixationDuration();
       } else {
         // Бросок резкий. Здесь намеренно НЕ плавная интерполяция за сотни
         // миллисекунд: настоящий глаз фиксируется и прыгает.
@@ -533,6 +562,7 @@ export class Microbehavior {
   debug() {
     return {
       gazePhase: this.gaze.phase,
+      averted: !!this.gaze.averted,
       gazeYaw: this.gaze.yaw, gazePitch: this.gaze.pitch,
       blinkPhase: this.blink.phase, blinkValue: this.blink.value,
       nextBlinkSec: this.blink.next,
