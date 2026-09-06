@@ -33,7 +33,8 @@ sys.path.insert(0, str(ROOT))
 
 from app import generator as gen_mod, llm as llm_mod, report as report_mod  # noqa: E402
 from app.actions import parse_reply, repair_action          # noqa: E402
-from app.agent import SYSTEM, apply as apply_action, build_prompt   # noqa: E402
+from app.agent import (SYSTEM, apply as apply_action,        # noqa: E402
+                       build_messages)
 from app.backchannel import Backchannel                     # noqa: E402
 from app.dialogue import DialogueState                      # noqa: E402
 from app.emotion_drive import mood_from                     # noqa: E402
@@ -96,7 +97,7 @@ class Session:
         # Спекуляция на недопечатанном: запрос уходит, пока человек ещё печатает.
         self.spec = Speculator(
             make_stream=lambda: llm_mod.make_stream(models["llm"]),
-            build_prompt=lambda text: build_prompt(self.state, text),
+            build_prompt=lambda text: build_messages(self.state, text),
             system=SYSTEM, cfg=models.get("spec_cfg", {}))
         # Динамика набора: время до первого нажатия, паузы, стирания. Часы
         # отсчитываются от конца реплики агента — их ставит сервер, а не клиент:
@@ -146,7 +147,7 @@ class Session:
             gen = self.registry.start()
             if user_turn is not None:
                 self.gen_turn[gen.id] = user_turn
-            prompt = build_prompt(self.state, user_text)
+            prompt = build_messages(self.state, user_text)
             # Если спекулятивный запрос попал — берём его: токены уже летят,
             # а то и накопились. Промах стоит потраченных токенов, не задержки.
             flight, cover = (self.spec.take(user_text) if user_text is not None

@@ -36,6 +36,12 @@ class Turn:
     counted: bool = True
     # Реплика прозвучала лишь частично — пользователь перебил на середине.
     interrupted: bool = False
+    # Действие, которым агент закончил ход: stay / next_stage / finish. Нужно,
+    # чтобы вернуть управляющую строку в историю: в формате чата модель видит
+    # свои прошлые реплики как есть, и без JSON она перестаёт его выводить.
+    # Замерено: доля реплик без управляющей строки подскочила с 0-5% до 63.7%,
+    # когда история стала чистым текстом.
+    action: str = ""
 
 
 @dataclass
@@ -196,8 +202,9 @@ class DialogueState:
         self.turns.append(t)
         return t
 
-    def add_agent(self, text: str, generation_id: str | None = None) -> Turn:
-        t = Turn("agent", text, self.stage_id, generation_id)
+    def add_agent(self, text: str, generation_id: str | None = None,
+                  action: str = "") -> Turn:
+        t = Turn("agent", text, self.stage_id, generation_id, action=action)
         self.turns.append(t)
         return t
 

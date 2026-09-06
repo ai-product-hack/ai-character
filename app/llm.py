@@ -61,12 +61,15 @@ class DeepSeekLLM:
         self.last_ms = 0.0
 
     def __call__(self, system: str, prompt: str) -> str:
+        return self.chat(system, [{"role": "user", "content": prompt}])
+
+    def chat(self, system: str, messages: list[dict]) -> str:
+        """Разговор массивом ролей. Кеш у DeepSeek автоматический, кода не просит."""
         body = json.dumps({
             "model": self.model,
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
-            "messages": [{"role": "system", "content": system},
-                         {"role": "user", "content": prompt}],
+            "messages": [{"role": "system", "content": system}] + list(messages),
         }).encode()
         req = urllib.request.Request(
             "https://api.deepseek.com/chat/completions", data=body,
@@ -87,6 +90,54 @@ class DeepSeekLLM:
         from .media import stream_deepseek
         return stream_deepseek(self, max_tokens or self.max_tokens,
                                self.temperature if temperature is None else temperature)
+
+
+_EPHEMERAL = {"type": "ephemeral"}
+
+
+def cacheable_system(system: str):
+    """Системный блок с точкой кеширования.
+
+    Он не меняется весь разговор и составляет заметную долю входа — держать
+    его некешируемым значит платить за одно и то же на каждом ходу.
+    """
+    if not system:
+        return system
+    return [{"type": "text", "text": system, "cache_control": _EPHEMERAL}]
+
+
+def with_cache_breakpoint(messages: list[dict]) -> list[dict]:
+    """Отметить конец стабильного префикса — всё, кроме последней реплики.
+
+    Последнее сообщение меняется каждый ход (в нём состояние этапа и свежая
+    реплика), а всё до него от хода к ходу совпадает байт в байт. Точка
+    ставится ровно на границе, иначе кеш промахивался бы каждый раз.
+
+    Точек всего две на запрос: здесь и в системном блоке. Лимит провайдера —
+    четыре, запас есть.
+
+    ЗАМЕРЕНО, и результат неочевидный: у моделей разный минимальный размер
+    кешируемого префикса, и наши разговоры попадают по разные стороны порога.
+
+        claude-sonnet-5    кеш работает с первого хода: вход упал с 2028 до
+                           336 токенов, остальное прочиталось из кеша
+        claude-haiku-4-5   при префиксе 3811 токенов НЕ кешируется, при 5431 —
+                           кешируется; наши разговоры дают 1700-3200, то есть
+                           кеш не срабатывает ни разу за диалог
+
+    Отметки всё равно ставятся всегда: вреда от них нет (провайдер просто
+    игнорирует префикс ниже порога), а на длинных сценариях и на Sonnet они
+    экономят кратно.
+    """
+    if len(messages) < 2:
+        return list(messages)
+    out = [dict(m) for m in messages]
+    last_stable = out[-2]
+    content = last_stable["content"]
+    if isinstance(content, str):
+        last_stable["content"] = [{"type": "text", "text": content,
+                                   "cache_control": _EPHEMERAL}]
+    return out
 
 
 # Модели Anthropic, пригодные для диалога. Opus в списке нет намеренно: по
@@ -124,18 +175,29 @@ class AnthropicLLM:
         self.last_ms = 0.0
         self.tokens_in = 0
         self.tokens_out = 0
+        self.cache_write = 0
+        self.cache_read = 0
 
     def __call__(self, system: str, prompt: str) -> str:
+        return self.chat(system, [{"role": "user", "content": prompt}])
+
+    def chat(self, system: str, messages: list[dict]) -> str:
         t0 = time.perf_counter()
         r = self.client.messages.create(
-            model=self.model, max_tokens=self.max_tokens, system=system,
-            messages=[{"role": "user", "content": prompt}],
+            model=self.model, max_tokens=self.max_tokens,
+            system=cacheable_system(system),
+            messages=with_cache_breakpoint(messages),
             thinking={"type": "disabled"})
         self.last_ms = (time.perf_counter() - t0) * 1000
         self.total_ms += self.last_ms
         self.calls += 1
         self.tokens_in += r.usage.input_tokens
         self.tokens_out += r.usage.output_tokens
+        # Сколько ушло в кеш и сколько прочиталось оттуда. Без этих двух чисел
+        # нельзя понять, работает кеширование или молча не срабатывает:
+        # `cache_read` в нуле при повторных ходах и есть тот самый признак.
+        self.cache_write += getattr(r.usage, "cache_creation_input_tokens", 0) or 0
+        self.cache_read += getattr(r.usage, "cache_read_input_tokens", 0) or 0
         return "".join(b.text for b in r.content if b.type == "text")
 
     def make_stream(self, max_tokens: int | None = None, temperature=None):
@@ -167,11 +229,15 @@ class AnthropicStream:
             except Exception:                              # noqa: BLE001
                 pass
 
-    def __call__(self, system: str, prompt: str):
+    def __call__(self, system: str, prompt):
+        """`prompt` — строка или уже готовый массив сообщений."""
+        messages = ([{"role": "user", "content": prompt}]
+                    if isinstance(prompt, str) else list(prompt))
         try:
             manager = self.llm.client.messages.stream(
-                model=self.llm.model, max_tokens=self.max_tokens, system=system,
-                messages=[{"role": "user", "content": prompt}],
+                model=self.llm.model, max_tokens=self.max_tokens,
+                system=cacheable_system(system),
+                messages=with_cache_breakpoint(messages),
                 thinking={"type": "disabled"})
             stream = manager.__enter__()
         except Exception:                                  # noqa: BLE001

@@ -521,15 +521,17 @@ class CancellableStream:
             except Exception:                              # noqa: BLE001
                 pass
 
-    def __call__(self, system: str, prompt: str):
+    def __call__(self, system: str, prompt):
+        """`prompt` — строка или уже готовый массив сообщений."""
         import json
         import urllib.request
 
+        turns = ([{"role": "user", "content": prompt}]
+                 if isinstance(prompt, str) else list(prompt))
         body = json.dumps({
             "model": self.model.model, "stream": True,
             "max_tokens": self.max_tokens, "temperature": self.temperature,
-            "messages": [{"role": "system", "content": system},
-                         {"role": "user", "content": prompt}],
+            "messages": [{"role": "system", "content": system}] + turns,
         }).encode()
         req = urllib.request.Request(
             "https://api.deepseek.com/chat/completions", data=body,

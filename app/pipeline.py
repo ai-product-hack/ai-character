@@ -69,7 +69,8 @@ def _scale_marks(marks, orig_len: int, spoken_len: int):
 class ReplyPipeline:
     """Один проход по реплике агента.
 
-    `llm_stream(system, prompt)` — генератор токенов.
+    `llm_stream(system, prompt)` — генератор токенов. `prompt` — строка или
+    массив сообщений: конвейер его не разбирает, а передаёт как есть.
     `tts(text)` -> (pcm, sample_rate)
     `align(pcm, sample_rate)` -> список {ch, ms}
     `to_visemes(chars)` -> список {pts_ms, viseme, ...}

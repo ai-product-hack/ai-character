@@ -27,6 +27,13 @@ class StubLLM:
         self._last_stage = None
         self._counter = itertools.count(1)
 
+    def chat(self, system: str, messages: list[dict]) -> str:
+        """Массив ролей — в текст: заглушке важен только последний ход."""
+        return self(system, "\n".join(
+            m["content"] if isinstance(m["content"], str)
+            else " ".join(b.get("text", "") for b in m["content"])
+            for m in messages))
+
     def __call__(self, system: str, prompt: str) -> str:
         self.calls += 1
         n = self.calls
@@ -73,6 +80,13 @@ class ScriptedLLM:
     def __init__(self, replies: list[str]):
         self.replies = list(replies)
         self.calls = 0
+
+    def chat(self, system: str, messages: list[dict]) -> str:
+        """Массив ролей — в текст: заглушке важен только последний ход."""
+        return self(system, "\n".join(
+            m["content"] if isinstance(m["content"], str)
+            else " ".join(b.get("text", "") for b in m["content"])
+            for m in messages))
 
     def __call__(self, system: str, prompt: str) -> str:
         self.calls += 1

@@ -34,6 +34,136 @@ SYSTEM = """Ты ведёшь тренировочный диалог по сц�
 выводи "next_stage"."""
 
 
+def scenario_block(state: DialogueState) -> str:
+    """Неизменная часть контекста: роль, сценарий, критерии.
+
+    Отделена от остального нарочно. Весь разговор она одна и та же, значит
+    может быть началом кешируемого префикса — а всё, что меняется по ходу,
+    висит на последней реплике.
+    """
+    sc = state.scenario
+    lines = [f"РОЛЬ: {sc.persona.prompt_block()}", f"СЦЕНАРИЙ: {sc.title}"]
+    if sc.criteria:
+        # Критерии говорят агенту, ЧТО важно вытянуть из собеседника. Оценивать
+        # их он не должен — это делает фоновая сессия.
+        lines += ["", "НА ЧТО СМОТРИМ (оценивать вслух не надо):"]
+        for c in sc.criteria:
+            lines.append(f"- {c.title}: от «{c.anchor_1}» до «{c.anchor_5}».")
+    return "\n".join(lines)
+
+
+def stage_block(state: DialogueState) -> str:
+    """Меняющаяся часть: где мы в сценарии прямо сейчас.
+
+    Прикрепляется к ПОСЛЕДНЕЙ реплике пользователя, а не в начало разговора:
+    так всё, что было раньше, остаётся байт в байт тем же и попадает в кеш.
+    """
+    sc = state.scenario
+    stage = state.stage
+    lines = [f"[ЭТАП {state.stage_index + 1} из {len(sc.stages)}: "
+             f"{stage.goal if stage else '—'}]"]
+    if stage and stage.hint:
+        lines.append(stage.hint)
+    if stage and stage.advance_when:
+        lines.append(f"Переходить дальше, когда: {stage.advance_when}.")
+    if state.is_last_stage:
+        lines.append("Это последний этап сценария: закончив его, заверши диалог.")
+    if state.closing_turn:
+        lines.append("ЭТО ТВОЯ ПОСЛЕДНЯЯ РЕПЛИКА В РАЗГОВОРЕ. Заверши его сам: "
+                     "коротко подведи черту и попрощайся, одной-двумя фразами. "
+                     "Новых вопросов не задавай — отвечать на них будет уже "
+                     "некому.")
+    spent = state.turns_on_stage
+    if spent:
+        left = max(0, state.stage_max_turns - spent)
+        lines.append(f"На этом этапе уже {spent} обмен(ов) репликами; "
+                     f"осталось {left} до принудительного перехода.")
+    return "\n".join(lines)
+
+
+# Требование про JSON повторяется в конце КАЖДОЙ реплики пользователя, а не
+# один раз в системном сообщении: замерено на DeepSeek — управляющая строка
+# терялась примерно в каждом шестом ходу, причём не из-за обрыва по токенам.
+CONTROL_REMINDER = (
+    "Ответь репликой, а затем ОБЯЗАТЕЛЬНО последней строкой — управляющим "
+    'JSON. Даже если ничего не меняется, это должно быть {"action": "stay"}. '
+    "Ответ без последней строки считается ошибкой."
+)
+
+
+def build_messages(state: DialogueState, user_text: str | None = None) -> list[dict]:
+    """Разговор как настоящий чат: массив ролей вместо склеенного текста.
+
+    Зачем это вместо одного `user`-сообщения со всей историей внутри:
+
+    1. **История перестаёт теряться.** Склеенный промпт нёс последние 12 ходов,
+       и на записанных прогонах обрезка срабатывала в 10 случаях из 10 — в
+       длинном сценарии агент не помнил, что человек сказал в начале.
+    2. **Появляется стабильный префикс.** Всё до последней реплики не меняется
+       от хода к ходу, значит читается из кеша. Замерено: вход дорожает на 8%,
+       а с кешем выходит в 2.4 раза дешевле нынешнего.
+
+    Опоры на память провайдера здесь по-прежнему нет: массив собирается заново
+    на каждый запрос из состояния движка. Перебитая реплика приходит сюда уже
+    обрезанной по услышанному, спекуляция строит тот же массив с черновиком
+    вместо последней реплики.
+    """
+    opening = scenario_block(state)
+    hist = state.transcript()
+    # Последний ход пользователя уже лежит в истории (его добавляют ДО сборки
+    # промпта). Он и есть «свежая» часть — собирается отдельно, вместе с
+    # состоянием этапа, чтобы всё до него осталось байт в байт прежним.
+    if user_text is not None and hist and hist[-1].role == "user":
+        hist = hist[:-1]
+
+    messages: list[dict] = []
+    opening_used = False
+    for turn in hist:
+        if turn.role == "agent":
+            if not messages:
+                # Массив обязан начинаться с user: разговор открывал агент, и
+                # блоку сценария больше некуда деться.
+                messages.append({"role": "user", "content": opening})
+                opening_used = True
+            # Управляющая строка возвращается в историю. Без неё модель не
+            # видит собственного формата и перестаёт его выводить: замерено,
+            # 63.7% реплик без JSON против 0-5% в прежней склейке.
+            text = turn.text
+            if turn.action and not turn.interrupted:
+                text = f'{text}\n{{"action": "{turn.action}"}}'
+            _append(messages, "assistant", text)
+        else:
+            text = turn.text
+            if not opening_used:
+                text = f"{opening}\n\n{text}"
+                opening_used = True
+            _append(messages, "user", text)
+
+    tail = [] if opening_used else [opening, ""]
+    tail.append(stage_block(state))
+    if user_text is not None:
+        tail.append(user_text)
+    elif not hist:
+        tail.append("Разговор начинается. Открой первый этап.")
+    tail += ["", CONTROL_REMINDER]
+    _append(messages, "user", "\n".join(tail))
+    return messages
+
+
+def _append(messages: list[dict], role: str, text: str) -> None:
+    """Добавить сообщение, склеивая подряд идущие одинаковые роли.
+
+    Два `user` подряд бывают: если агента перебили до первого звука, его ход
+    не оставляет следа в истории, и две реплики человека оказываются рядом.
+    Провайдеры такое либо отвергают, либо обрабатывают по-разному — надёжнее
+    склеить самим.
+    """
+    if messages and messages[-1]["role"] == role:
+        messages[-1]["content"] += "\n" + text
+        return
+    messages.append({"role": role, "content": text})
+
+
 def build_prompt(state: DialogueState, user_text: str | None = None) -> str:
     """Промпт одного хода: роль, где мы, что было, что делать."""
     sc = state.scenario
@@ -106,7 +236,7 @@ def apply(state: DialogueState, reply: AgentReply, generation_id: str | None = N
                 "finished": False, "observed": False, "forced": False}
 
     if reply.speakable:
-        state.add_agent(reply.speakable, generation_id)
+        state.add_agent(reply.speakable, generation_id, a.action)
 
     if a.action == EVALUATE and a.criterion:
         happened["observed"] = state.observe(a.criterion, a.note, a.score) is not None
@@ -163,8 +293,8 @@ class Agent:
              generation_id: str | None = None) -> tuple[AgentReply, dict]:
         if user_text is not None:
             state.add_user(user_text)
-        prompt = build_prompt(state, user_text)
-        raw = self.llm(self.system, prompt)
+        messages = build_messages(state, user_text)
+        raw = self.llm.chat(self.system, messages)
         reply = parse_reply(raw)
         happened = apply(state, reply, generation_id)
         return reply, happened
