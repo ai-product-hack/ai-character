@@ -1,9 +1,22 @@
 """Адаптеры моделей.
 
 Синхронные: движку и фоновой оценке нужен целый ответ, а не поток. Потоковый
-вариант появится в конвейере реплики — там он нужен ради первого звука.
+нужен конвейеру реплики — там он определяет первый звук.
 
-Переключение провайдера — одна строка в конфиге, как и было заложено в S1.
+Провайдеров два, переключаются строкой в `app/config.json`:
+
+    deepseek    дешевле в 4-19 раз, но TTFT 2330 мс
+    anthropic   claude-haiku-4-5 (772 мс) или claude-sonnet-5 (941 мс)
+
+Числа замерены, не взяты с потолка: `research/R8-llm-latency.md`. Разница в
+задержке решает, укладывается ли реплика в бюджет 3000 мс, разница в цене — во
+что обходится минута разговора; и то и другое посчитано в `BUDGET.md`.
+
+У обоих провайдеров одинаковый утиный интерфейс, чтобы движок не знал, с кем
+разговаривает:
+
+    llm(system, prompt) -> str        целый ответ
+    llm.make_stream() -> поток        генератор токенов с .cancel()
 """
 from __future__ import annotations
 
@@ -70,11 +83,155 @@ class DeepSeekLLM:
         self.calls += 1
         return data["choices"][0]["message"]["content"]
 
+    def make_stream(self, max_tokens: int | None = None, temperature: float | None = None):
+        from .media import stream_deepseek
+        return stream_deepseek(self, max_tokens or self.max_tokens,
+                               self.temperature if temperature is None else temperature)
+
+
+# Модели Anthropic, пригодные для диалога. Opus в списке нет намеренно: по
+# TTFT он неотличим от Sonnet (949 против 941 мс), а стоит вдвое дороже —
+# замерено в R8.
+ANTHROPIC_MODELS = ("claude-haiku-4-5", "claude-sonnet-5")
+
+
+class AnthropicLLM:
+    """Anthropic под тем же интерфейсом, что DeepSeekLLM.
+
+    Мышление выключено принудительно и не настраивается. В голосовом тренажёре
+    весь бюджет 3000 мс, и модель, которая думает перед ответом, в него не
+    помещается ни при каком качестве.
+
+    `temperature` не принимается: в SDK 1.x его нет в сигнатуре вовсе, а на
+    новых моделях сэмплирование удалено на стороне API. Аргумент проглатывается
+    молча, чтобы вызывающий код не расходился между провайдерами.
+    """
+
+    def __init__(self, model: str = "claude-haiku-4-5", max_tokens: int = 300,
+                 temperature: float | None = None, timeout: float = 40):
+        load_env()
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            # RuntimeError, а не SystemExit: адаптер живёт в потоке сервера, а
+            # SystemExit проходит мимо `except Exception` насквозь.
+            raise RuntimeError("нет ANTHROPIC_API_KEY в окружении или .env")
+        import anthropic                     # импорт здесь: пакет нужен только тут
+        self.client = anthropic.Anthropic(timeout=timeout)
+        self.model = model
+        self.max_tokens = max_tokens
+        self.timeout = timeout
+        self.calls = 0
+        self.total_ms = 0.0
+        self.last_ms = 0.0
+        self.tokens_in = 0
+        self.tokens_out = 0
+
+    def __call__(self, system: str, prompt: str) -> str:
+        t0 = time.perf_counter()
+        r = self.client.messages.create(
+            model=self.model, max_tokens=self.max_tokens, system=system,
+            messages=[{"role": "user", "content": prompt}],
+            thinking={"type": "disabled"})
+        self.last_ms = (time.perf_counter() - t0) * 1000
+        self.total_ms += self.last_ms
+        self.calls += 1
+        self.tokens_in += r.usage.input_tokens
+        self.tokens_out += r.usage.output_tokens
+        return "".join(b.text for b in r.content if b.type == "text")
+
+    def make_stream(self, max_tokens: int | None = None, temperature=None):
+        return AnthropicStream(self, max_tokens or self.max_tokens)
+
+
+class AnthropicStream:
+    """Потоковый Anthropic, который можно оборвать снаружи.
+
+    Та же задача, что у `CancellableStream` для DeepSeek: пока не пришёл первый
+    токен, поток стоит в чтении сокета, и закрыть его может только другой
+    поток. Без этого отмена не освобождала соединение ровно на величину TTFT, а
+    токены всё равно оплачивались.
+    """
+
+    def __init__(self, llm: AnthropicLLM, max_tokens: int = 300):
+        self.llm = llm
+        self.max_tokens = max_tokens
+        self._stream = None
+        self._closed = False
+
+    def cancel(self) -> None:
+        """Оборвать соединение. Зовётся из другого потока."""
+        self._closed = True
+        s, self._stream = self._stream, None
+        if s is not None:
+            try:
+                s.close()
+            except Exception:                              # noqa: BLE001
+                pass
+
+    def __call__(self, system: str, prompt: str):
+        try:
+            manager = self.llm.client.messages.stream(
+                model=self.llm.model, max_tokens=self.max_tokens, system=system,
+                messages=[{"role": "user", "content": prompt}],
+                thinking={"type": "disabled"})
+            stream = manager.__enter__()
+        except Exception:                                  # noqa: BLE001
+            if self._closed:
+                return
+            raise
+        self._stream = stream
+        try:
+            for event in stream:
+                if self._closed:
+                    break
+                if event.type == "content_block_delta" and \
+                        getattr(event.delta, "type", "") == "text_delta":
+                    yield event.delta.text
+        except Exception:                                  # noqa: BLE001
+            # Оборванное соединение — это и есть отмена, а не сбой.
+            if not self._closed:
+                raise
+        finally:
+            self._stream = None
+            try:
+                manager.__exit__(None, None, None)
+            except Exception:                              # noqa: BLE001
+                pass
+
 
 def build(provider: str = "stub", **kw):
     if provider == "deepseek":
         return DeepSeekLLM(**kw)
+    if provider == "anthropic":
+        return AnthropicLLM(**kw)
     if provider == "stub":
         from .stub_llm import StubLLM
         return StubLLM(**kw)
     raise SystemExit(f"провайдер '{provider}' не реализован")
+
+
+def build_dialogue(cfg: dict | None = None) -> dict:
+    """Три клиента диалога по конфигу: реплика, второй разбор, вывод отчёта.
+
+    Бюджеты токенов у них разные и не случайные. Реплика — 300, как и было
+    замерено. Второй разбор возвращает одно слово, и держать под него бюджет
+    реплики незачем. Вывод отчёта — два текста по 2-4 предложения, и на 300
+    токенах он обрывался на середине JSON (поймано на живом прогоне).
+    """
+    cfg = cfg or {}
+    provider = cfg.get("provider", "deepseek")
+    model = cfg.get("model")
+    if provider == "anthropic" and model and model not in ANTHROPIC_MODELS:
+        raise SystemExit(f"модель «{model}» не в списке для диалога: "
+                         f"{', '.join(ANTHROPIC_MODELS)}")
+    kw = {"model": model} if model else {}
+    return {
+        "llm": build(provider, max_tokens=cfg.get("max_tokens", 300), **kw),
+        "repair_llm": build(provider, max_tokens=8, temperature=0, **kw),
+        "summary_llm": build(provider, max_tokens=1200, **kw),
+        "provider": provider,
+    }
+
+
+def make_stream(llm, max_tokens: int = 300, temperature: float = 0.7):
+    """Поток для любого провайдера. Конвейер не должен знать, с кем говорит."""
+    return llm.make_stream(max_tokens, temperature)

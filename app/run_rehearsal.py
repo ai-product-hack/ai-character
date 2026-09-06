@@ -59,8 +59,16 @@ def post(port, path, obj) -> dict:
     req = urllib.request.Request(f"{BASE.format(port=port)}{path}",
                                  data=json.dumps(obj).encode(),
                                  headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return json.loads(r.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        # 409 — сессия уже закончилась. Это не сбой стенда, а нормальный
+        # конец разговора: сервер перестаёт принимать реплики в законченной
+        # сессии, и репетиция обязана понимать это, а не падать трассировкой.
+        if e.code == 409:
+            return json.loads(e.read().decode())
+        raise
 
 
 def get(port, path) -> dict:
@@ -183,7 +191,14 @@ def speak_aloud(port, text, rng) -> dict | None:
         req = urllib.request.Request(f"{BASE.format(port=port)}/api/audio",
                                      data=chunk,
                                      headers={"Content-Type": "application/octet-stream"})
-        d = json.loads(urllib.request.urlopen(req, timeout=60).read())
+        try:
+            d = json.loads(urllib.request.urlopen(req, timeout=60).read())
+        except urllib.error.HTTPError as e:
+            # 409 — сессия закончилась, пока мы «говорили». Законный конец
+            # разговора: сервер не принимает звук в законченной сессии.
+            if e.code == 409:
+                return json.loads(e.read().decode())
+            raise
         if d.get("endpoint"):
             return d
     return None
@@ -260,6 +275,9 @@ def run_scenario(port, sc, args, rng) -> dict:
             print(f"\nпольз. ГОЛОСОМ: {user}")
             t_enter = time.perf_counter()
             d = speak_aloud(port, user, rng)
+            if d is not None and d.get("finished"):
+                print("  сценарий завершён (сервер больше не принимает реплики)")
+                break
             if d is None:
                 print("  !! эндпоинтер не сработал — ход пропущен")
                 continue
@@ -275,7 +293,13 @@ def run_scenario(port, sc, args, rng) -> dict:
             typed_ms = type_like_a_human(port, user, rng)
             print(f"\nпольз. ({typed_ms:.0f} мс набора): {user}")
             t_enter = time.perf_counter()
-            post(port, "/api/message", {"text": user})
+            sent = post(port, "/api/message", {"text": user})
+            if sent.get("finished"):
+                # Диалог закрылся на предыдущем ходу: движок исчерпал бюджет,
+                # и сервер больше не принимает реплики. Разговор состоялся,
+                # это конец, а не сбой.
+                print("  сценарий завершён (сервер больше не принимает реплики)")
+                break
 
         # Перебивание: с заданной вероятностью гасим реплику посреди речи.
         cut = None

@@ -1,0 +1,241 @@
+{
+  "runs": [
+    {
+      "scenario_id": "s10_pitch_qa",
+      "user_turns": 25,
+      "duration_s": 130.8,
+      "dialogue": {
+        "in": 80681,
+        "out": 3314
+      },
+      "evaluation": {
+        "in": 39529,
+        "out": 2250
+      },
+      "summary": {
+        "in": 5412,
+        "out": 464
+      },
+      "speak_chars": 7477
+    },
+    {
+      "scenario_id": "s1_interview_backend",
+      "user_turns": 21,
+      "duration_s": 89.9,
+      "dialogue": {
+        "in": 51797,
+        "out": 2015
+      },
+      "evaluation": {
+        "in": 20194,
+        "out": 1890
+      },
+      "summary": {
+        "in": 3668,
+        "out": 538
+      },
+      "speak_chars": 4574
+    },
+    {
+      "scenario_id": "s2_interview_stress",
+      "user_turns": 16,
+      "duration_s": 67.5,
+      "dialogue": {
+        "in": 38475,
+        "out": 1354
+      },
+      "evaluation": {
+        "in": 14150,
+        "out": 1440
+      },
+      "summary": {
+        "in": 2799,
+        "out": 479
+      },
+      "speak_chars": 2824
+    },
+    {
+      "scenario_id": "s3_sales_cold",
+      "user_turns": 10,
+      "duration_s": 52.9,
+      "dialogue": {
+        "in": 22350,
+        "out": 508
+      },
+      "evaluation": {
+        "in": 8262,
+        "out": 900
+      },
+      "summary": {
+        "in": 1657,
+        "out": 397
+      },
+      "speak_chars": 1027
+    },
+    {
+      "scenario_id": "s4_sales_objections",
+      "user_turns": 14,
+      "duration_s": 59.8,
+      "dialogue": {
+        "in": 34033,
+        "out": 1403
+      },
+      "evaluation": {
+        "in": 12788,
+        "out": 1260
+      },
+      "summary": {
+        "in": 2712,
+        "out": 387
+      },
+      "speak_chars": 3150
+    },
+    {
+      "scenario_id": "s5_knowledge_check",
+      "user_turns": 21,
+      "duration_s": 85.2,
+      "dialogue": {
+        "in": 48909,
+        "out": 1752
+      },
+      "evaluation": {
+        "in": 18439,
+        "out": 1890
+      },
+      "summary": {
+        "in": 3279,
+        "out": 491
+      },
+      "speak_chars": 4065
+    },
+    {
+      "scenario_id": "s6_angry_client",
+      "user_turns": 12,
+      "duration_s": 57.4,
+      "dialogue": {
+        "in": 34255,
+        "out": 1180
+      },
+      "evaluation": {
+        "in": 15928,
+        "out": 1080
+      },
+      "summary": {
+        "in": 2549,
+        "out": 552
+      },
+      "speak_chars": 2588
+    },
+    {
+      "scenario_id": "s7_bad_news",
+      "user_turns": 13,
+      "duration_s": 59.9,
+      "dialogue": {
+        "in": 38436,
+        "out": 1625
+      },
+      "evaluation": {
+        "in": 18867,
+        "out": 1170
+      },
+      "summary": {
+        "in": 3028,
+        "out": 505
+      },
+      "speak_chars": 3609
+    },
+    {
+      "scenario_id": "s8_feedback_denial",
+      "user_turns": 16,
+      "duration_s": 71.5,
+      "dialogue": {
+        "in": 51124,
+        "out": 2252
+      },
+      "evaluation": {
+        "in": 24942,
+        "out": 1440
+      },
+      "summary": {
+        "in": 3816,
+        "out": 547
+      },
+      "speak_chars": 5136
+    },
+    {
+      "scenario_id": "s9_price_negotiation",
+      "user_turns": 19,
+      "duration_s": 83.7,
+      "dialogue": {
+        "in": 58509,
+        "out": 1968
+      },
+      "evaluation": {
+        "in": 30399,
+        "out": 1710
+      },
+      "summary": {
+        "in": 3631,
+        "out": 421
+      },
+      "speak_chars": 4303
+    }
+  ],
+  "per_conversation": {
+    "dialogue": {
+      "in": 45857,
+      "out": 1737
+    },
+    "evaluation": {
+      "in": 20350,
+      "out": 1503
+    },
+    "summary": {
+      "in": 3255,
+      "out": 478
+    }
+  },
+  "avg_turns": 16.7,
+  "avg_seconds": 76,
+  "avg_speak_chars": 3875,
+  "scenario_generation": {
+    "in": 2014,
+    "out": 4377
+  },
+  "llm_usd_per_conversation": {
+    "deepseek-chat": 0.02284,
+    "claude-haiku-4-5": 0.08805,
+    "claude-sonnet-5": 0.26416
+  },
+  "tts_usd_per_conversation": {
+    "silero": 0.0,
+    "elevenlabs (flash, 0.5 кредита/симв.)": 0.42628,
+    "elevenlabs (1 кредит/симв.)": 0.85257
+  },
+  "pace_sec_per_turn": {
+    "машинный": 4.4,
+    "живой": 36.9
+  },
+  "minutes_live": 10.3,
+  "minutes_machine": 1.2,
+  "llm_prices_per_mtok": {
+    "deepseek-chat": [
+      0.27,
+      1.1
+    ],
+    "claude-haiku-4-5": [
+      1.0,
+      5.0
+    ],
+    "claude-sonnet-5": [
+      3.0,
+      15.0
+    ]
+  },
+  "tts_prices_per_char": {
+    "silero": 0.0,
+    "elevenlabs (flash, 0.5 кредита/симв.)": 0.00011,
+    "elevenlabs (1 кредит/симв.)": 0.00022
+  },
+  "count_tokens_calls": 532
+}

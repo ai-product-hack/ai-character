@@ -43,7 +43,7 @@ from app.panels import (SYSTEM_HINT as PANEL_HINT,          # noqa: E402
 from app.evaluator import BackgroundEvaluator               # noqa: E402
 from app.generation import GenerationRegistry               # noqa: E402
 from app.media import (GigaAMAligner, PROVIDERS, SwitchableTTS,   # noqa: E402
-                       stream_deepseek, tts_config)
+                       tts_config)
 from app.pipeline import ReplyPipeline, subtitle_cues       # noqa: E402
 from app.scenario import Criterion, Scenario, load_all      # noqa: E402
 from app.templates import TYPES                             # noqa: E402
@@ -95,7 +95,7 @@ class Session:
         self.bc_cfg = models.get("bc_cfg", {})
         # Спекуляция на недопечатанном: запрос уходит, пока человек ещё печатает.
         self.spec = Speculator(
-            make_stream=lambda: stream_deepseek(models["llm"]),
+            make_stream=lambda: llm_mod.make_stream(models["llm"]),
             build_prompt=lambda text: build_prompt(self.state, text),
             system=SYSTEM, cfg=models.get("spec_cfg", {}))
         # Динамика набора: время до первого нажатия, паузы, стирания. Часы
@@ -162,7 +162,7 @@ class Session:
                 em_head = (t0 - flight.t_start) * 1000
                 em_tokens = len(flight.tokens)
             else:
-                self.stream = stream_deepseek(self.models["llm"])
+                self.stream = llm_mod.make_stream(self.models["llm"])
                 self.pipe.llm_stream = self.stream
                 spec_hit = False
                 em_head = None
@@ -705,17 +705,19 @@ class App:
     def __init__(self):
         print("поднимаю модели…")
         t0 = time.perf_counter()
+        cfg = load_config()
+        # Кто ведёт диалог — строка в конфиге. Три клиента с разными бюджетами
+        # токенов: реплика, второй разбор действия (ответ в одно слово) и общий
+        # вывод отчёта (два текста, на 300 токенах обрывался на середине JSON).
+        dialogue = llm_mod.build_dialogue(cfg.get("dialogue", {}))
+        self.dialogue_provider = dialogue["provider"]
         self.models = {
             "tts": SwitchableTTS(tts_config()),
             "aligner": GigaAMAligner(),
             "bridge": VisemeBridge(),
-            "llm": llm_mod.DeepSeekLLM(),
-            # Отдельный дешёвый клиент для второго разбора: ответ — одно слово,
-            # и держать под него бюджет основной реплики незачем.
-            "repair_llm": llm_mod.DeepSeekLLM(max_tokens=8, temperature=0),
-            # Общий вывод: два текста по 2-4 предложения. В бюджет оценки (300)
-            # они не влезают, ответ обрывался на середине JSON.
-            "summary_llm": llm_mod.DeepSeekLLM(max_tokens=1200),
+            "llm": dialogue["llm"],
+            "repair_llm": dialogue["repair_llm"],
+            "summary_llm": dialogue["summary_llm"],
         }
         # Заполнители готовятся здесь и лежат в памяти: по Enter не считается
         # ничего, иначе смысл теряется.
@@ -739,7 +741,6 @@ class App:
         # Порог короткий намеренно: полсекунды тишины и есть то, что заполнитель
         # убирает. Случай «ответ пришёл быстро» — это попадание спекуляции с
         # уже готовым результатом, а не ожидание в шестьсот миллисекунд.
-        cfg = load_config()
         self.models["bc_cfg"] = {k: v for k, v in cfg.get("backchannel", {}).items()
                                  if not k.startswith("_")} or \
             {"enabled": True, "after_ms": 120, "lead_ms": 150}
@@ -763,6 +764,9 @@ class App:
         self._generator = None
         self._generator_lock = threading.Lock()
         print(f"  синтез: {self.models['tts'].describe()}")
+        # Кто ведёт диалог — на показе это единственный способ заметить, что
+        # переключение в конфиге не подхватилось.
+        print(f"  диалог: {dialogue['provider']} / {self.models['llm'].model}")
         print(f"готово за {time.perf_counter() - t0:.1f} с, "
               f"сценариев {len(self.scenarios)}")
 
@@ -959,6 +963,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             # заметить, что сетевой голос отвалился и говорит запасной.
             tts = APP.models["tts"]
             return self._json({"tts": tts.describe(),
+                               "dialogue": {"provider": APP.dialogue_provider,
+                                            "model": APP.models["llm"].model},
                                "scenarios": len(APP.scenarios),
                                "voice": APP.models.get("endpointer") is not None,
                                "generator": bool(os.environ.get("ANTHROPIC_API_KEY")),

@@ -214,14 +214,18 @@ class JobsSurviveAnything(unittest.TestCase):
 
     def test_generator_reports_missing_key_as_a_catchable_error(self):
         import os
-        saved = os.environ.pop("ANTHROPIC_API_KEY", None)
+        saved = os.environ.get("ANTHROPIC_API_KEY")
+        os.environ["ANTHROPIC_API_KEY"] = ""
         try:
-            os.environ["ANTHROPIC_API_KEY"] = ""
             with self.assertRaises(Exception) as ctx:
                 gen.AnthropicGenerator()
             self.assertNotIsInstance(ctx.exception, SystemExit)
         finally:
-            if saved is not None:
+            # Ключ надо вернуть КАК БЫЛО, включая «его не было»: пустая строка,
+            # оставленная после себя, ломала другие тесты в полном прогоне.
+            if saved is None:
+                os.environ.pop("ANTHROPIC_API_KEY", None)
+            else:
                 os.environ["ANTHROPIC_API_KEY"] = saved
 
     def test_progress_is_visible_while_running(self):

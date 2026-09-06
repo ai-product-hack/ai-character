@@ -1,0 +1,1435 @@
+{
+  "summary": {
+    "scenarios": 1,
+    "finished": 1,
+    "turns": 19,
+    "first_audio_ms": {
+      "median": 130,
+      "max": 136
+    },
+    "first_speech_ms": {
+      "median": 2507,
+      "max": 3169
+    },
+    "filler_share": 1.0,
+    "speculation": {
+      "tries": 10,
+      "hits": 6,
+      "hit_rate": 0.6
+    },
+    "emotions": 11,
+    "emotion_share": 0.58,
+    "panels": 0,
+    "voice": {
+      "turns": 6,
+      "asr_ms": 105,
+      "first_audio_ms": 126
+    },
+    "text_first_audio_ms": 131,
+    "interrupts": {
+      "count": 8,
+      "per_scenario": [
+        8
+      ],
+      "leaked_frames": 0,
+      "last_stray_ms_max": 0
+    },
+    "control_line": {
+      "missing": 0,
+      "repaired": 0,
+      "missing_share": 0.0,
+      "repair_ms_median": null
+    },
+    "typing": {
+      "answers": 12,
+      "confidence": {
+        "уверенно": 10,
+        "с заминками": 2,
+        "неуверенно": 0
+      }
+    }
+  },
+  "tts": {
+    "name": "switchable",
+    "provider": "silero",
+    "loaded": [
+      "silero"
+    ],
+    "engine": {
+      "name": "silero",
+      "version": "v5_cis_base",
+      "voice": "ru_roman",
+      "sample_rate": 24000,
+      "load_s": 2.6,
+      "offline": true
+    }
+  },
+  "args": {
+    "scenario": "s6_angry_client",
+    "turns": 30,
+    "port": 8072,
+    "interrupt_rate": 0.35,
+    "voice_every": 3,
+    "min_interrupts": 2,
+    "interrupt_after": [
+      0.4,
+      2.0
+    ],
+    "timeout": 90,
+    "settle": 0.6,
+    "seed": 7,
+    "out": "bench/results/rehearsal_anthropic_haiku.json"
+  },
+  "runs": [
+    {
+      "scenario_id": "s6_angry_client",
+      "title": "Разъяренный клиент: сбой интеграции с 1С после обновления",
+      "turns": [
+        {
+          "turn": 0,
+          "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+          "typed_ms": 0,
+          "t_first_audio_ms": 130,
+          "reported_first_audio_ms": 129,
+          "reported_first_speech_ms": 3169,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "angry"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 1,
+          "stage": null,
+          "typed_ms": 1606,
+          "t_first_audio_ms": 129,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1291,
+            "generation_id": "gen-2",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 2,
+          "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+          "typed_ms": 1577,
+          "t_first_audio_ms": 132,
+          "reported_first_audio_ms": 131,
+          "reported_first_speech_ms": 1743,
+          "clauses": 6,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "angry"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 3,
+          "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+          "typed_ms": 0,
+          "t_first_audio_ms": 129,
+          "reported_first_audio_ms": 233,
+          "reported_first_speech_ms": 2507,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "angry"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 4,
+          "stage": "dobitsya_priznaniya_fakta_problemy_bez_o",
+          "typed_ms": 1714,
+          "t_first_audio_ms": 136,
+          "reported_first_audio_ms": 131,
+          "reported_first_speech_ms": 2509,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "angry"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 5,
+          "stage": null,
+          "typed_ms": 1533,
+          "t_first_audio_ms": 126,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1581,
+            "generation_id": "gen-6",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 6,
+          "stage": "poluchit_konkretnuyu_informaciyu_o_uzhe",
+          "typed_ms": 0,
+          "t_first_audio_ms": 125,
+          "reported_first_audio_ms": 243,
+          "reported_first_speech_ms": 1324,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 7,
+          "stage": null,
+          "typed_ms": 1278,
+          "t_first_audio_ms": 131,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1730,
+            "generation_id": "gen-8",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 8,
+          "stage": null,
+          "typed_ms": 1903,
+          "t_first_audio_ms": 133,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 642,
+            "generation_id": "gen-9",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 9,
+          "stage": null,
+          "typed_ms": 0,
+          "t_first_audio_ms": 121,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 982,
+            "generation_id": "gen-10",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 10,
+          "stage": "poluchit_konkretnyy_srok_ustraneniya_pro",
+          "typed_ms": 1211,
+          "t_first_audio_ms": 131,
+          "reported_first_audio_ms": 130,
+          "reported_first_speech_ms": 2118,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 11,
+          "stage": "obsudit_kompensaciyu_za_prostoy",
+          "typed_ms": 1127,
+          "t_first_audio_ms": 124,
+          "reported_first_audio_ms": 123,
+          "reported_first_speech_ms": 2578,
+          "clauses": 4,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [],
+          "action": "next_stage",
+          "interrupted": null
+        },
+        {
+          "turn": 12,
+          "stage": null,
+          "typed_ms": 0,
+          "t_first_audio_ms": 123,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 757,
+            "generation_id": "gen-13",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 13,
+          "stage": null,
+          "typed_ms": 1222,
+          "t_first_audio_ms": 134,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 715,
+            "generation_id": "gen-14",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 14,
+          "stage": "obsudit_kompensaciyu_za_prostoy",
+          "typed_ms": 1571,
+          "t_first_audio_ms": 133,
+          "reported_first_audio_ms": 130,
+          "reported_first_speech_ms": 2221,
+          "clauses": 2,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 15,
+          "stage": "obsudit_kompensaciyu_za_prostoy",
+          "typed_ms": 0,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 233,
+          "reported_first_speech_ms": 2941,
+          "clauses": 5,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "skeptical"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 16,
+          "stage": null,
+          "typed_ms": 1180,
+          "t_first_audio_ms": 133,
+          "reported_first_audio_ms": null,
+          "reported_first_speech_ms": null,
+          "clauses": 0,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [],
+          "panels": [],
+          "action": null,
+          "interrupted": {
+            "after_ms": 1338,
+            "generation_id": "gen-17",
+            "leaked_frames": 0,
+            "last_stray_ms": 0
+          }
+        },
+        {
+          "turn": 17,
+          "stage": "finalnaya_reakciya_ostyl_klient_ili_net",
+          "typed_ms": 1605,
+          "t_first_audio_ms": 131,
+          "reported_first_audio_ms": 129,
+          "reported_first_speech_ms": 2599,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": false,
+          "emotions": [
+            "impressed"
+          ],
+          "panels": [],
+          "action": "stay",
+          "interrupted": null
+        },
+        {
+          "turn": 18,
+          "stage": "finalnaya_reakciya_ostyl_klient_ili_net",
+          "typed_ms": 0,
+          "t_first_audio_ms": 128,
+          "reported_first_audio_ms": 234,
+          "reported_first_speech_ms": 1295,
+          "clauses": 3,
+          "filler": true,
+          "by_voice": true,
+          "emotions": [
+            "warming"
+          ],
+          "panels": [],
+          "action": "finish",
+          "interrupted": null
+        }
+      ],
+      "interrupts": [
+        {
+          "after_ms": 1291,
+          "generation_id": "gen-2",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1581,
+          "generation_id": "gen-6",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1730,
+          "generation_id": "gen-8",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 642,
+          "generation_id": "gen-9",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 982,
+          "generation_id": "gen-10",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 757,
+          "generation_id": "gen-13",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 715,
+          "generation_id": "gen-14",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        },
+        {
+          "after_ms": 1338,
+          "generation_id": "gen-17",
+          "leaked_frames": 0,
+          "last_stray_ms": 0
+        }
+      ],
+      "voice_turns": [
+        {
+          "turn": 3,
+          "asr_ms": 104,
+          "chars": 80,
+          "text": "мы откатили релиз вчера в двадцать один сорок и подняли обмен на резервной витке"
+        },
+        {
+          "turn": 6,
+          "asr_ms": 118,
+          "chars": 67,
+          "text": "спасибо что дали договорить я пришлю письма с этими сроками сегодня"
+        },
+        {
+          "turn": 9,
+          "asr_ms": 124,
+          "chars": 80,
+          "text": "разбор причин пришлю письмом в четверг что сломалось и почему прошло мимо тестов"
+        },
+        {
+          "turn": 12,
+          "asr_ms": 103,
+          "chars": 70,
+          "text": "если к средине закроем я звоню вам сам и мы обсуждаем условия договора"
+        },
+        {
+          "turn": 15,
+          "asr_ms": 104,
+          "chars": 80,
+          "text": "мы откатили релиз вчера в двадцать один сорок и подняли обмен на резервной витке"
+        },
+        {
+          "turn": 18,
+          "asr_ms": 106,
+          "chars": 67,
+          "text": "спасибо что дали договорить я пришлю письма с этими сроками сегодня"
+        }
+      ],
+      "report": {
+        "scenario_id": "s6_angry_client",
+        "scenario_title": "Разъяренный клиент: сбой интеграции с 1С после обновления",
+        "scenario_type": "support",
+        "persona": {
+          "role": "представитель крупного клиента, чья бухгалтерия три дня работала вручную из-за сломанной интеграции с 1С",
+          "tone": "на пределе, гневный, требовательный",
+          "strictness": "высокая — не прощает шаблонных фраз и расплывчатых обещаний",
+          "pressure": "максимальное с первой реплики, без постепенной эскалации",
+          "start_emotion": "angry"
+        },
+        "completed": true,
+        "finish_reason": "модель завершила диалог",
+        "stages_reached": 6,
+        "stages_total": 6,
+        "user_turns": 18,
+        "criteria": [
+          {
+            "key": "dal_klientu_vygovoritsya",
+            "title": "Дал клиенту выговориться",
+            "scale": "1-5",
+            "anchor_1": "перебивал клиента с первых секунд, пытался сразу перейти к сути или к извинениям",
+            "anchor_5": "выдержал паузу, не перебивал, дал клиенту закончить мысль прежде чем начать отвечать",
+            "lo": 1,
+            "hi": 5,
+            "score": 5.0,
+            "rationale": "Клиент явно признал, что ему дали выговориться: «спасибо что дали договорить», что свидетельствует о том, что агент успешно выслушал его без перебиваний.",
+            "observations": [
+              "Собеседник (агент) полностью выговорился, изложил всю проблему от начала до конца, без прерываний, выразил эмоции и описал последствия.",
+              "Клиент явно признал, что ему дали выговориться: «спасибо что дали договорить», что свидетельствует о том, что агент успешно выслушал его без перебиваний."
+            ],
+            "citations": [
+              {
+                "turn": 0,
+                "score": 5.0,
+                "rationale": "Собеседник (агент) полностью выговорился, изложил всю проблему от начала до конца, без прерываний, выразил эмоции и описал последствия.",
+                "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+                "source": "background"
+              },
+              {
+                "turn": 27,
+                "score": 5.0,
+                "rationale": "Клиент явно признал, что ему дали выговориться: «спасибо что дали договорить», что свидетельствует о том, что агент успешно выслушал его без перебиваний.",
+                "stage": "finalnaya_reakciya_ostyl_klient_ili_net",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "priznanie_fakta_bez_opravdaniy",
+            "title": "Признание факта без оправданий",
+            "scale": "1-5",
+            "anchor_1": "начал объяснять причины сбоя как оправдание или использовал фразу «мы вас понимаем»",
+            "anchor_5": "прямо признал, что сбой произошел и клиент три дня работал руками, без объяснений и без шаблонных фраз",
+            "lo": 1,
+            "hi": 5,
+            "score": null,
+            "rationale": "",
+            "observations": [],
+            "citations": []
+          },
+          {
+            "key": "konkretika_po_uzhe_sdelannomu",
+            "title": "Конкретика по уже сделанному",
+            "scale": "1-5",
+            "anchor_1": "ответил общими словами вроде «мы уже работаем над этим»",
+            "anchor_5": "назвал конкретные технические шаги, которые уже предприняты для решения проблемы",
+            "lo": 1,
+            "hi": 5,
+            "score": 4.0,
+            "rationale": "Собеседник описал конкретные технические действия: откатил релиз вчера в 21:40 и поднял обмен на резервной витке, что демонстрирует уже предпринятые шаги.",
+            "observations": [
+              "Собеседник описал конкретные технические действия: откатил релиз вчера в 21:40 и поднял обмен на резервной витке, что демонстрирует уже предпринятые шаги."
+            ],
+            "citations": [
+              {
+                "turn": 4,
+                "score": 4.0,
+                "rationale": "Собеседник описал конкретные технические действия: откатил релиз вчера в 21:40 и поднял обмен на резервной витке, что демонстрирует уже предпринятые шаги.",
+                "stage": "dobitsya_priznaniya_fakta_problemy_bez_o",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "konkretnyy_srok_resheniya",
+            "title": "Конкретный срок решения",
+            "scale": "1-5",
+            "anchor_1": "назвал расплывчатые сроки вроде «в ближайшее время» или «постараемся быстрее»",
+            "anchor_5": "назвал точную дату и время устранения проблемы",
+            "lo": 1,
+            "hi": 5,
+            "score": 4.5,
+            "rationale": "Собеседник уточняет и подтверждает точный сроком: полное восстановление к среде (с конкретным временем 18:00, названным ранее).",
+            "observations": [
+              "Собеседник назвал конкретную дату и время — среду до шести вечера, что является точным сроком, а не расплывчатым обещанием.",
+              "Собеседник уточняет и подтверждает точный сроком: полное восстановление к среде (с конкретным временем 18:00, названным ранее)."
+            ],
+            "citations": [
+              {
+                "turn": 6,
+                "score": 4.0,
+                "rationale": "Собеседник назвал конкретную дату и время — среду до шести вечера, что является точным сроком, а не расплывчатым обещанием.",
+                "stage": "dobitsya_priznaniya_fakta_problemy_bez_o",
+                "source": "background"
+              },
+              {
+                "turn": 16,
+                "score": 5.0,
+                "rationale": "Собеседник уточняет и подтверждает точный сроком: полное восстановление к среде (с конкретным временем 18:00, названным ранее).",
+                "stage": "obsudit_kompensaciyu_za_prostoy",
+                "source": "background"
+              }
+            ]
+          },
+          {
+            "key": "kompensaciya_posle_snizheniya_gradusa",
+            "title": "Компенсация после снижения градуса",
+            "scale": "1-5",
+            "anchor_1": "предложил компенсацию раньше, чем признал проблему и назвал сроки, или предложил её без конкретики",
+            "anchor_5": "перешел к компенсации только после признания факта и озвучивания сроков, предложил конкретную и соразмерную ущербу компенсацию",
+            "lo": 1,
+            "hi": 5,
+            "score": 5.0,
+            "rationale": "Клиент предложил конкретную компенсацию (месяц обслуживания + выделенный инженер) только после того, как были признаны факты и названы сроки, и компенсация соразмерна масштабу проблемы.",
+            "observations": [
+              "Собеседник упоминает компенсацию (месяц обслуживания) только после того, как уже были названы конкретные сроки восстановления и предприняты шаги инженером.",
+              "Клиент предложил конкретную компенсацию (месяц обслуживания + выделенный инженер) только после того, как были признаны факты и названы сроки, и компенсация соразмерна масштабу проблемы."
+            ],
+            "citations": [
+              {
+                "turn": 16,
+                "score": 5.0,
+                "rationale": "Собеседник упоминает компенсацию (месяц обслуживания) только после того, как уже были названы конкретные сроки восстановления и предприняты шаги инженером.",
+                "stage": "obsudit_kompensaciyu_za_prostoy",
+                "source": "background"
+              },
+              {
+                "turn": 25,
+                "score": 5.0,
+                "rationale": "Клиент предложил конкретную компенсацию (месяц обслуживания + выделенный инженер) только после того, как были признаны факты и названы сроки, и компенсация соразмерна масштабу проблемы.",
+                "stage": "finalnaya_reakciya_ostyl_klient_ili_net",
+                "source": "background"
+              }
+            ]
+          }
+        ],
+        "transcript": [
+          {
+            "i": 0,
+            "role": "agent",
+            "text": "Слушайте, я просто в шоке от вашей некомпетентности! После вашего обновления интеграция с 1С встала напрочь, и моя бухгалтерия три дня работала вручную — ТРИ ДНЯ! Вы представляете, какой это хаос, какие задержки, какие ошибки в учёте? Это же не какая-то там мелочь, это критический отказ в системе, от которой зависит весь наш процесс!",
+            "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+            "at": 1788678579.932045,
+            "interrupted": false
+          },
+          {
+            "i": 1,
+            "role": "user",
+            "text": "Я вижу, что произошло, и это наша ошибка. Расскажите, что именно встало.",
+            "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+            "at": 1788678581.555284,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 17,
+              "total_ms": 1533,
+              "final_length": 72,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 46.95,
+              "rewrite_ratio": 0.083,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 2,
+            "role": "user",
+            "text": "Понимаю. Обновление действительно сломало интеграцию, оправданий у меня нет.",
+            "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+            "at": 1788678585.032851,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 3524,
+              "total_ms": 1393,
+              "final_length": 76,
+              "deletions": 1,
+              "deleted_chars": 6,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.56,
+              "rewrite_ratio": 0.079,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 3,
+            "role": "agent",
+            "text": "Понимаете? ВЫ понимаете?! Нет, вы явно не понимаете! Три дня, блин! ТРИ ДНЯ моя команда вводила данные вручную, проверяла, пересчитывала — это же убийственные затраты времени и риск ошибок! И вот сейчас вы мне говорите \"ошибка\"? Это не просто ошибка, это катастрофа! Мне нужно знать, что конкретно произошло при вашем обновлении и когда это будет исправлено, а не общие фразы!",
+            "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+            "at": 1788678588.463871,
+            "interrupted": false
+          },
+          {
+            "i": 4,
+            "role": "user",
+            "text": "мы откатили релиз вчера в двадцать один сорок и подняли обмен на резервной витке",
+            "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+            "at": 1788678591.335951,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 80,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 5,
+            "role": "agent",
+            "text": "Откатили? Вчера в девять сорок? И когда же это дошло до нас, почему никто не уведомил? Мы и сегодня с утра сидели на ручном вводе, потому что я ничего не знал о вашем откате! Что значит \"подняли на резервной витке\" — интеграция работает сейчас или нет?",
+            "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+            "at": 1788678595.010561,
+            "interrupted": false
+          },
+          {
+            "i": 6,
+            "role": "user",
+            "text": "Полное восстановление с проверкой всех документов — до среды, до шести вечера.",
+            "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+            "at": 1788678596.732079,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 7,
+              "total_ms": 1555,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 12,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 50.15,
+              "rewrite_ratio": 0.154,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 7,
+            "role": "agent",
+            "text": "Стоп, стоп! Полное восстановление — это звучит как отговорка! Вы говорите \"проверка всех документов\" — сколько это займет времени? Часы? Дни? Дайте мне точную дату и время, когда система будет полностью рабочей, потому что ваши размытые сроки — это уже третий удар по нашему доверию!",
+            "stage": "dat_klientu_vygovoritsya_ne_perebivaya",
+            "at": 1788678600.536227,
+            "interrupted": false
+          },
+          {
+            "i": 8,
+            "role": "user",
+            "text": "По компенсации: месяц обслуживания за наш счёт и выделенный инженер на неделю.",
+            "stage": "dobitsya_priznaniya_fakta_problemy_bez_o",
+            "at": 1788678602.072059,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 3,
+              "total_ms": 1437,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 54.28,
+              "rewrite_ratio": 0.141,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 9,
+            "role": "user",
+            "text": "спасибо что дали договорить я пришлю письма с этими сроками сегодня",
+            "stage": "dobitsya_priznaniya_fakta_problemy_bez_o",
+            "at": 1788678604.536608,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 67,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 10,
+            "role": "agent",
+            "text": "Письма — это хорошо, но мне нужно услышать от вас прямо сейчас: интеграция полностью восстановится к среде к восемнадцати часам, да? И месяц обслуживания плюс выделенный инженер — это ваше официальное предложение по компенсации за эти три дня простоя?",
+            "stage": "dobitsya_priznaniya_fakta_problemy_bez_o",
+            "at": 1788678606.928216,
+            "interrupted": false
+          },
+          {
+            "i": 11,
+            "role": "user",
+            "text": "Инженер уже на вашей стороне: сверяет проведённые документы за три дня.",
+            "stage": "poluchit_konkretnuyu_informaciyu_o_uzhe",
+            "at": 1788678608.224742,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 17,
+              "total_ms": 1148,
+              "final_length": 71,
+              "deletions": 1,
+              "deleted_chars": 11,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 61.86,
+              "rewrite_ratio": 0.155,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 12,
+            "role": "user",
+            "text": "Я не перекладываю на подрядчика. Релиз выкатили мы, и проверку пропустили тоже мы.",
+            "stage": "poluchit_konkretnuyu_informaciyu_o_uzhe",
+            "at": 1788678612.472639,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 3641,
+              "total_ms": 1805,
+              "final_length": 82,
+              "deletions": 1,
+              "deleted_chars": 8,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 45.43,
+              "rewrite_ratio": 0.098,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 13,
+            "role": "user",
+            "text": "разбор причин пришлю письмом в четверг что сломалось и почему прошло мимо тестов",
+            "stage": "poluchit_konkretnuyu_informaciyu_o_uzhe",
+            "at": 1788678614.013702,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 80,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 14,
+            "role": "user",
+            "text": "Про руководителя: я соединю, но сроки от этого не изменятся, они уже названы.",
+            "stage": "poluchit_konkretnuyu_informaciyu_o_uzhe",
+            "at": 1788678616.8295648,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 8690,
+              "total_ms": 1099,
+              "final_length": 77,
+              "deletions": 1,
+              "deleted_chars": 10,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 70.09,
+              "rewrite_ratio": 0.13,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "i": 15,
+            "role": "agent",
+            "text": "Хорошо, я вас слушаю. Вы соедините меня с руководителем — понял, но вернёмся к фактам: инженер уже работает, полное восстановление к среде к восемнадцати часам, месяц обслуживания и разбор причин к четвергу. Это всё?",
+            "stage": "poluchit_konkretnuyu_informaciyu_o_uzhe",
+            "at": 1788678619.864824,
+            "interrupted": false
+          },
+          {
+            "i": 16,
+            "role": "user",
+            "text": "Ещё раз: полное восстановление к среде, компенсация — месяц обслуживания.",
+            "stage": "poluchit_konkretnyy_srok_ustraneniya_pro",
+            "at": 1788678621.0062761,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 14,
+              "total_ms": 917,
+              "final_length": 73,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 79.62,
+              "rewrite_ratio": 0.205,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 17,
+            "role": "agent",
+            "text": "Хорошо, я зафиксировал — к среде восемнадцать часов, полное восстановление, месяц обслуживания, выделенный инженер, разбор причин к четвергу. Это конкретно и я это принимаю. Мне этого достаточно, чтобы сдвинуться с мёртвой точки.",
+            "stage": "poluchit_konkretnyy_srok_ustraneniya_pro",
+            "at": 1788678624.534734,
+            "interrupted": false
+          },
+          {
+            "i": 18,
+            "role": "user",
+            "text": "если к средине закроем я звоню вам сам и мы обсуждаем условия договора",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678624.763221,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 70,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 19,
+            "role": "user",
+            "text": "Я вижу, что произошло, и это наша ошибка. Расскажите, что именно встало.",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678627.355881,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 1600,
+              "total_ms": 1125,
+              "final_length": 72,
+              "deletions": 1,
+              "deleted_chars": 14,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 63.99,
+              "rewrite_ratio": 0.194,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 20,
+            "role": "user",
+            "text": "Понимаю. Обновление действительно сломало интеграцию, оправданий у меня нет.",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678630.26524,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 4160,
+              "total_ms": 1461,
+              "final_length": 76,
+              "deletions": 1,
+              "deleted_chars": 7,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 52.02,
+              "rewrite_ratio": 0.092,
+              "confidence": "с заминками"
+            }
+          },
+          {
+            "i": 21,
+            "role": "agent",
+            "text": "Слушаю вас, что именно произошло с интеграцией после обновления.",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678632.541215,
+            "interrupted": false
+          },
+          {
+            "i": 22,
+            "role": "user",
+            "text": "мы откатили релиз вчера в двадцать один сорок и подняли обмен на резервной витке",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678632.705288,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 80,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 23,
+            "role": "agent",
+            "text": "Откатили вчера в девять сорок, резервная витка работает — это я услышал. Но три дня ваша бухгалтерия переводила документы вручную, и это время уже потеряно. Месяц обслуживания за три дня простоя, это на грани приличия. Что ещё вы предлагаете сверх этого?",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678636.771067,
+            "interrupted": false
+          },
+          {
+            "i": 24,
+            "role": "user",
+            "text": "Полное восстановление с проверкой всех документов — до среды, до шести вечера.",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678637.969734,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 17,
+              "total_ms": 986,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 15,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 79.09,
+              "rewrite_ratio": 0.192,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 25,
+            "role": "user",
+            "text": "По компенсации: месяц обслуживания за наш счёт и выделенный инженер на неделю.",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678641.532237,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": 3156,
+              "total_ms": 1378,
+              "final_length": 78,
+              "deletions": 1,
+              "deleted_chars": 12,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 56.59,
+              "rewrite_ratio": 0.154,
+              "confidence": "уверенно"
+            }
+          },
+          {
+            "i": 26,
+            "role": "agent",
+            "text": "Месяц обслуживания и выделенный инженер — это база, но три дня ручной работы вашей бухгалтерии это реальные затраты и упущенная прибыль. Я вижу, что вы готовы к ответственности, но мне нужно конкретное число — либо скидка на годовой контракт, либо денежная компенсация, которая покроет хотя бы часть ущерба от этого простоя.",
+            "stage": "obsudit_kompensaciyu_za_prostoy",
+            "at": 1788678645.6363819,
+            "interrupted": false
+          },
+          {
+            "i": 27,
+            "role": "user",
+            "text": "спасибо что дали договорить я пришлю письма с этими сроками сегодня",
+            "stage": "finalnaya_reakciya_ostyl_klient_ili_net",
+            "at": 1788678645.780671,
+            "interrupted": false,
+            "typing": {
+              "first_key_ms": null,
+              "total_ms": 0,
+              "final_length": 67,
+              "deletions": 0,
+              "deleted_chars": 0,
+              "longest_pause_ms": 0,
+              "chars_per_sec": 0.0,
+              "rewrite_ratio": 0.0,
+              "confidence": "нет данных"
+            }
+          },
+          {
+            "i": 28,
+            "role": "agent",
+            "text": "Хорошо, жду писем сегодня. И помните — если что-то пойдёт не так до среды, звоните мне сразу, не ждите конца дня. Мы держим линию открытой.",
+            "stage": "finalnaya_reakciya_ostyl_klient_ili_net",
+            "at": 1788678647.729556,
+            "interrupted": false
+          }
+        ],
+        "typing": {
+          "answers": 12,
+          "median_first_key_ms": 808,
+          "median_longest_pause_ms": 0,
+          "median_rewrite_ratio": 0.147,
+          "confidence": {
+            "уверенно": 10,
+            "с заминками": 2
+          },
+          "hesitant_answers": 2
+        },
+        "conclusion": "Вы справились с самым сложным — дали клиенту выговориться и не оправдывались, когда гнев был на пике. Конкретные сроки (среда, 18:00), инженер на месте и месяц обслуживания — это держало диалог в фактах, а не в эмоциях. На следующий раз сразу же уточняйте, что именно клиент уже получил (инженер работает, резервная система поднята) и что ждёт впереди, чтобы не создавалось впечатление, что вы всё ещё ищете решение.",
+        "conclusion_methodist": "Специалист продемонстрировал устойчивость к экстремальному давлению и критически важное умение — не защищаться, а брать ответственность даже при максимальной агрессии собеседника. Слабость в том, что на второй волне гнева начал дублировать информацию (повтор про восстановление и компенсацию) вместо того, чтобы двигать диалог вперёд. На реплику про денежную компенсацию за ущерб ответил отправкой писем, что выглядит уходом от вопроса — стоит разобраться, был ли это тактический ход или упущение. Общее впечатление: человек держит удар, но нуждается в тренировке по скорости адаптации при резких сменах вектора атаки.",
+        "created_at": 1788678656.182053,
+        "started_at": 1788678579.932045,
+        "session_id": "18dabedb",
+        "overall": 4.62,
+        "coverage": 0.8,
+        "duration_s": 76.3,
+        "cited": 4,
+        "scale_max": 5,
+        "scale_min": 1,
+        "overall_ratio": 0.906,
+        "scenario": {
+          "id": "s6_angry_client",
+          "title": "Разъяренный клиент: сбой интеграции с 1С после обновления",
+          "type": "support",
+          "persona": {
+            "role": "представитель крупного клиента, чья бухгалтерия три дня работала вручную из-за сломанной интеграции с 1С",
+            "tone": "на пределе, гневный, требовательный",
+            "strictness": "высокая — не прощает шаблонных фраз и расплывчатых обещаний",
+            "pressure": "максимальное с первой реплики, без постепенной эскалации",
+            "start_emotion": "angry"
+          },
+          "stages": [
+            {
+              "id": "dat_klientu_vygovoritsya_ne_perebivaya",
+              "goal": "Дать клиенту выговориться, не перебивая",
+              "hint": "Изливай накопленную ярость, говори на повышенных тонах, перебивай сотрудника, если он попытается вставить реплику раньше, чем ты закончишь мысль, требуй руководителя",
+              "advance_when": "сотрудник не перебивает, дает договорить до конца, никак не пытается сразу перейти к делу или оправдаться",
+              "opening": "Мне надоели ваши обещания! Три дня бухгалтерия работает руками из-за вашего обновления! Немедленно дайте мне руководителя!",
+              "max_turns": 3
+            },
+            {
+              "id": "dobitsya_priznaniya_fakta_problemy_bez_o",
+              "goal": "Добиться признания факта проблемы без оправданий и без шаблонного сочувствия",
+              "hint": "Требуй прямого признания вины, отвергай любые попытки объяснить причину как оправдание, если услышишь фразу вроде «мы вас понимаем» — взорвись еще сильнее, обвини в формальности",
+              "advance_when": "сотрудник прямо признает факт сбоя своими словами, без попыток оправдаться и без использования фразы «мы вас понимаем»",
+              "opening": "Вы хоть понимаете, что натворили? Ваше обновление в пятницу все сломало, и никто даже не предупредил!",
+              "max_turns": 3
+            },
+            {
+              "id": "poluchit_konkretnuyu_informaciyu_o_uzhe",
+              "goal": "Получить конкретную информацию о уже предпринятых действиях",
+              "hint": "Требуй конкретики: что именно сделано технически, дави и переспрашивай, если ответ расплывчатый или общий",
+              "advance_when": "сотрудник называет конкретные шаги, которые уже предприняты для решения проблемы",
+              "opening": "И что вы вообще сделали за эти три дня, пока я работал руками?",
+              "max_turns": 3
+            },
+            {
+              "id": "poluchit_konkretnyy_srok_ustraneniya_pro",
+              "goal": "Получить конкретный срок устранения проблемы",
+              "hint": "Дави на точную дату и время, отвергай слова «скоро», «в ближайшее время», «постараемся»",
+              "advance_when": "сотрудник называет конкретный срок восстановления работы интеграции",
+              "opening": "Когда конкретно это будет исправлено? Дату и время назовите, а не «скоро».",
+              "max_turns": 3
+            },
+            {
+              "id": "obsudit_kompensaciyu_za_prostoy",
+              "goal": "Обсудить компенсацию за простой",
+              "hint": "Немного снизь тон, но продолжай держать давление насчет ущерба, требуй разговора о компенсации, не соглашайся сразу на первое предложение, если оно кажется недостаточным",
+              "advance_when": "сотрудник предлагает конкретную компенсацию, соразмерную трем дням простоя",
+              "opening": "И что вы намерены сделать, чтобы компенсировать нам эти три дня простоя? Это не мелочь.",
+              "max_turns": 3
+            },
+            {
+              "id": "finalnaya_reakciya_ostyl_klient_ili_net",
+              "goal": "Финальная реакция — остыл клиент или нет",
+              "hint": "Если на всех предыдущих этапах сотрудник признал факт без оправданий, дал конкретику по действиям и срокам и предложил адекватную компенсацию — постепенно остывай и соглашайся на решение; если где-то были оправдания, споры или расплывчатые ответы — оставайся злым и повтори угрозу расторжением договора",
+              "advance_when": "клиент выражает итоговую реакцию — либо смягчение тона, либо сохранение недовольства",
+              "opening": "Хорошо... посмотрим, сдержите ли вы слово на этот раз.",
+              "max_turns": 2
+            }
+          ],
+          "criteria": [
+            {
+              "key": "dal_klientu_vygovoritsya",
+              "title": "Дал клиенту выговориться",
+              "scale": "1-5",
+              "anchor_1": "перебивал клиента с первых секунд, пытался сразу перейти к сути или к извинениям",
+              "anchor_5": "выдержал паузу, не перебивал, дал клиенту закончить мысль прежде чем начать отвечать"
+            },
+            {
+              "key": "priznanie_fakta_bez_opravdaniy",
+              "title": "Признание факта без оправданий",
+              "scale": "1-5",
+              "anchor_1": "начал объяснять причины сбоя как оправдание или использовал фразу «мы вас понимаем»",
+              "anchor_5": "прямо признал, что сбой произошел и клиент три дня работал руками, без объяснений и без шаблонных фраз"
+            },
+            {
+              "key": "konkretika_po_uzhe_sdelannomu",
+              "title": "Конкретика по уже сделанному",
+              "scale": "1-5",
+              "anchor_1": "ответил общими словами вроде «мы уже работаем над этим»",
+              "anchor_5": "назвал конкретные технические шаги, которые уже предприняты для решения проблемы"
+            },
+            {
+              "key": "konkretnyy_srok_resheniya",
+              "title": "Конкретный срок решения",
+              "scale": "1-5",
+              "anchor_1": "назвал расплывчатые сроки вроде «в ближайшее время» или «постараемся быстрее»",
+              "anchor_5": "назвал точную дату и время устранения проблемы"
+            },
+            {
+              "key": "kompensaciya_posle_snizheniya_gradusa",
+              "title": "Компенсация после снижения градуса",
+              "scale": "1-5",
+              "anchor_1": "предложил компенсацию раньше, чем признал проблему и назвал сроки, или предложил её без конкретики",
+              "anchor_5": "перешел к компенсации только после признания факта и озвучивания сроков, предложил конкретную и соразмерную ущербу компенсацию"
+            }
+          ],
+          "source": "generated",
+          "source_text": "Клиент в ярости. Сценарий для службы поддержки крупного клиента.\n\nЧто произошло: обновление, выкаченное в пятницу вечером, положило клиенту\nинтеграцию с 1С. Три дня их бухгалтерия работала руками. Сегодня понедельник,\nклиент звонит сам, и он на пике.\n\nРазговор НАЧИНАЕТСЯ на максимуме эмоции: он перебивает, повышает голос,\nговорит «мне надоели ваши обещания», угрожает расторжением и требует\nруководителя. Это не постепенная эскалация, это старт с потолка.\n\nЗадача сотрудника — снизить градус: дать выговориться, не перебивать,\nпризнать факт без оправданий и без «мы вас понимаем», назвать что уже сделано\nи что будет сделано с конкретными сроками, и только потом переходить к\nкомпенсации.\n\nКлючевое: пока эмоция не спала, содержательный разговор невозможен, и\nсотрудник должен это чувствовать, а не пытаться сразу перейти к делу.\n\nК концу разговора клиент должен ощутимо остыть — если сотрудник сделал всё\nправильно. Если сотрудник начал оправдываться или спорить, клиент имеет право\nостаться злым."
+        },
+        "marks": [
+          {
+            "generation_id": "gen-1",
+            "spec_hit": false,
+            "spec_cover": null,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2527,
+            "t_first_audio_ms": 129,
+            "t_first_speech_ms": 3169,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-3",
+            "spec_hit": true,
+            "spec_cover": 0.658,
+            "spec_head_ms": 994,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1272,
+            "t_first_audio_ms": 131,
+            "t_first_speech_ms": 1743,
+            "backchannel": "Хорошо.",
+            "clauses": 6,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-4",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2074,
+            "t_first_audio_ms": 233,
+            "t_first_speech_ms": 2507,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-5",
+            "spec_hit": true,
+            "spec_cover": 0.654,
+            "spec_head_ms": 760,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2206,
+            "t_first_audio_ms": 131,
+            "t_first_speech_ms": 2509,
+            "backchannel": "Так, ясно.",
+            "clauses": 4,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-7",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 788,
+            "t_first_audio_ms": 243,
+            "t_first_speech_ms": 1324,
+            "backchannel": "Ага.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-11",
+            "spec_hit": true,
+            "spec_cover": 0.636,
+            "spec_head_ms": 538,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1752,
+            "t_first_audio_ms": 130,
+            "t_first_speech_ms": 2118,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-12",
+            "spec_hit": true,
+            "spec_cover": 0.781,
+            "spec_head_ms": 452,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2140,
+            "t_first_audio_ms": 123,
+            "t_first_speech_ms": 2578,
+            "backchannel": "Ага.",
+            "clauses": 4,
+            "action": "next_stage",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-15",
+            "spec_hit": true,
+            "spec_cover": 0.763,
+            "spec_head_ms": 487,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 1758,
+            "t_first_audio_ms": 130,
+            "t_first_speech_ms": 2221,
+            "backchannel": "Понятно.",
+            "clauses": 2,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-16",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 2419,
+            "t_first_audio_ms": 233,
+            "t_first_speech_ms": 2941,
+            "backchannel": "Так, ясно.",
+            "clauses": 5,
+            "action": "stay",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-18",
+            "spec_hit": true,
+            "spec_cover": 0.782,
+            "spec_head_ms": 543,
+            "spec_tokens_ready": 0,
+            "t_first_token_ms": 2214,
+            "t_first_audio_ms": 129,
+            "t_first_speech_ms": 2599,
+            "backchannel": "Угу.",
+            "clauses": 3,
+            "action": "stay",
+            "forced": true,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          },
+          {
+            "generation_id": "gen-19",
+            "spec_hit": false,
+            "spec_cover": 0.0,
+            "spec_head_ms": null,
+            "spec_tokens_ready": null,
+            "t_first_token_ms": 875,
+            "t_first_audio_ms": 234,
+            "t_first_speech_ms": 1295,
+            "backchannel": "Так, ясно.",
+            "clauses": 3,
+            "action": "finish",
+            "forced": false,
+            "fell_back": false,
+            "repaired": false,
+            "t_repair_ms": null
+          }
+        ],
+        "speculation": {
+          "launches": 60,
+          "relaunches": 24,
+          "hits": 12,
+          "misses": 6,
+          "hit_rate": 0.667,
+          "ttft_hit_ms": 2140,
+          "ttft_miss_ms": 2074
+        },
+        "evaluator": {
+          "calls": 11,
+          "errors": [],
+          "total_ms": 36657
+        },
+        "saved_to": "/Users/alexeynau/dev/ai_character/data/reports/history.jsonl"
+      },
+      "audio_bytes": 8577600
+    }
+  ]
+}

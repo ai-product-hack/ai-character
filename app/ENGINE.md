@@ -12,7 +12,8 @@
     app/translit.py    латинские ключи из русских названий
     app/report.py      отчёт с цитатами
     app/evaluator.py   фоновая оценка и общий вывод
-    app/llm.py         адаптеры моделей
+    app/llm.py         адаптеры моделей: DeepSeek и Anthropic под одним
+                       интерфейсом, переключаются строкой в config.json
     app/stub_llm.py    заглушка для тестов и прогона без сети
 
 294 юнит-теста: `python3 -m unittest discover -s app/tests -p "test_*.py" -t app/tests`
